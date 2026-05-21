@@ -1,5 +1,18 @@
-import { index, type RouteConfig } from '@react-router/dev/routes';
+import { index, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
-  index('./pages/index/index.tsx')
+  index('./pages/index/index.tsx'),
+  
+  route('/new'    , './pages/new/new.tsx'),
+  route('/list'   , './pages/list/list.tsx'),
+  route('/site'   , './pages/site/site.tsx'),
+  route('/edit'   , './pages/edit/edit.tsx'),
+  route('/support', './pages/support/support.tsx'),
+  
+  route('/admin'          , './pages/admin/index.tsx'),
+  route('/admin/dashboard', './pages/admin/dashboard.tsx'),
+  route('/admin/sites'    , './pages/admin/sites.tsx'),
+  route('/admin/tags'     , './pages/admin/tags.tsx'),
+  route('/admin/support'  , './pages/admin/support.tsx'),
+  route('/admin/deny-ips' , './pages/admin/deny-ips.tsx')
 ] satisfies RouteConfig;
