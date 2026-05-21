@@ -8,12 +8,12 @@ import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
 import { mergeIssues } from '../../../helpers/merge-issues';
-import { normalizeUrlNearby } from '../../../helpers/normalize-url';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
 import { SiteCommentsRepository } from '../../../repositories/site-comments-repository';
 import { SiteIpsRepository } from '../../../repositories/site-ips-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
 import { SitesRepository } from '../../../repositories/sites-repository';
+import { SiteUrlService } from '../../../services/site-url-service';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
 
@@ -58,17 +58,14 @@ sites.post('/', async context => {
   const siteIpsRepository = new SiteIpsRepository(context.env.DB);
   const siteTagsRepository = new SiteTagsRepository(context.env.DB);
   const siteCommentsRepository = new SiteCommentsRepository(context.env.DB);
+  const siteUrlService = new SiteUrlService();
   
   const ip = getIp(context);
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, 400);
   
-  const exactMatch = await sitesRepository.findActiveByExactUrl(parsed.url);
-  if(exactMatch != null && exactMatch.id != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMatch.id}]` }, 400);
-  
-  const allSites = await sitesRepository.findActiveUrls();
-  const normalizedInput = normalizeUrlNearby(parsed.url);
-  const nearMatch = allSites.find(site => normalizeUrlNearby(site.url) === normalizedInput);
+  const urlMatch = await siteUrlService.findSiteUrlMatch(sitesRepository, parsed.url);
+  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, 400);
   
   const rawPassword = typeof parsed.password === 'string' ? parsed.password : '';
   const passwordHash = rawPassword !== '' ? await hashPassword(rawPassword) : null;
@@ -89,7 +86,7 @@ sites.post('/', async context => {
   
   if(parsed.is_self === 0 && !isEmpty(parsed.recommender_comment)) await siteCommentsRepository.create({ content: parsed.recommender_comment!, ip, site_id: siteId, user_name: parsed.recommender_name });
   
-  return context.json({ result: { id: siteId, warning: nearMatch ? `近い URL が登録済みです : ID [${nearMatch.id}]` : null } }, 201);
+  return context.json({ result: { id: siteId, warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 201);
 });
 
 sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
@@ -103,6 +100,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const sitesRepository = new SitesRepository(context.env.DB);
   const siteIpsRepository = new SiteIpsRepository(context.env.DB);
   const siteTagsRepository = new SiteTagsRepository(context.env.DB);
+  const siteUrlService = new SiteUrlService();
   
   const existing = await sitesRepository.findAuthById(siteId);
   if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, 404);
@@ -111,6 +109,8 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, 400);
   
   const parsed = parsedResult.data;
+  const urlMatch = await siteUrlService.findSiteUrlMatch(sitesRepository, parsed.url, siteId);
+  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, 400);
   
   if(existing.is_self === 0) {
     if(isEmpty(parsed.password)) return context.json({ error: `${passwordDisplayName}を設定することで自薦サイトに切り替えられます` }, 403);
@@ -144,7 +144,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   
   await siteTagsRepository.replaceNames(siteId, parsed.tags);
   
-  return context.json({ result: { id: siteId } }, 200);
+  return context.json({ result: { id: siteId, warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 200);
 });
 
 sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing

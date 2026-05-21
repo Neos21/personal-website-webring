@@ -23,6 +23,7 @@
 - 共有ロジックはヘルパーに切り出す
 - DB 操作部分は `server/repositories/` 配下にテーブル別の Repository として実装する
 - DB テーブルの型定義は `shared/types/` 配下にテーブル別に作成する
+- サーバサイドロジックは `server/services/` 配下に作成し、サーバサイドロジック内でのみ使う型定義は `server/types/` 配下に作成する
 - `context.req.json()` は常に `await context.req.json().catch(() => null)` で受け、`body == null` の場合は 400 エラーを返す
 - 正常レスポンスは必ずトップレベルを `result` のみとし、エラーはトップレベル `error` を使う
 - 正規表現をは必ず `(/.../)` で囲む

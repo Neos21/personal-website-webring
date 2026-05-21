@@ -11,12 +11,9 @@ export const normalizeUrlNearby = (value: string): string => {
     let hostname = url.hostname.toLowerCase();
     if(hostname.startsWith('www.')) hostname = hostname.slice(4);
     
-    let pathname = url.pathname.replace((/\/index(?:\.[^/?#]+)?$/i), '');
-    pathname = pathname.replace((/\/$/), '');
-    if(pathname === '') pathname = '/';
+    const pathname = url.pathname.replace((/\/index(?:\.[^/?#]+)?$/i), '').replace((/\/$/), '');
     
-    const search = url.search || '';
-    return `${hostname}${pathname}${search}`;
+    return `${hostname}${pathname}`;
   }
   catch {
     return normalizeUrlExact(trimmed);
