@@ -1,0 +1,64 @@
+{
+  "name": "personal-website-webring",
+  "description": "Personal WebSite WebRing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev --host",
+    "lint": "eslint . --fix",
+    "generate-types": "wrangler types && react-router typegen",
+    "build": "npm run generate-types && tsc && react-router build",
+    "build-only": "react-router build",
+    "preview": "npm run build && wrangler dev",
+    "preview-only": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy-only": "wrangler deploy",
+    "tsc": "tsc",
+    "wrangler": "wrangler"
+  },
+  "author": "Neo <neos21@gmail.com> (https://neos21.net/)",
+  "license": "MIT",
+  "homepage": "https://github.com/Neos21/personal-website-webring#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neos21/personal-website-webring.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Neos21/personal-website-webring/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Neos21"
+  },
+  "dependencies": {
+    "@marsidev/react-turnstile": "1.5.2",
+    "@react-router/node": "7.14.2",
+    "hono": "4.12.16",
+    "isbot": "5.1.39",
+    "ky": "2.0.2",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "react-router": "7.14.2",
+    "zod": "4.4.3",
+    "zustand": "5.0.13"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@hono/vite-dev-server": "0.25.3",
+    "@neos21/neos-eslint-plugin": "0.0.4",
+    "@react-router/dev": "7.14.2",
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.4",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-react": "7.37.5",
+    "globals": "17.6.0",
+    "hono-react-router-adapter": "0.6.5",
+    "jiti": "2.6.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.59.2",
+    "vite": "8.0.10",
+    "wrangler": "4.87.0"
+  }
+}

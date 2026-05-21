@@ -1,0 +1,69 @@
+import js from '@eslint/js';
+import neosEslintPlugin from '@neos21/neos-eslint-plugin';
+import { defineConfig } from 'eslint/config';
+import importPlugin from 'eslint-plugin-import';
+import pluginReact from 'eslint-plugin-react';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+
+export default defineConfig([
+  {
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    plugins: {
+      js,
+      import: importPlugin
+    },
+    extends: ['js/recommended'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    rules: {
+      'import/order': [
+        'error',
+        {
+          groups: [
+            ['builtin', 'external'],
+            ['internal'],
+            ['parent', 'sibling', 'index'],
+            ['type']
+          ],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true }
+        }
+      ]
+    }
+  },
+  tseslint.configs.recommended,
+  {
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': ['error', {
+        allowIIFEs: true
+      }]
+    }
+  },
+  neosEslintPlugin.configs.recommended,
+  {
+    ...pluginReact.configs.flat.recommended,
+    rules: {
+      'react/react-in-jsx-scope': 'off'
+    },
+    settings: {
+      react: {
+        version: 'detect'
+      }
+    }
+  },
+  {
+    ignores: [
+      'node_modules/**',
+      '.wrangler/**',
+      '.react-router/**',
+      'build/**',
+      'worker-configuration.d.ts'
+    ]
+  }
+]);

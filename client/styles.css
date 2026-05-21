@@ -1,0 +1,34 @@
+/* Globals */
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  color: #000;
+  font-family: sans-serif, "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  text-decoration-skip-ink: none;
+  word-break: break-all;
+  line-height: 1.7;
+  background: #fff;
+  cursor: default;
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+
+/* Classes */
+
+.turnstile-wrapper { height: 65px; }
+
+.text-muted   { color: #765d6c; }
+.text-success { color: #0a6f3c; }
+.text-error   { color: #a51717; }
+
+.nowrap   { white-space: nowrap;   }
+.pre-wrap { white-space: pre-wrap; }

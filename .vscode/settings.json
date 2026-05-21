@@ -1,0 +1,9 @@
+{
+  "search.exclude": {
+    "**/.react-router": true,
+    "**/.wrangler": true,
+    "**/build": true,
+    "**/node_modules": true,
+    "**/worker-configuration.d.ts": true
+  }
+}
