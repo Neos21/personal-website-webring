@@ -2,11 +2,11 @@ import z from 'zod';
 
 import { reduceNewlines } from '../helpers/reduce-newlines';
 
-const siteIdDisplayName   = 'サイト ID';
-const userNameDisplayName = 'ハンドルネーム';
-const userNameMaxLength   = 100;
-const commentDisplayName  = '本文';
-const commentMaxLength    = 500;
+export const siteIdDisplayName   = 'サイト ID';
+export const userNameDisplayName = 'ハンドルネーム';
+export const userNameMaxLength   = 100;
+export const contentDisplayName  = '本文';
+export const contentMaxLength    = 500;
 
 export const supportPostSchema = z.object({
   site_id         : z.coerce.number({ error: `${siteIdDisplayName} 数値が指定されていません` })
@@ -21,9 +21,9 @@ export const supportPostSchema = z.object({
                     ),
   content         : z.preprocess(
                       value => value == null ? '' : typeof value === 'string' ? reduceNewlines(value.trim()) : value,
-                      z.string({ error: `${commentDisplayName}に文字列でないデータが入力されています` })
-                        .min(1, { error: `${commentDisplayName}を入力してください` })
-                        .max(commentMaxLength, { error: `${commentDisplayName}は${commentMaxLength}文字以内で入力してください` })
+                      z.string({ error: `${contentDisplayName}に文字列でないデータが入力されています` })
+                        .min(1, { error: `${contentDisplayName}を入力してください` })
+                        .max(contentMaxLength, { error: `${contentDisplayName}は${contentMaxLength}文字以内で入力してください` })
                     ),
   turnstile_token : z.preprocess(
                       value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
