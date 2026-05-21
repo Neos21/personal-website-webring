@@ -129,6 +129,12 @@ export default function Site(): ReactElement {
             </ul>
           </section>
           
+          {site.is_self === 1 ? (
+            <p><Link to={`/edit?id=${siteId}`}>管理人様用 : 編集・削除</Link></p>
+          ) : site.is_self === 0 ? (
+            <p><Link to={`/edit?id=${siteId}`}>このサイトの管理人ですか？</Link></p>
+          ) : (<></>)}
+          
           <p>
             <Link to={`/support?id=${siteId}`}>このサイトについてサポート掲示板で問い合わせる</Link>
           </p>
