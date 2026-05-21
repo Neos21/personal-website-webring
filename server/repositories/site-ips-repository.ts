@@ -1,11 +1,7 @@
 import type { NewSiteIp } from '../../shared/types/site-ip';
 
 export class SiteIpsRepository {
-  private db: D1Database;
-  
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(private readonly db: D1Database) { }
   
   public async create(siteIp: NewSiteIp): Promise<number> {
     const result = await this.db

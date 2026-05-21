@@ -1,11 +1,7 @@
 import type { NewPost, PostPublic } from '../../shared/types/post';
 
 export class PostsRepository {
-  private db: D1Database;
-  
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(private readonly db: D1Database) { }
   
   public async findPage(pageSize: number, offset: number, siteId: number | null): Promise<Array<PostPublic>> {
     if(siteId == null) {

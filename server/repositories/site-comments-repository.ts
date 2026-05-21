@@ -1,11 +1,7 @@
 import type { NewSiteComment, SiteCommentPublic } from '../../shared/types/site-comment';
 
 export class SiteCommentsRepository {
-  private db: D1Database;
-  
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(private readonly db: D1Database) { }
   
   public async findBySiteId(siteId: number): Promise<Array<SiteCommentPublic>> {
     const result = await this.db

@@ -1,11 +1,7 @@
 import type { NewSite, Site, SiteAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
 
 export class SitesRepository {
-  private db: D1Database;
-  
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(private readonly db: D1Database) { }
   
   public async findAll(): Promise<Array<Site>> {
     const result = await this.db

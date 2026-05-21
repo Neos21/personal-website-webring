@@ -1,11 +1,7 @@
 import type { Tag } from '../../shared/types/tag';
 
 export class TagsRepository {
-  private db: D1Database;
-  
-  constructor(db: D1Database) {
-    this.db = db;
-  }
+  constructor(private readonly db: D1Database) { }
   
   /** タグ1件を大文字小文字区別せず取得する */
   public async findByNameCaseInsensitive(name: string): Promise<Tag | null> {
