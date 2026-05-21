@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 
+import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { PostsRepository } from '../../../repositories/posts-repository';
 
@@ -19,5 +20,5 @@ adminPosts.get('/', async context => {
   
   const postsRepository = new PostsRepository(context.env.DB);
   const items = await postsRepository.findPage(pageSize, offset, null);
-  return context.json({ result: { page, items } }, 200);
+  return context.json({ result: { page, items } }, httpStatusCode.ok);
 });

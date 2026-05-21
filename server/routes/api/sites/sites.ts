@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 
 import { comments, commentsPath } from './comments/comments';
+import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { idParamSchema } from '../../../../shared/schemas/site-id-param-schema';
 import { deleteSiteSchema, newSiteSchema, passwordDisplayName } from '../../../../shared/schemas/site-schema';
@@ -33,32 +34,32 @@ sites.get('/', async context => {
   
   const sitesRepository = new SitesRepository(context.env.DB);
   const items = await sitesRepository.findActivePage(pageSize, offset);
-  return context.json({ result: { page, items } }, 200);
+  return context.json({ result: { page, items } }, httpStatusCode.ok);
 });
 
 sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
+  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, httpStatusCode.badRequest);
   
   const siteId = siteIdResult.data;
   const sitesRepository = new SitesRepository(context.env.DB);
   
   const site = await sitesRepository.findActiveById(siteId);
-  if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, 404);
+  if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  return context.json({ result: site }, 200);
+  return context.json({ result: site }, httpStatusCode.ok);
 });
 
 sites.post('/', async context => {
   const denyIpsRepository = new DenyIpsRepository(context.env.DB);
   const ip = getIp(context);
-  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, httpStatusCode.forbidden);
   
   const body = await context.req.json().catch(() => null);
-  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, 400);
+  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const parsedResult = newSiteSchema.safeParse(body);
-  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, 400);
+  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, httpStatusCode.badRequest);
   
   const parsed = parsedResult.data;
   const sitesRepository = new SitesRepository(context.env.DB);
@@ -70,10 +71,10 @@ sites.post('/', async context => {
   const siteUrlService = new SiteUrlService();
   
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.turnstile_token, ip);
-  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, 400);
+  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
   const urlMatch = await siteUrlService.findSiteUrlMatch(sitesRepository, parsed.url);
-  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, 400);
+  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
   
   const rawPassword = typeof parsed.password === 'string' ? parsed.password : '';
   const passwordHash = rawPassword !== '' ? await hashPassword(rawPassword) : null;
@@ -95,19 +96,19 @@ sites.post('/', async context => {
   if(parsed.is_self === 0 && !isEmpty(parsed.recommender_comment)) await siteCommentsRepository.create({ content: parsed.recommender_comment!, ip, site_id: siteId, user_name: parsed.recommender_name });
   
   // 正規化後のタグ名を返しておく
-  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 201);
+  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, httpStatusCode.created);
 });
 
 sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const denyIpsRepository = new DenyIpsRepository(context.env.DB);
   const ip = getIp(context);
-  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, httpStatusCode.forbidden);
   
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
+  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, httpStatusCode.badRequest);
   
   const body = await context.req.json().catch(() => null);
-  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, 400);
+  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const siteId = siteIdResult.data;
   const sitesRepository = new SitesRepository(context.env.DB);
@@ -118,23 +119,23 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const siteUrlService = new SiteUrlService();
   
   const existing = await sitesRepository.findAuthById(siteId);
-  if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, 404);
+  if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   const parsedResult = newSiteSchema.safeParse(body);
-  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, 400);
+  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, httpStatusCode.badRequest);
   
   const parsed = parsedResult.data;
   const urlMatch = await siteUrlService.findSiteUrlMatch(sitesRepository, parsed.url, siteId);
-  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, 400);
+  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
   
   if(existing.is_self === 0) {
-    if(isEmpty(parsed.password)) return context.json({ error: `${passwordDisplayName}を設定することで自薦サイトに切り替えられます` }, 403);
+    if(isEmpty(parsed.password)) return context.json({ error: `${passwordDisplayName}を設定することで自薦サイトに切り替えられます` }, httpStatusCode.forbidden);
   }
   else {
-    if(isEmpty(existing.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, 403);
+    if(isEmpty(existing.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, httpStatusCode.forbidden);
     
     const currentHash = await hashPassword(typeof parsed.password === 'string' ? parsed.password : '');
-    if(currentHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, 401);
+    if(currentHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   }
   
   const rawPassword = typeof parsed.password === 'string' ? parsed.password : '';
@@ -159,38 +160,38 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const normalizedTags = await siteTagService.replaceNames(siteTagsRepository, tagsRepository, siteId, parsed.tags);
   
   // 正規化後のタグ名を返しておく
-  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 200);
+  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, httpStatusCode.ok);
 });
 
 sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const denyIpsRepository = new DenyIpsRepository(context.env.DB);
   const ip = getIp(context);
-  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, httpStatusCode.forbidden);
   
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
+  if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, httpStatusCode.badRequest);
   
   const body = await context.req.json().catch(() => null);
-  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, 400);
+  if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const siteId = siteIdResult.data;
   const sitesRepository = new SitesRepository(context.env.DB);
   const siteIpsRepository = new SiteIpsRepository(context.env.DB);
   
   const existing = await sitesRepository.findAuthById(siteId);
-  if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, 404);
-  if(isEmpty(existing.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, 403);
+  if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
+  if(isEmpty(existing.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, httpStatusCode.forbidden);
   
   const parsedResult = deleteSiteSchema.safeParse(body);
-  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, 400);
+  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, httpStatusCode.badRequest);
   
   const parsed = parsedResult.data;
   const passwordHash = await hashPassword(parsed.password);
-  if(passwordHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, 401);
+  if(passwordHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
   await sitesRepository.markDeleted(siteId);  // 論理削除する
   
   await siteIpsRepository.create({ ip, is_created: 0, is_self: existing.is_self, site_id: siteId });
   
-  return context.json({ result: { id: siteId } }, 200);
+  return context.json({ result: { id: siteId } }, httpStatusCode.ok);
 });
