@@ -7,15 +7,15 @@ import { EditSiteForm } from './components/edit-site-form';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { SitePublic } from '../../../shared/types/site';
+import type { SitePublicWithTags } from '../../../shared/types/site';
 
 export default function Edit(): ReactElement {
   const [searchParams] = useSearchParams();
   
   const idParam = searchParams.get('id');
-  const siteId = isEmpty(idParam) ? null : Number(idParam);
+  const siteId  = isEmpty(idParam) ? null : Number(idParam);
   
-  const [site     , setSite     ] = useState<SitePublic | null>(null);
+  const [site     , setSite     ] = useState<SitePublicWithTags | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error    , setError    ] = useState<string>('');
   
@@ -31,7 +31,7 @@ export default function Edit(): ReactElement {
       setError('');
       
       try {
-        const response = await ky.get(`/api/sites/${siteId}`).json<{ result: SitePublic; }>();
+        const response = await ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>();
         setSite(response.result);
       }
       catch(err) {
@@ -75,7 +75,7 @@ export default function Edit(): ReactElement {
           )}
           
           <p className="text-right" style={{ marginTop: '2rem' }}>
-            <Link to={`/site?id=${siteId}`}>サイト詳細へ戻る</Link>
+            <Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト詳細へ戻る</Link>
           </p>
         </>
       )}

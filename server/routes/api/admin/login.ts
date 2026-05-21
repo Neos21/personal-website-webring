@@ -19,19 +19,17 @@ adminLogin.post('/', async context => {
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsedResult = adminLoginSchema.safeParse(body);
-  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, httpStatusCode.badRequest);
-  
-  const parsed = parsedResult.data;
+  const parsed = adminLoginSchema.safeParse(body);
+  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const ip = getIp(context);
-  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.turnstile_token, ip);
+  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
-  if(parsed.password !== context.env.ADMIN_PASSWORD) return context.json({ error: `${adminPasswordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
+  if(parsed.data.password !== context.env.ADMIN_PASSWORD) return context.json({ error: `${adminPasswordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
   const now = Math.floor(Date.now() / 1000);
-  const adminTokenExpiresInSeconds = 60 * 60 * 24 * 30;  // 30日間
-  const token = await sign({ exp: now + adminTokenExpiresInSeconds, iat: now }, context.env.ADMIN_JWT_SECRET, 'HS256');
+  const tokenExpiresInSeconds = 60 * 60 * 24 * 30;  // 30日間
+  const token = await sign({ exp: now + tokenExpiresInSeconds, iat: now }, context.env.ADMIN_JWT_SECRET, 'HS256');
   return context.json({ result: { token } }, httpStatusCode.ok);
 });

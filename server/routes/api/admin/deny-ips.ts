@@ -23,24 +23,24 @@ adminDenyIps.post('/', async context => {
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsedResult = denyIpSchema.safeParse(body);
-  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, httpStatusCode.badRequest);
+  const parsed = denyIpSchema.safeParse(body);
+  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const denyIpsRepository = new DenyIpsRepository(context.env.DB);
-  if(await denyIpsRepository.isIpDenied(parsedResult.data.ip)) return context.json({ error: 'この IP アドレスは既に登録されています' }, httpStatusCode.badRequest);
+  if(await denyIpsRepository.isIpDenied(parsed.data.ip)) return context.json({ error: 'この IP アドレスは既に登録されています' }, httpStatusCode.badRequest);
   
-  const id = await denyIpsRepository.create(parsedResult.data.ip);
+  const id = await denyIpsRepository.create(parsed.data.ip);
   return context.json({ result: { id } }, httpStatusCode.created);
 });
 
 adminDenyIps.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
-  const idResult = idParamSchema.safeParse(context.req.param('id'));
-  if(!idResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, httpStatusCode.badRequest);
+  const idParsed = idParamSchema.safeParse(context.req.param('id'));
+  if(!idParsed.success) return context.json({ error: 'リクエストパラメータが不正です' }, httpStatusCode.badRequest);
   
   const denyIpsRepository = new DenyIpsRepository(context.env.DB);
-  const existing = await denyIpsRepository.findById(idResult.data);
+  const existing = await denyIpsRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象の IP アドレスが見つかりませんでした' }, httpStatusCode.notFound);
   
-  await denyIpsRepository.deleteById(idResult.data);
-  return context.json({ result: { id: idResult.data } }, httpStatusCode.ok);
+  await denyIpsRepository.deleteById(idParsed.data);
+  return context.json({ result: { id: idParsed.data } }, httpStatusCode.ok);
 });

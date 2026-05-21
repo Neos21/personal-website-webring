@@ -6,15 +6,17 @@ import { SiteCard } from './components/site-card';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { SitePublic } from '../../../shared/types/site';
+import type { SitePublicWithTags } from '../../../shared/types/site';
 
 export default function List(): ReactElement {
   const [searchParams] = useSearchParams();
   
-  const pageParam = searchParams.get('page');
-  const page = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
   
-  const [sites    , setSites    ] = useState<Array<SitePublic>>([]);
+  const [sites    , setSites    ] = useState<Array<SitePublicWithTags>>([]);
+  const [hasNext  , setHasNext  ] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error    , setError    ] = useState<string>('');
   
@@ -24,8 +26,9 @@ export default function List(): ReactElement {
       setError('');
       
       try {
-        const response = await ky.get(`/api/sites?page=${page}`).json<{ result: { page: number; sites: Array<SitePublic>; }; }>();
+        const response = await ky.get(`/api/sites?page=${page}`).json<{ result: { page: number; sites: Array<SitePublicWithTags>; has_next: boolean; }; }>();
         setSites(response.result.sites);
+        setHasNext(response.result.has_next);
       }
       catch(error) {
         const errorMessage = await extractApiErrorMessage(error, '一覧の取得に失敗しました');
@@ -36,10 +39,6 @@ export default function List(): ReactElement {
       }
     })();
   }, [page]);
-  
-  // TODO : `shared/constants/` で1ページの件数をサーバ・クライアントで共通管理するようにして、1ページの件数を変更可能にする
-  // TODO : 次ページが存在するか否かを API 側で判別してレスポンスに含める
-  const hasNextPage = sites.length === 100;  // 仮に100件取得できていたら次ページがある可能性が高い (正確な総件数が API から返らない前提)
   
   return (
     <main className="list-page page-container">
@@ -60,14 +59,12 @@ export default function List(): ReactElement {
           </div>
           
           <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-            {page > 1 ? (
-              <Link to={`/list?page=${page - 1}`}>&laquo; 前のページ</Link>
-            ) : (
-              <span></span>
+            {page > 1 && (
+              <Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>
             )}
             
-            {hasNextPage && (
-              <Link to={`/list?page=${page + 1}`}>次のページ &raquo;</Link>
+            {hasNext && (
+              <Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>
             )}
           </div>
         </>

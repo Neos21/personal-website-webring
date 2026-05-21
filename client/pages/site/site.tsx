@@ -8,19 +8,24 @@ import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { siteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/comment-schema';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { SitePublic } from '../../../shared/types/site';
+import type { SitePublicWithTags } from '../../../shared/types/site';
 import type { SiteCommentPublic } from '../../../shared/types/site-comment';
 
 export default function Site(): ReactElement {
   const [searchParams] = useSearchParams();
   
   const idParam = searchParams.get('id');
-  const siteId = isEmpty(idParam) ? null : Number(idParam);
+  const siteId  = isEmpty(idParam) ? null : Number(idParam);
   
-  const [site     , setSite     ] = useState<SitePublic | null>(null);
-  const [comments , setComments ] = useState<Array<SiteCommentPublic>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error    , setError    ] = useState<string>('');
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  
+  const [site          , setSite          ] = useState<SitePublicWithTags | null>(null);
+  const [comments      , setComments      ] = useState<Array<SiteCommentPublic>>([]);
+  const [commentHasNext, setCommentHasNext] = useState<boolean>(false);
+  const [isLoading     , setIsLoading     ] = useState<boolean>(true);
+  const [error         , setError         ] = useState<string>('');
   
   const [commentUserName, setCommentUserName   ] = useState<string>('');
   const [commentContent , setCommentContent    ] = useState<string>('');
@@ -41,22 +46,23 @@ export default function Site(): ReactElement {
       
       try {
         const [siteResponse, commentsResponse] = await Promise.all([
-          ky.get(`/api/sites/${siteId}`).json<{ result: SitePublic; }>(),
-          ky.get(`/api/sites/${siteId}/comments`).json<{ result: Array<SiteCommentPublic>; }>()
+          ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>(),
+          ky.get(`/api/sites/${siteId}/comments?page=${page}`).json<{ result: { page: number; comments: Array<SiteCommentPublic>; has_next: boolean; }; }>()
         ]);
         
         setSite(siteResponse.result);
-        setComments(commentsResponse.result);
+        setComments(commentsResponse.result.comments);
+        setCommentHasNext(commentsResponse.result.has_next);
       }
-      catch(err) {
-        const errorMessage = await extractApiErrorMessage(err, '情報の取得に失敗しました');
+      catch(error) {
+        const errorMessage = await extractApiErrorMessage(error, '情報の取得に失敗しました');
         setError(errorMessage);
       }
       finally {
         setIsLoading(false);
       }
     })();
-  }, [siteId]);
+  }, [siteId, page]);
   
   const onSubmitComment = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -68,18 +74,19 @@ export default function Site(): ReactElement {
       user_name: commentUserName,
       content  : commentContent
     };
-    const parsedResult = siteCommentSchema.safeParse(payload);
-    if(!parsedResult.success) return setCommentClientError(mergeIssues(parsedResult.error));
+    const parsed = siteCommentSchema.safeParse(payload);
+    if(!parsed.success) return setCommentClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      await ky.post(`/api/sites/${siteId}/comments`, { json: parsedResult.data }).json();
+      await ky.post(`/api/sites/${siteId}/comments`, { json: parsed.data }).json();
       
       setCommentUserName('');
       setCommentContent('');
       
-      const commentsResponse = await ky.get(`/api/sites/${siteId}/comments`).json<{ result: Array<SiteCommentPublic>; }>();
-      setComments(commentsResponse.result);
+      const response = await ky.get(`/api/sites/${siteId}/comments?page=${page}`).json<{ result: { page: number; comments: Array<SiteCommentPublic>; has_next: boolean; }; }>();
+      setComments(response.result.comments);
+      setCommentHasNext(response.result.has_next);
     }
     catch(error) {
       const errorMessage = await extractApiErrorMessage(error, 'コメントの投稿に失敗しました');
@@ -130,14 +137,27 @@ export default function Site(): ReactElement {
           </section>
           
           {site.is_self === 1 ? (
-            <p><Link to={`/edit?id=${siteId}`}>管理人様用 : 編集・削除</Link></p>
+            <p><Link to={{ pathname: '/edit', search: `?id=${siteId}` }}>管理人様用 : 編集・削除</Link></p>
           ) : site.is_self === 0 ? (
-            <p><Link to={`/edit?id=${siteId}`}>このサイトの管理人ですか？</Link></p>
-          ) : (<></>)}
+            <p><Link to={{ pathname: '/edit', search: `?id=${siteId}` }}>このサイトの管理人ですか？</Link></p>
+          ) : (
+            <></>
+          )}
           
           <p>
-            <Link to={`/support?id=${siteId}`}>このサイトについてサポート掲示板で問い合わせる</Link>
+            <Link to={{ pathname: '/support', search: `?id=${siteId}` }}>このサイトについてサポート掲示板で問い合わせる</Link>
           </p>
+          
+          {site.tags && site.tags.length > 0 && (
+            <div className="site-tags" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+              <strong style={{ display: 'block', marginBottom: '0.5rem' }}>タグ:</strong>
+              {site.tags.map(tag => (
+                <span key={tag.id} style={{ display: 'inline-block', background: '#e8f4f8', color: '#0277bd', padding: '0.25rem 0.5rem', borderRadius: '4px', marginRight: '0.5rem', fontSize: '0.9rem' }}>
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
           
           <hr style={{ margin: '2rem 0' }} />
           
@@ -147,17 +167,32 @@ export default function Site(): ReactElement {
             {comments.length === 0 ? (
               <p>まだコメントはありません。</p>
             ) : (
-              <div className="comments-list">
-                {comments.map(comment => (
-                  <article key={comment.id} className="comment" style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                    <div className="comment-meta" style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                      <span className="comment-author" style={{ fontWeight: 'bold' }}>{comment.user_name || '名無し'}</span>
-                      <span className="comment-date" style={{ marginLeft: '1rem' }}>{convertUtcToJst(comment.created_at)}</span>
-                    </div>
-                    <div className="comment-content pre-wrap">{comment.content}</div>
-                  </article>
-                ))}
-              </div>
+              <>
+                <div className="comments-list">
+                  {comments.map(comment => (
+                    <article key={comment.id} className="comment" style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                      <div className="comment-meta" style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                        <span className="comment-author" style={{ fontWeight: 'bold' }}>{comment.user_name || '名無し'}</span>
+                        <span className="comment-date" style={{ marginLeft: '1rem' }}>{convertUtcToJst(comment.created_at)}</span>
+                      </div>
+                      <div className="comment-content pre-wrap">{comment.content}</div>
+                    </article>
+                  ))}
+                </div>
+                
+                <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+                  {page > 1 ? (
+                    <Link to={`/site?id=${siteId}&page=${page - 1}`}>&laquo; 前のページ</Link>
+                  ) : (
+                    <span />
+                  )}
+                  {commentHasNext ? (
+                    <Link to={`/site?id=${siteId}&page=${page + 1}`}>次のページ &raquo;</Link>
+                  ) : (
+                    <span />
+                  )}
+                </div>
+              </>
             )}
             
             <form onSubmit={onSubmitComment} style={{ marginTop: '2rem', padding: '1rem', background: '#f9f9f9', borderRadius: '8px' }}>

@@ -14,44 +14,49 @@ import type { PostPublic } from '../../../shared/types/post';
 export default function Support(): ReactElement {
   const [searchParams] = useSearchParams();
   
-  const rawSiteId = searchParams.get('id');
-  const rawPage   = searchParams.get('page');
-  const pageCandidate = isEmpty(rawPage) ? 1 : Number(rawPage);
-  const page = Number.isInteger(pageCandidate) && pageCandidate > 0 ? pageCandidate : 1;
-  const siteId = isEmpty(rawSiteId) ? null : Number(rawSiteId);
-  const isSiteIdValid = isEmpty(rawSiteId) || (siteId != null && Number.isInteger(siteId) && siteId > 0);
+  const siteIdParam          = searchParams.get('id');
+  const initialSiteId        = isEmpty(siteIdParam) ? null : Number(siteIdParam);
+  const isValidInitialSiteId = isEmpty(siteIdParam) || (initialSiteId != null && Number.isInteger(initialSiteId) && initialSiteId > 0);
+  
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
   
   const [posts    , setPosts    ] = useState<Array<PostPublic>>([]);
+  const [hasNext  , setHasNext  ] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error    , setError    ] = useState<string>('');
   
+  const [formSiteId    , setFormSiteId    ] = useState<string>(initialSiteId != null ? String(initialSiteId) : '');
+  const [lookupSiteInfo, setLookupSiteInfo] = useState<{ id: number; site_name: string; url: string; } | null>(null);
+  const [lookupError   , setLookupError   ] = useState<string>('');
   const [userName      , setUserName      ] = useState<string>('');
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [turnstileKey  , setTurnstileKey  ] = useState<string>(String(Date.now()));  // `key` を変更すると Turnstile ウィジェットを再読み込みできる
   const [isSubmitting  , setIsSubmitting  ] = useState<boolean>(false);
   const [clientError   , setClientError   ] = useState<string>('');
   const [serverError   , setServerError   ] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
+    setError('');
+    setSuccessMessage('');
+    if(!isValidInitialSiteId) {
+      setError('サイト ID が不正です');
+      setIsLoading(false);
+      return;
+    }
+    
     (async () => {
-      setIsLoading(true);
-      setError('');
-      setSuccessMessage('');
-      
-      if(!isSiteIdValid) {
-        setError('サイト ID が不正です');
-        setIsLoading(false);
-        return;
-      }
-      
-      const query = new URLSearchParams();
-      query.set('page', String(page));
-      if(siteId != null) query.set('id', String(siteId));
-      
       try {
-        const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; }; }>();
+        const query = new URLSearchParams();
+        query.set('page', String(page));
+        if(initialSiteId != null) query.set('id', String(initialSiteId));
+        const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
         setPosts(response.result.posts);
+        setHasNext(response.result.has_next);
       }
       catch(error) {
         const errorMessage = await extractApiErrorMessage(error, '投稿一覧の取得に失敗しました');
@@ -61,7 +66,33 @@ export default function Support(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [page, rawSiteId, isSiteIdValid, siteId]);
+  }, [page, siteIdParam, isValidInitialSiteId, initialSiteId]);
+  
+  
+  
+  const handleSiteIdBlur = async (): Promise<void> => {
+    setLookupError('');
+    setLookupSiteInfo(null);
+    
+    if(isEmpty(formSiteId)) {
+      return;
+    }
+    
+    const inputSiteId = Number(formSiteId);
+    if(!Number.isInteger(inputSiteId) || inputSiteId <= 0) {
+      setLookupError('サイト ID は正の整数で指定してください');
+      return;
+    }
+    
+    try {
+      const response = await ky.get(`/api/sites/${inputSiteId}`).json<{ result: { id: number; site_name: string; url: string; }; }>();
+      setLookupSiteInfo(response.result);
+    }
+    catch(error) {
+      const errorMessage = await extractApiErrorMessage(error, 'サイト情報の取得に失敗しました');
+      setLookupError(errorMessage);
+    }
+  };
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -69,32 +100,36 @@ export default function Support(): ReactElement {
     setServerError('');
     setSuccessMessage('');
     
-    const payload: { site_id?: number | null; user_name?: string | null; content: string; turnstile_token: string; } = {
-      content,
-      turnstile_token: turnstileToken,
-      user_name: userName || null
-    };
-    if(siteId != null && isSiteIdValid) payload.site_id = siteId;
+    const submittedSiteId = isEmpty(formSiteId) ? null : Number(formSiteId);
+    const isValidSubmittedSiteId = isEmpty(formSiteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
     
-    const parsedResult = supportPostSchema.safeParse(payload);
-    if(!parsedResult.success) {
-      setClientError(mergeIssues(parsedResult.error));
-      return;
-    }
+    const payload = {
+      site_id        : isValidSubmittedSiteId ? submittedSiteId : null,
+      user_name      : userName || null,
+      content        : content,
+      turnstile_token: turnstileToken
+    };
+    const parsed = supportPostSchema.safeParse(payload);
+    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      await ky.post('/api/posts', { json: parsedResult.data }).json();
+      await ky.post('/api/posts', { json: parsed.data }).json();
+      
       setUserName('');
       setContent('');
+      setLookupSiteInfo(null);
       setTurnstileToken('');
+      setTurnstileKey(String(Date.now()));
       setSuccessMessage('投稿が送信されました。');
       
+      const submittedSiteId = isEmpty(formSiteId) ? null : Number(formSiteId);
       const query = new URLSearchParams();
-      query.set('page', String(page));
-      if(siteId != null) query.set('id', String(siteId));
-      const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; }; }>();
+      query.set('page', String(1));
+      if(submittedSiteId != null) query.set('id', String(submittedSiteId));
+      const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
       setPosts(response.result.posts);
+      setHasNext(response.result.has_next);
     }
     catch(error) {
       const errorMessage = await extractApiErrorMessage(error, '投稿の送信に失敗しました');
@@ -105,16 +140,12 @@ export default function Support(): ReactElement {
     }
   };
   
-  const hasNextPage = posts.length === 100;
-  const currentQuery = new URLSearchParams();
-  if(siteId != null) currentQuery.set('id', String(siteId));
-  
   return (
     <main className="support-page page-container">
       <h1>サポート掲示板</h1>
       
-      {siteId != null ? (
-        <p>このページはサイトID <strong>{siteId}</strong> に関する投稿を表示します。</p>
+      {initialSiteId != null ? (
+        <p>このページはサイトID <strong>{initialSiteId}</strong> に関する投稿を表示します。</p>
       ) : (
         <p>全体のサポート掲示板投稿を表示します。</p>
       )}
@@ -137,7 +168,9 @@ export default function Support(): ReactElement {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#555' }}>
                       <span>{post.user_name || '名無し'}</span>
                       <span>投稿日: {convertUtcToJst(post.created_at)}</span>
-                      {post.site_id != null && <span>サイトID: {post.site_id}</span>}
+                      {post.site_id != null && <span>
+                        サイトID: <Link to={{ pathname: '/support', search: `?id=${post.site_id}` }}>{post.site_id}</Link>
+                      </span>}
                     </div>
                     <div className="post-content pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</div>
                   </article>
@@ -146,16 +179,12 @@ export default function Support(): ReactElement {
             )}
             
             <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-              {page > 1 ? (
-                <Link to={`/support?${new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString()}`}>&laquo; 前のページ</Link>
-              ) : (
-                <span />
+              {page > 1 && (
+                <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
               )}
               
-              {hasNextPage ? (
-                <Link to={`/support?${new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString()}`}>次のページ &raquo;</Link>
-              ) : (
-                <span />
+              {hasNext && (
+                <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
               )}
             </div>
           </section>
@@ -164,6 +193,20 @@ export default function Support(): ReactElement {
             <h2>投稿する</h2>
             <form onSubmit={onSubmit}>
               <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                <label style={{ display: 'block', marginBottom: '1rem' }}>
+                  <div style={{ marginBottom: '0.5rem' }}>サイト ID <span style={{ color: '#666', fontSize: '0.9rem' }}>(任意)</span></div>
+                  <input type="number" value={formSiteId} min="1" placeholder="サイト ID" onChange={event => setFormSiteId(event.target.value)} onBlur={handleSiteIdBlur} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </label>
+                
+                {!isEmpty(lookupError) && <p className="text-error">{lookupError}</p>}
+                {lookupSiteInfo != null && (
+                  <div style={{ padding: '1rem', marginBottom: '1rem', background: '#e8f5e9', borderRadius: '6px', border: '1px solid #81c784' }}>
+                    <p style={{ margin: '0.25rem 0' }}>
+                      <strong>サイト名:</strong> <a href={lookupSiteInfo.url} target="_blank">{lookupSiteInfo.site_name}</a>
+                    </p>
+                  </div>
+                )}
+                
                 <label style={{ display: 'block', marginBottom: '1rem' }}>
                   <div style={{ marginBottom: '0.5rem' }}>{userNameDisplayName} <span style={{ color: '#666', fontSize: '0.9rem' }}>(任意・{userNameMaxLength}文字以内)</span></div>
                   <input type="text" value={userName} maxLength={userNameMaxLength} placeholder={userNameDisplayName} onChange={event => setUserName(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }} />
@@ -175,7 +218,7 @@ export default function Support(): ReactElement {
                 </label>
                 
                 <div style={{ marginBottom: '1rem' }}>
-                  <TurnstileField onTokenChange={setTurnstileToken} />
+                  <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
                 </div>
                 
                 {clientError && <p className="text-error">{clientError}</p>}
@@ -190,6 +233,12 @@ export default function Support(): ReactElement {
               </fieldset>
             </form>
           </section>
+          
+          {initialSiteId != null && (
+            <p style={{ marginTop: '2rem' }}>
+              <Link to={{ pathname: '/site', search: `?id=${initialSiteId}` }}>このサイトの詳細に戻る</Link>
+            </p>
+          )}
         </>
       )}
       

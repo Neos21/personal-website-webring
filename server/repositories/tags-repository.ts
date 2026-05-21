@@ -3,6 +3,7 @@ import type { Tag } from '../../shared/types/tag';
 export class TagsRepository {
   constructor(private readonly db: D1Database) { }
   
+  /** 管理画面向け全件取得 */
   public async findAll(): Promise<Array<Tag>> {
     const result = await this.db
       .prepare('SELECT id, name FROM tags ORDER BY id DESC')

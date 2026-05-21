@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
+import { postsConstants } from '../../../../shared/constants/posts';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { PostsRepository } from '../../../repositories/posts-repository';
 
@@ -14,11 +15,10 @@ adminPosts.use((context, next) => jwt({ secret: context.env.ADMIN_JWT_SECRET, al
 
 adminPosts.get('/', async context => {
   const page = convertToInteger(context.req.query('page')) ?? 1;
+  const offset = (page - 1) * postsConstants.pageSize;
   
-  const pageSize = 100;
-  const offset = (page - 1) * pageSize;
-  
-  const postsRepository = new PostsRepository(context.env.DB);
-  const posts = await postsRepository.findPage(pageSize, offset, null);
-  return context.json({ result: { page, posts } }, httpStatusCode.ok);
+  const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, null);
+  const hasNext = posts.length > postsConstants.pageSize;
+  if(hasNext) posts.length = postsConstants.pageSize;
+  return context.json({ result: { page, posts, has_next: hasNext } }, httpStatusCode.ok);
 });

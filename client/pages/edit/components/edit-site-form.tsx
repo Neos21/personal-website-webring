@@ -23,19 +23,13 @@ import {
   urlMaxLength
 } from '../../../../shared/schemas/site-schema';
 import { TurnstileField } from '../../../components/turnstile-field';
+import { bannerSizeToDimensions, type BannerSize } from '../../../helpers/banner-size-to-dimensions';
 import { extractApiErrorMessage } from '../../../helpers/extract-api-error-message';
 
-import type { SitePublic } from '../../../../shared/types/site';
-
-type BannerSize = '200x40' | '88x31';
+import type { SitePublicWithTags } from '../../../../shared/types/site';
 
 type Props = {
-  site: SitePublic;
-};
-
-const bannerSizeToDimensions = (bannerSize: BannerSize): { banner_height: number; banner_width: number; } => {
-  if(bannerSize === '88x31') return { banner_height: 31, banner_width: 88 };
-  return { banner_height: 40, banner_width: 200 };
+  site: SitePublicWithTags;
 };
 
 export function EditSiteForm({ site }: Props): ReactElement {
@@ -80,16 +74,16 @@ export function EditSiteForm({ site }: Props): ReactElement {
       turnstile_token    : turnstileToken,
       url                : url
     };
-    const parsedResult = newSiteSchema.safeParse(payload);
-    if(!parsedResult.success) return setClientError(mergeIssues(parsedResult.error));
+    const parsed = newSiteSchema.safeParse(payload);
+    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      const response = await ky.put(`/api/sites/${site.id}`, { json: parsedResult.data }).json<{ result: { id: number; tags: Array<string>; warning: string | null; }; }>();
-      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });
+      const response = await ky.put(`/api/sites/${site.id}`, { json: parsed.data }).json<{ result: { id: number; tags: Array<string>; warning: string | null; }; }>();
+      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });  // TODO : この state・warning は使ってるのか？
     }
     catch(error) {
-      const errorMessage = await extractApiErrorMessage(error, '更新に失敗しました');
+      const errorMessage = await extractApiErrorMessage(error, '編集に失敗しました');
       setServerError(errorMessage);
     }
     finally {
@@ -125,7 +119,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
         <label>
           <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></div>
           <input type="text" placeholder={tagDisplayName} value={tagsInput} onChange={event => setTagsInput(event.target.value)} required />
-          {/* Note : tags は API の戻り値に含まれていないため空欄で表示しています。更新時はここに入力した値で上書きされます。 */}
+          {/* TODO : tags は API の戻り値に含まれていないため空欄で表示しています。更新時はここに入力した値で上書きされます。 */}
         </label>
         
         <label>

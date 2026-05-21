@@ -1,3 +1,5 @@
+import type { Tag } from './tag';
+
 export type Site = {
   id: number;
   is_self: number;
@@ -15,6 +17,8 @@ export type Site = {
 };
 
 export type SitePublic = Omit<Site, 'password_hash' | 'is_deleted'>;
+
+export type SitePublicWithTags = SitePublic & { tags: Array<Tag>; };
 
 export type SiteAuth = Pick<Site, 'id' | 'is_deleted' | 'password_hash' | 'is_self'>;
 

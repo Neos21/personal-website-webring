@@ -3,6 +3,7 @@ import type { NewSite, Site, SiteAuth, SitePublic, SiteUrl, UpdateSite } from '.
 export class SitesRepository {
   constructor(private readonly db: D1Database) { }
   
+  /** 管理画面向け全件取得 */
   public async findAll(): Promise<Array<Site>> {
     const result = await this.db
       .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites')
@@ -10,9 +11,10 @@ export class SitesRepository {
     return result.results ?? [];
   }
   
+  /** ページング処理付き一覧 */
   public async findActivePage(pageSize: number, offset: number): Promise<Array<SitePublic>> {
     const result = await this.db
-      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, created_at, updated_at FROM sites WHERE is_deleted = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, created_at, updated_at FROM sites WHERE is_deleted = 0 ORDER BY id DESC LIMIT ? OFFSET ?')
       .bind(pageSize, offset)
       .all<SitePublic>();
     return result.results ?? [];

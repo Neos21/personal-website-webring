@@ -27,22 +27,8 @@ import {
   urlMaxLength
 } from '../../../../shared/schemas/site-schema';
 import { TurnstileField } from '../../../components/turnstile-field';
+import { bannerSizeToDimensions, type BannerSize } from '../../../helpers/banner-size-to-dimensions';
 import { extractApiErrorMessage } from '../../../helpers/extract-api-error-message';
-
-type BannerSize = '200x40' | '88x31';
-
-type CreateSiteResult = {
-  result: {
-    id: number;
-    tags: Array<string>;
-    warning: string | null;
-  };
-};
-
-const bannerSizeToDimensions = (bannerSize: BannerSize): { banner_height: number; banner_width: number; } => {
-  if(bannerSize === '88x31') return { banner_height: 31, banner_width: 88 };
-  return { banner_height: 40, banner_width: 200 };
-};
 
 export function NewSiteForm(): ReactElement {
   const navigate = useNavigate();
@@ -98,14 +84,13 @@ export function NewSiteForm(): ReactElement {
       turnstile_token    : turnstileToken,
       url                : url
     };
-    
-    const parsedResult = newSiteSchema.safeParse(payload);
-    if(!parsedResult.success) return setClientError(mergeIssues(parsedResult.error));
+    const parsed = newSiteSchema.safeParse(payload);
+    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      const response = await ky.post('/api/sites', { json: parsedResult.data }).json<CreateSiteResult>();
-      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });
+      const response = await ky.post('/api/sites', { json: parsed.data }).json<{ result: { id: number; tags: Array<string>; warning: string | null; }; }>();
+      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });  // TODO : この state・warning は使ってるのか？
     }
     catch(error) {
       const errorMessage = await extractApiErrorMessage(error, '登録に失敗しました');
