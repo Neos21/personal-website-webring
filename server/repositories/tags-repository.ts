@@ -7,6 +7,7 @@ export class TagsRepository {
     this.db = db;
   }
   
+  /** タグ1件を大文字小文字区別せず取得する */
   public async findByNameCaseInsensitive(name: string): Promise<Tag | null> {
     return await this.db
       .prepare('SELECT id, name FROM tags WHERE lower(name) = lower(?) LIMIT 1')
@@ -22,10 +23,11 @@ export class TagsRepository {
     return result.meta.last_row_id;
   }
   
-  public async findOrCreate(name: string): Promise<number> {
+  public async findOrCreate(name: string): Promise<Tag> {
     const existing = await this.findByNameCaseInsensitive(name);
-    if(existing != null) return existing.id;
+    if(existing != null) return existing;
     
-    return await this.create(name);
+    const id = await this.create(name);
+    return { id, name };
   }
 }

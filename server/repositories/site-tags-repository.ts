@@ -1,17 +1,11 @@
-import { TagsRepository } from './tags-repository';
-import { isEmpty } from '../../shared/helpers/is-empty';
-
-
 export class SiteTagsRepository {
   private db: D1Database;
   
-  private tagsRepository: TagsRepository;
-  
   constructor(db: D1Database) {
     this.db = db;
-    this.tagsRepository = new TagsRepository(db);
   }
   
+  /** サイト ID とタグ ID を紐付ける */
   public async attach(siteId: number, tagId: number): Promise<void> {
     await this.db
       .prepare('INSERT OR IGNORE INTO site_tags (site_id, tag_id) VALUES (?, ?)')
@@ -19,21 +13,22 @@ export class SiteTagsRepository {
       .run();
   }
   
-  public async attachNames(siteId: number, tags: Array<string>): Promise<void> {
-    const uniqueTags = [...new Map(tags.map(tag => [tag.trim().toLowerCase(), tag.trim()])).values()];
-    for(const tag of uniqueTags) {
-      if(isEmpty(tag)) continue;
-      
-      const tagId = await this.tagsRepository.findOrCreate(tag);
-      await this.attach(siteId, tagId);
-    }
+  /** 複数のタグ ID を指定のサイト ID に紐付ける */
+  public async attachTagIds(siteId: number, tagIds: Array<number>): Promise<void> {
+    for(const tagId of tagIds) await this.attach(siteId, tagId);
   }
   
-  public async replaceNames(siteId: number, tags: Array<string>): Promise<void> {
+  /** 指定のサイト ID に紐付くタグを全て削除する */
+  public async deleteBySiteId(siteId: number): Promise<void> {
     await this.db
       .prepare('DELETE FROM site_tags WHERE site_id = ?')
       .bind(siteId)
       .run();
-    await this.attachNames(siteId, tags);
+  }
+  
+  /** 指定のサイト ID に紐付くタグ ID を更新する (一旦全削除 → 新規追加とする) */
+  public async replaceTagIds(siteId: number, tagIds: Array<number>): Promise<void> {
+    await this.deleteBySiteId(siteId);
+    await this.attachTagIds(siteId, tagIds);
   }
 }

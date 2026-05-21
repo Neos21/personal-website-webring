@@ -13,6 +13,8 @@ import { SiteCommentsRepository } from '../../../repositories/site-comments-repo
 import { SiteIpsRepository } from '../../../repositories/site-ips-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
 import { SitesRepository } from '../../../repositories/sites-repository';
+import { TagsRepository } from '../../../repositories/tags-repository';
+import { SiteTagService } from '../../../services/site-tag-service';
 import { SiteUrlService } from '../../../services/site-url-service';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
@@ -58,6 +60,8 @@ sites.post('/', async context => {
   const siteIpsRepository = new SiteIpsRepository(context.env.DB);
   const siteTagsRepository = new SiteTagsRepository(context.env.DB);
   const siteCommentsRepository = new SiteCommentsRepository(context.env.DB);
+  const tagsRepository = new TagsRepository(context.env.DB);
+  const siteTagService = new SiteTagService();
   const siteUrlService = new SiteUrlService();
   
   const ip = getIp(context);
@@ -82,11 +86,12 @@ sites.post('/', async context => {
   });
   await siteIpsRepository.create({ ip, is_created: 1, is_self: parsed.is_self, site_id: siteId });
   
-  if(parsed.tags.length > 0) await siteTagsRepository.attachNames(siteId, parsed.tags);
+  const normalizedTags = await siteTagService.attachNames(siteTagsRepository, tagsRepository, siteId, parsed.tags);
   
   if(parsed.is_self === 0 && !isEmpty(parsed.recommender_comment)) await siteCommentsRepository.create({ content: parsed.recommender_comment!, ip, site_id: siteId, user_name: parsed.recommender_name });
   
-  return context.json({ result: { id: siteId, warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 201);
+  // 正規化後のタグ名を返しておく
+  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 201);
 });
 
 sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
@@ -100,6 +105,8 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const sitesRepository = new SitesRepository(context.env.DB);
   const siteIpsRepository = new SiteIpsRepository(context.env.DB);
   const siteTagsRepository = new SiteTagsRepository(context.env.DB);
+  const tagsRepository = new TagsRepository(context.env.DB);
+  const siteTagService = new SiteTagService();
   const siteUrlService = new SiteUrlService();
   
   const existing = await sitesRepository.findAuthById(siteId);
@@ -142,9 +149,10 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const ip = getIp(context);
   await siteIpsRepository.create({ ip, is_created: 0, is_self: isSelf, site_id: siteId });
   
-  await siteTagsRepository.replaceNames(siteId, parsed.tags);
+  const normalizedTags = await siteTagService.replaceNames(siteTagsRepository, tagsRepository, siteId, parsed.tags);
   
-  return context.json({ result: { id: siteId, warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 200);
+  // 正規化後のタグ名を返しておく
+  return context.json({ result: { id: siteId, tags: normalizedTags.map(tag => tag.name), warning: urlMatch.nearMatchId != null ? `近い URL が登録済みです : ID [${urlMatch.nearMatchId}]` : null } }, 200);
 });
 
 sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
