@@ -90,11 +90,11 @@ export const newSiteSchema = z.object({
   banner_width        : z.coerce.number({ error: `${bannerWidthDisplayName}に数値が指定されていません` })
                           .int({ error: `${bannerWidthDisplayName}に整数が指定されていません` })
                           .min(1, { error: `${bannerWidthDisplayName}に1以上の整数が指定されていません` })
-                          .nullable(),
+                          .nullish(),
   banner_height       : z.coerce.number({ error: `${bannerHeightDisplayName}に数値が指定されていません` })
                           .int({ error: `${bannerHeightDisplayName}に整数が指定されていません` })
                           .min(1, { error: `${bannerHeightDisplayName}に1以上の整数が指定されていません` })
-                          .nullable(),
+                          .nullish(),
   password            : z.preprocess(
                           value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
                           z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })

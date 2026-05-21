@@ -12,7 +12,7 @@ export const supportPostSchema = z.object({
   site_id         : z.coerce.number({ error: `${siteIdDisplayName} 数値が指定されていません` })
                       .int({ error: `${siteIdDisplayName} に整数が指定されていません` })
                       .min(1, { error: `${siteIdDisplayName} に1以上の整数が指定されていません` })
-                      .nullable(),
+                      .nullish(),
   user_name       : z.preprocess(
                       value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
                       z.string({ error: `${userNameDisplayName}に文字列でないデータが入力されています` })
