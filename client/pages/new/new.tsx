@@ -1,6 +1,6 @@
-import type { ReactElement } from 'react';
+import { NewSiteForm } from './components/new-site-form';
 
-import { NewSiteForm } from '../../components/new-site-form';
+import type { ReactElement } from 'react';
 
 export default function New(): ReactElement {
   return (

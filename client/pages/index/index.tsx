@@ -6,6 +6,7 @@ export default function Index(): ReactElement {
     <main className="index-page page-container">
       <h1>個人サイトウェブリング</h1>
       <p><Link to="/new">新規登録</Link></p>
+      <p><Link to="/list">登録済サイト一覧</Link></p>
     </main>
   );
 }

@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 
 import { httpStatusCode } from '../../../../../shared/constants/http-status-code';
+import { mergeIssues } from '../../../../../shared/helpers/merge-issues';
 import { siteCommentSchema } from '../../../../../shared/schemas/comment-schema';
 import { idParamSchema } from '../../../../../shared/schemas/site-id-param-schema';
 import { getIp } from '../../../../helpers/get-ip';
-import { mergeIssues } from '../../../../../shared/helpers/merge-issues';
 import { DenyIpsRepository } from '../../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../../repositories/site-comments-repository';
 import { SitesRepository } from '../../../../repositories/sites-repository';

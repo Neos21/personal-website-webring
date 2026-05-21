@@ -2,9 +2,8 @@ import ky from 'ky';
 import { useCallback, useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { TurnstileField } from './turnstile-field';
-import { isEmpty } from '../../shared/helpers/is-empty';
-import { mergeIssues } from '../../shared/helpers/merge-issues';
+import { isEmpty } from '../../../../shared/helpers/is-empty';
+import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import {
   bannerUrlDisplayName,
   bannerUrlMaxLength,
@@ -26,8 +25,9 @@ import {
   tagsMax,
   urlDisplayName,
   urlMaxLength
-} from '../../shared/schemas/site-schema';
-import { extractApiErrorMessage } from '../helpers/extract-api-error-message';
+} from '../../../../shared/schemas/site-schema';
+import { TurnstileField } from '../../../components/turnstile-field';
+import { extractApiErrorMessage } from '../../../helpers/extract-api-error-message';
 
 type BannerSize = '200x40' | '88x31';
 
