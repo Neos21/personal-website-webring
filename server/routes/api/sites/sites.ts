@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { comments, commentsPath } from './comments/comments';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { idParamSchema } from '../../../../shared/schemas/site-id-param-schema';
-import { newSiteSchema, passwordDisplayName } from '../../../../shared/schemas/site-schema';
+import { deleteSiteSchema, newSiteSchema, passwordDisplayName } from '../../../../shared/schemas/site-schema';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
@@ -168,14 +168,14 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   
   const existing = await sitesRepository.findAuthById(siteId);
   if(existing == null || existing.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, 404);
-  
-  const password = typeof body.password === 'string' ? body.password.trim() : '';
-  if(password === '') return context.json({ error: `${passwordDisplayName}を入力してください` }, 400);
-  
   if(isEmpty(existing.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, 403);
   
-  const currentHash = await hashPassword(password);
-  if(currentHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, 401);
+  const parsedResult = deleteSiteSchema.safeParse(body);
+  if(!parsedResult.success) return context.json({ error: mergeIssues(parsedResult.error) }, 400);
+  
+  const parsed = parsedResult.data;
+  const passwordHash = await hashPassword(parsed.password);
+  if(passwordHash !== existing.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, 401);
   
   await sitesRepository.markDeleted(siteId);  // 論理削除する
   

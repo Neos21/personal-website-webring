@@ -136,3 +136,12 @@ export const newSiteSchema = z.object({
     if(!isValidSize) context.addIssue({ code: 'custom', message: 'バナー画像のサイズは 200x40 または 88x31 のいずれかを選択してください' });
   }
 });
+
+export const deleteSiteSchema = z.object({
+  password: z.preprocess(
+              value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+              z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
+                .min(1, { error: `${passwordDisplayName}を入力してください` })
+                .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
+            )
+});
