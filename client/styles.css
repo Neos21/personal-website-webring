@@ -1,5 +1,10 @@
 /* Globals */
 
+:root {
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", Meiryo, sans-serif, "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-family-monospace : "Noto Sans Mono CJK JP", Osaka-mono, "MS Gothic", Menlo, Consolas, Courier, "Courier New"                                                                      , monospace , "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
 *, ::before, ::after {
   box-sizing: border-box;
 }
@@ -7,7 +12,7 @@
 html {
   min-height: 100%;
   color: #000;
-  font-family: sans-serif, "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: var(--font-family-sans-serif);
   text-decoration-skip-ink: none;
   word-break: break-all;
   line-height: 1.7;
@@ -21,96 +26,120 @@ body {
   margin: 0;
 }
 
+a {
+  color: #00f;
+  text-decoration: none;
+  
+  &:hover {
+    color: #f00;
+    text-decoration: underline;
+  }
+}
+
+input[type="text"], input[type="url"], input[type="password"], textarea, button {
+  border: 2px dashed #2abbf4;
+  border-radius: 4px;
+  padding: .3rem .5rem;
+  color: #0080ff;
+  font-size: 1rem;
+  font-family: var(--font-family-monospace);
+  background: #ecf9ff;
+  
+  &::placeholder {
+    color: rgba(0, 128, 255, .5);
+  }
+}
+
+input[type="text"], input[type="url"], input[type="password"], textarea {
+  display: block;
+  width: 100%;
+}
+
 textarea {
   min-height: 6rem;
   resize: vertical;
 }
 
+button {
+  font: inherit;
+  cursor: pointer;
+  
+  &:disabled {
+    cursor: not-allowed;
+  }
+  &:hover {
+    background: #d1f1ff;
+  }
+  &:focus {
+    background: #b7e9ff;
+  }
+}
 
-/* Classes */
+fieldset {
+  margin: 1.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  
+  & > legend {
+    font-weight: bold;
+  }
+  
+  & > label {
+    display: block;
+    margin: 1rem 0;
+  }
+  & > label:first-of-type {
+    margin-top: .5rem;
+  }
+  
+  & .form-label {
+    margin-bottom: .25rem;
+    font-weight: bold;
+  }
+  & .form-label-memo {
+    display: inline-block;
+    margin-left: .5rem;
+    color: #666;
+    font-size: .86rem;
+    font-weight: normal;
+  }
+}
+
+
+/* Utilities */
 
 .turnstile-wrapper { min-height: 65px; }
 
 .text-muted   { color: #666; }
-.text-success { color: #0a6f3c; }
-.text-error   { color: #a51717; }
+.text-success { color: #063; }
+.text-error   { color: #d00; }
+
+.text-left   { text-align: left  ; }
+.text-center { text-align: center; }
+.text-right  { text-align: right ; }
+
+.text-normal { font-weight: normal; }
+.text-bold   { font-weight: bold  ; }
+
+.text-small { font-size: .86rem; }
 
 .nowrap   { white-space: nowrap;   }
 .pre-wrap { white-space: pre-wrap; }
 
 
-/* Form */
+/* Form Classes */
 
-.new-page,
-.new-site-form {
-  max-width: 40rem;
+.form-radio-2columns {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  column-gap: 1rem
+}
+
+
+/* Page Layouts */
+
+.page-container {
+  max-width: 60rem;
   margin: 0 auto;
   padding: 1rem;
-}
-
-.new-site-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-field,
-.form-fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: .35rem;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.form-fieldset {
-  gap: .5rem;
-}
-
-.form-field label,
-.form-label,
-.form-fieldset legend {
-  font-weight: 700;
-}
-
-.form-field input[type="text"],
-.form-field input[type="url"],
-.form-field input[type="password"],
-.form-field textarea {
-  width: 100%;
-  padding: .5rem;
-  font: inherit;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form-radio {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  margin-right: 1rem;
-  font-weight: 400;
-}
-
-.form-message {
-  margin: 0;
-}
-
-.form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-}
-
-.form-actions button {
-  padding: .5rem 1.25rem;
-  font: inherit;
-  cursor: pointer;
-}
-
-.form-actions button:disabled {
-  cursor: not-allowed;
-  opacity: .6;
 }

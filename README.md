@@ -61,48 +61,43 @@
 - テーブル定義は以下に記載して管理するのみとし、Cloudflare D1 への適用は手動で行う
 
 ```sql
--- サイト
-CREATE TABLE sites (
-  id               INTEGER  PRIMARY KEY  AUTOINCREMENT,                         -- ID
-  is_self          INTEGER  NOT NULL     CHECK (is_self IN 0, 1),               -- 他薦 `0` or 自薦 `1` (他薦登録された後に管理人が名乗り出た場合は自薦に切り替える)
-  url              TEXT     NOT NULL     UNIQUE,                                -- URL
-  site_name        TEXT     NOT NULL,                                           -- サイト名
-  owner_name       TEXT,                                                        -- 管理人名 (任意)
-  description      TEXT,                                                        -- サイトの説明 (任意)
-  banner_url       TEXT,                                                        -- バナー画像 URL (任意)
-  banner_width     INTEGER,                                                     -- バナー画像の横幅ピクセル (バナー画像 URL を指定した場合は必須)
-  banner_height    INTEGER,                                                     -- バナー画像の高さピクセル (バナー画像 URL を指定した場合は必須)
-  password_hash    TEXT,                                                        -- 管理パスワード (自薦の場合のみ必須・他薦の場合は入力不可)
-  created_at       TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP,             -- 登録日時
-  updated_at       TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP,             -- 更新日時
-  is_deleted       INTEGER  NOT NULL     CHECK (is_deleted IN 0, 1)  DEFAULT 0  -- 論理削除した場合は `1` (管理人による削除申告・リングマスターの判断で物理削除せず削除扱いにする場合)
+CREATE TABLE sites (  -- サイト
+  id               INTEGER  PRIMARY KEY  AUTOINCREMENT,                           -- ID
+  is_self          INTEGER  NOT NULL     CHECK (is_self IN (0, 1)),               -- 他薦 `0` or 自薦 `1` (他薦登録された後に管理人が名乗り出た場合は自薦に切り替える)
+  url              TEXT     NOT NULL     UNIQUE,                                  -- URL
+  site_name        TEXT     NOT NULL,                                             -- サイト名
+  owner_name       TEXT,                                                          -- 管理人名 (任意)
+  description      TEXT,                                                          -- サイトの説明 (任意)
+  banner_url       TEXT,                                                          -- バナー画像 URL (任意)
+  banner_width     INTEGER,                                                       -- バナー画像の横幅ピクセル (バナー画像 URL を指定した場合は必須)
+  banner_height    INTEGER,                                                       -- バナー画像の高さピクセル (バナー画像 URL を指定した場合は必須)
+  password_hash    TEXT,                                                          -- 管理パスワード (自薦の場合のみ必須・他薦の場合は入力不可)
+  created_at       TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP,               -- 登録日時
+  updated_at       TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP,               -- 更新日時
+  is_deleted       INTEGER  NOT NULL     CHECK (is_deleted IN (0, 1))  DEFAULT 0  -- 論理削除した場合は `1` (管理人による削除申告・リングマスターの判断で物理削除せず削除扱いにする場合)
 );
 
--- タグ
-CREATE TABLE tags (
+CREATE TABLE tags (  -- タグ
   id    INTEGER  PRIMARY KEY  AUTOINCREMENT,  -- ID
   name  TEXT     NOT NULL     UNIQUE          -- タグ名
 );
 
--- サイトに付与されたタグ
-CREATE TABLE site_tags (
+CREATE TABLE site_tags (  -- サイトに付与されたタグ
   site_id  INTEGER  NOT NULL  REFERENCES sites(id),  -- サイト ID (`sites.id`)
   tag_id   INTEGER  NOT NULL  REFERENCES tags(id),   -- タグ ID (`tags.id`)
   PRIMARY KEY (site_id, tag_id)
 );
 
--- サイト登録・更新時の IP アドレス (荒らし対策用)
-CREATE TABLE site_ips (
-  id          INTEGER  PRIMARY KEY  AUTOINCREMENT,               -- ID
-  site_id     INTEGER  NOT NULL     REFERENCES sites(id),        -- サイト ID (`sites.id`)
-  is_created  INTEGER  NOT NULL     CHECK (is_created IN 0, 1),  -- 新規登録時は `1`・編集と削除時は `0`
-  is_self     INTEGER  NOT NULL     CHECK (is_self IN 0, 1),     -- 他薦 `0` or 自薦 `1`
-  ip          TEXT     NOT NULL,                                 -- IP アドレス
-  created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP    -- 登録日時
+CREATE TABLE site_ips (  -- サイト登録・編集・削除時の IP アドレス (荒らし対策用)
+  id          INTEGER  PRIMARY KEY  AUTOINCREMENT,                 -- ID
+  site_id     INTEGER  NOT NULL     REFERENCES sites(id),          -- サイト ID (`sites.id`)
+  is_created  INTEGER  NOT NULL     CHECK (is_created IN (0, 1)),  -- 新規登録時は `1`・編集と削除時は `0`
+  is_self     INTEGER  NOT NULL     CHECK (is_self    IN (0, 1)),  -- 他薦 `0` or 自薦 `1`
+  ip          TEXT     NOT NULL,                                   -- IP アドレス
+  created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP      -- 登録日時
 );
 
--- サイトへのコメント
-CREATE TABLE site_comments (
+CREATE TABLE site_comments (  -- サイトへのコメント
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
   site_id     INTEGER  NOT NULL     REFERENCES sites(id),      -- サイト ID (`sites.id`)
   user_name   TEXT,                                            -- ハンドルネーム (任意)
@@ -111,8 +106,7 @@ CREATE TABLE site_comments (
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
 );
 
--- サポート掲示板の投稿
-CREATE TABLE posts (
+CREATE TABLE posts (  -- サポート掲示板の投稿
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,                          -- ID
   site_id     INTEGER               REFERENCES sites(id),                   -- サイト ID (`sites.id`)・未指定の場合はサイトに紐付かない内容の問合せ
   user_name   TEXT,                                                         -- ハンドルネーム (任意)
@@ -122,8 +116,7 @@ CREATE TABLE posts (
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP               -- 登録日時
 );
 
--- IP 制限 (荒らし対策用)
-CREATE TABLE deny_ips (
+CREATE TABLE deny_ips (  -- IP 制限 (荒らし対策用)
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
   ip          TEXT     NOT NULL     UNIQUE,                    -- IP アドレス
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時

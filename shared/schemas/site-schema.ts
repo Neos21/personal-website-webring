@@ -68,6 +68,7 @@ export const newSiteSchema = z.object({
                           value => {
                             if(value == null) return [];
                             if(Array.isArray(value)) return value;
+                            // 文字列の場合、スペースまたはカンマで区切り配列にする
                             if(typeof value === 'string') return value
                               .split((/[\s,]+/))
                               .map(tag => typeof tag === 'string' ? tag.trim() : String(tag).trim())

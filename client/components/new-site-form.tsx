@@ -117,94 +117,99 @@ export function NewSiteForm(): ReactElement {
   };
   
   return (
-    <form className="new-site-form" onSubmit={onSubmit}>
-      <fieldset className="form-fieldset">
+    <form onSubmit={onSubmit}>
+      <fieldset>
         <legend>登録種別</legend>
-        <label className="form-radio">
-          <input checked={isSelf === 0} name="is_self" onChange={() => handleIsSelfChange(0)} type="radio" value="0" />
-          <span>他薦</span>
-        </label>
-        <label className="form-radio">
-          <input checked={isSelf === 1} name="is_self" onChange={() => handleIsSelfChange(1)} type="radio" value="1" />
-          <span>自薦</span>
-        </label>
+        
+        <div className="form-radio-2columns">
+          <label>
+            <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => handleIsSelfChange(0)} /> 他薦
+          </label>
+          <label>
+            <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => handleIsSelfChange(1)} /> 自薦
+          </label>
+        </div>
       </fieldset>
       
-      <div className="form-field">
-        <label htmlFor="new-site-form-site-name">{siteNameDisplayName} <span className="text-muted">(必須・{siteNameMaxLength}文字以内)</span></label>
-        <input id="new-site-form-site-name" maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required type="text" value={siteName} />
-      </div>
-      
-      <div className="form-field">
-        <label htmlFor="new-site-form-url">{urlDisplayName} <span className="text-muted">(必須・{urlMaxLength}文字以内)</span></label>
-        <input id="new-site-form-url" maxLength={urlMaxLength} onChange={event => setUrl(event.target.value)} required type="url" value={url} />
-      </div>
-      
-      <div className="form-field">
-        <label htmlFor="new-site-form-owner-name">{ownerNameDisplayName} <span className="text-muted">(任意・{ownerNameMaxLength}文字以内)</span></label>
-        <input id="new-site-form-owner-name" maxLength={ownerNameMaxLength} onChange={event => setOwnerName(event.target.value)} type="text" value={ownerName} />
-      </div>
-      
-      <div className="form-field">
-        <label htmlFor="new-site-form-description">{descriptionDisplayName} <span className="text-muted">(任意・{descriptionMaxLength}文字以内)</span></label>
-        <textarea id="new-site-form-description" maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={5} value={description} />
-      </div>
-      
-      <div className="form-field">
-        <label htmlFor="new-site-form-tags">{tagDisplayName} <span className="text-muted">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></label>
-        <input id="new-site-form-tags" onChange={event => setTagsInput(event.target.value)} required type="text" value={tagsInput} />
-      </div>
-      
-      <div className="form-field">
-        <label htmlFor="new-site-form-banner-url">{bannerUrlDisplayName} <span className="text-muted">(任意・{bannerUrlMaxLength}文字以内)</span></label>
-        <input id="new-site-form-banner-url" maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} type="url" value={bannerUrl} />
-      </div>
-      
-      <fieldset className="form-fieldset">
-        <legend>バナーサイズ <span className="text-muted">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></legend>
-        <label className="form-radio">
-          <input checked={bannerSize === '200x40'} name="banner_size" onChange={() => setBannerSize('200x40')} type="radio" value="200x40" />
-          <span>200x40</span>
+      <fieldset>
+        <legend>サイト情報</legend>
+        
+        <label>
+          <div className="form-label">{siteNameDisplayName} <span className="form-label-memo">(必須・{siteNameMaxLength}文字以内)</span></div>
+          <input type="text" placeholder={siteNameDisplayName} value={siteName} maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required />
         </label>
-        <label className="form-radio">
-          <input checked={bannerSize === '88x31'} name="banner_size" onChange={() => setBannerSize('88x31')} type="radio" value="88x31" />
-          <span>88x31</span>
+        
+        <label>
+          <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
+          <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => setUrl(event.target.value)} required />
         </label>
+        
+        <label>
+          <div className="form-label">{ownerNameDisplayName} <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>
+          <input type="text" placeholder={ownerNameDisplayName} value={ownerName} maxLength={ownerNameMaxLength} onChange={event => setOwnerName(event.target.value)} />
+        </label>
+        
+        <label>
+          <div className="form-label">{descriptionDisplayName} <span className="form-label-memo">(任意・{descriptionMaxLength}文字以内)</span></div>
+          <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={5} />
+        </label>
+        
+        <label>
+          <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></div>
+          <input type="text" placeholder={tagDisplayName} value={tagsInput} onChange={event => setTagsInput(event.target.value)} required />
+        </label>
+        
+        <label>
+          <div className="form-label">{bannerUrlDisplayName} <span className="form-label-memo">(任意・{bannerUrlMaxLength}文字以内)</span></div>
+          <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} />
+        </label>
+        
+        <div className="form-label">バナーサイズ <span className="form-label-memo">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
+        <div className="form-radio-2columns">
+          <label>
+            <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
+          </label>
+          <label>
+            <input type="radio" name="banner_size" value="88x31" checked={bannerSize === '88x31'} onChange={() => setBannerSize('88x31')} /> 88x31
+          </label>
+        </div>
       </fieldset>
       
       {isSelf === 0 && (
-        <>
-          <div className="form-field">
-            <label htmlFor="new-site-form-recommender-name">{recommenderNameDisplayName} <span className="text-muted">(任意・{recommenderNameMaxLength}文字以内)</span></label>
-            <input id="new-site-form-recommender-name" maxLength={recommenderNameMaxLength} onChange={event => setRecommenderName(event.target.value)} type="text" value={recommenderName} />
-          </div>
+        <fieldset>
+          <legend>{recommenderCommentDisplayName}</legend>
           
-          <div className="form-field">
-            <label htmlFor="new-site-form-recommender-comment">{recommenderCommentDisplayName} <span className="text-muted">(必須・{recommenderCommentMaxLength}文字以内)</span></label>
-            <textarea id="new-site-form-recommender-comment" maxLength={recommenderCommentMaxLength} onChange={event => setRecommenderComment(event.target.value)} required rows={5} value={recommenderComment} />
-          </div>
-        </>
+          <label>
+            <div className="form-label">{recommenderNameDisplayName} <span className="form-label-memo">(任意・{recommenderNameMaxLength}文字以内)</span></div>
+            <input type="text" placeholder={recommenderNameDisplayName} value={recommenderName} maxLength={recommenderNameMaxLength} onChange={event => setRecommenderName(event.target.value)} />
+          </label>
+          
+          <label>
+            <div className="form-label">{recommenderCommentDisplayName} <span className="form-label-memo">(必須・{recommenderCommentMaxLength}文字以内)</span></div>
+            <textarea placeholder={recommenderCommentDisplayName} value={recommenderComment} maxLength={recommenderCommentMaxLength} onChange={event => setRecommenderComment(event.target.value)} required rows={5} />
+          </label>
+        </fieldset>
       )}
       
       {isSelf === 1 && (
-        <div className="form-field">
-          <label htmlFor="new-site-form-password">{passwordDisplayName} <span className="text-muted">(必須・{passwordMaxLength}文字以内)</span></label>
-          <input id="new-site-form-password" maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required type="password" value={password} />
-        </div>
+        <fieldset>
+          <legend>{passwordDisplayName}</legend>
+          
+          <label>
+            <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
+            <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
+          </label>
+        </fieldset>
       )}
       
-      <div className="form-field">
-        <p className="form-label">Turnstile 認証</p>
-        <TurnstileField onTokenChange={setTurnstileToken} />
-      </div>
+      <TurnstileField onTokenChange={setTurnstileToken} />
       
-      {clientError !== '' && <p className="form-message text-error">{clientError}</p>}
-      {serverError !== '' && <p className="form-message text-error">{serverError}</p>}
+      {!isEmpty(clientError) && <p className="text-error">{clientError}</p>}
+      {!isEmpty(serverError) && <p className="text-error">{serverError}</p>}
       
-      <div className="form-actions">
-        <button disabled={isSubmitting} type="submit">{isSubmitting ? '送信中…' : '登録する'}</button>
-        <Link to="/">トップへ戻る</Link>
-      </div>
+      <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '登録する'}</button></p>
+      
+      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
     </form>
   );
 }
