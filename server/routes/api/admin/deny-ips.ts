@@ -4,7 +4,7 @@ import { jwt } from 'hono/jwt';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { denyIpSchema } from '../../../../shared/schemas/deny-ip-schema';
 import { idParamSchema } from '../../../../shared/schemas/site-id-param-schema';
-import { mergeIssues } from '../../../helpers/merge-issues';
+import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
 
 import type { HonoBindings } from '../../../types/hono-bindings';

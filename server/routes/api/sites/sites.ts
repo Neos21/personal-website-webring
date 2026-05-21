@@ -8,7 +8,7 @@ import { deleteSiteSchema, newSiteSchema, passwordDisplayName } from '../../../.
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
-import { mergeIssues } from '../../../helpers/merge-issues';
+import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
 import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../repositories/site-comments-repository';
