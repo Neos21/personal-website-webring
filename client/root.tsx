@@ -16,7 +16,7 @@ export function Layout({ children }: { children: ReactNode }): ReactElement {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0088ff" />
         <meta name="description" content="個人サイトウェブリング" />
-        <meta name="keywords" content="Persona WebSite WebRing, 個人サイトウェブリング" />
+        <meta name="keywords" content="Personal WebSite WebRing, 個人サイトウェブリング" />
         <meta name="robots" content="index, follow" />
         
         <meta property="og:type" content="website" />
@@ -42,7 +42,7 @@ export function Layout({ children }: { children: ReactNode }): ReactElement {
         
         <Links />
         
-        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token" : "TODO"}' />
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token" : "5590bcb26e704bdba93a62251bd2dba0"}' />
       </head>
       <body>
         {children}

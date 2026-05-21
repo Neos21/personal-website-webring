@@ -6,5 +6,5 @@ export const sites = new Hono<{ Bindings: HonoBindings; }>();
 export const sitesPath = '/sites';
 
 sites.get('/', async context => {
-  return context.json({ resut: 'TODO' }, 200);
+  return context.json({ result: 'TODO' }, 200);
 });
