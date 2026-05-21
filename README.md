@@ -95,7 +95,7 @@ CREATE TABLE site_tags (
 CREATE TABLE site_ips (
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,               -- ID
   site_id     INTEGER  NOT NULL     REFERENCES sites(id),        -- サイト ID (`sites.id`)
-  is_created  INTEGER  NOT NULL     CHECK (is_created IN 0, 1),  -- 新規登録時は `0`・編集と削除時は `1`
+  is_created  INTEGER  NOT NULL     CHECK (is_created IN 0, 1),  -- 新規登録時は `1`・編集と削除時は `0`
   is_self     INTEGER  NOT NULL     CHECK (is_self IN 0, 1),     -- 他薦 `0` or 自薦 `1`
   ip          TEXT     NOT NULL,                                 -- IP アドレス
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP    -- 登録日時

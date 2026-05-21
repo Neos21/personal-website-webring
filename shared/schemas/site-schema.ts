@@ -121,6 +121,12 @@ export const newSiteSchema = z.object({
 }).superRefine((data, context) => {
   if(data.is_self === 1 && isEmpty(data.password)) context.addIssue({ code: 'custom', message: `${passwordDisplayName}は自薦登録時に必須です` });
   
+  if(data.is_self === 1 && !isEmpty(data.recommender_name)) context.addIssue({ code: 'custom', message: `${recommenderNameDisplayName}は自薦登録時には入力できません` });
+  
+  if(data.is_self === 1 && !isEmpty(data.recommender_comment)) context.addIssue({ code: 'custom', message: `${recommenderCommentDisplayName}は自薦登録時には入力できません` });
+  
+  if(data.is_self === 0 && !isEmpty(data.password)) context.addIssue({ code: 'custom', message: `${passwordDisplayName}は他薦登録時には入力できません` });
+  
   if(data.is_self === 0 && isEmpty(data.recommender_comment)) context.addIssue({ code: 'custom', message: `${recommenderCommentDisplayName} は他薦登録時に必須です` });
   
   if(!isEmpty(data.banner_url) && (isEmpty(data.banner_width) || isEmpty(data.banner_height))) context.addIssue({ code: 'custom', message: `${bannerUrlDisplayName} を指定する場合はバナーサイズも選択してください` });
