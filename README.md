@@ -121,6 +121,13 @@ CREATE TABLE posts (
   is_admin    INTEGER  NOT NULL     CHECK (is_admin IN (0, 1))  DEFAULT 0,  -- リングマスターの投稿である場合は `1`
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP               -- 登録日時
 );
+
+-- IP 制限 (荒らし対策用)
+CREATE TABLE deny_ips (
+  id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
+  ip          TEXT     NOT NULL     UNIQUE,                    -- IP アドレス
+  created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
+);
 ```
 
 ### 機能詳細

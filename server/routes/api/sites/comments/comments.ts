@@ -4,6 +4,7 @@ import { siteCommentSchema } from '../../../../../shared/schemas/comment-schema'
 import { idParamSchema } from '../../../../../shared/schemas/site-id-param-schema';
 import { getIp } from '../../../../helpers/get-ip';
 import { mergeIssues } from '../../../../helpers/merge-issues';
+import { DenyIpsRepository } from '../../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../../repositories/site-comments-repository';
 import { SitesRepository } from '../../../../repositories/sites-repository';
 
@@ -28,6 +29,10 @@ comments.get('/', async context => {
 });
 
 comments.post('/', async context => {
+  const denyIpsRepository = new DenyIpsRepository(context.env.DB);
+  const ip = getIp(context);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
   if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
   
@@ -46,7 +51,6 @@ comments.post('/', async context => {
   
   const parsed = parsedResult.data;
   
-  const ip = getIp(context);
   const commentId = await siteCommentsRepository.create({ content: parsed.content, ip, site_id: siteId, user_name: parsed.user_name });
   return context.json({ result: { id: commentId } }, 201);
 });

@@ -14,7 +14,7 @@ next.get('/', async context => {
   
   const webringRepository = new WebringRepository(context.env.DB);
   const site = await webringRepository.getNextSite(id);
-  if(site == null) return context.json({ error: '次のサイトが見つかりませんでした' }, 500);
+  if(site == null) return context.json({ error: '次のサイトが見つかりませんでした' }, 404);
   
   return context.redirect(site.url);
 });

@@ -14,7 +14,7 @@ random.get('/', async context => {
   
   const webringRepository = new WebringRepository(context.env.DB);
   const site = await webringRepository.getRandomSite(id);
-  if(site == null) return context.json({ error: 'サイトが見つかりませんでした' }, 500);
+  if(site == null) return context.json({ error: '遷移先のサイトが見つかりませんでした' }, 404);
   
   return context.redirect(site.url);
 });

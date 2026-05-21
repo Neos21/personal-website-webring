@@ -9,6 +9,7 @@ import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
 import { mergeIssues } from '../../../helpers/merge-issues';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
+import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../repositories/site-comments-repository';
 import { SiteIpsRepository } from '../../../repositories/site-ips-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
@@ -49,6 +50,10 @@ sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
 });
 
 sites.post('/', async context => {
+  const denyIpsRepository = new DenyIpsRepository(context.env.DB);
+  const ip = getIp(context);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, 400);
   
@@ -64,7 +69,6 @@ sites.post('/', async context => {
   const siteTagService = new SiteTagService();
   const siteUrlService = new SiteUrlService();
   
-  const ip = getIp(context);
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, 400);
   
@@ -95,6 +99,10 @@ sites.post('/', async context => {
 });
 
 sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
+  const denyIpsRepository = new DenyIpsRepository(context.env.DB);
+  const ip = getIp(context);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
   if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
   
@@ -146,7 +154,6 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
     url           : parsed.url
   });
   
-  const ip = getIp(context);
   await siteIpsRepository.create({ ip, is_created: 0, is_self: isSelf, site_id: siteId });
   
   const normalizedTags = await siteTagService.replaceNames(siteTagsRepository, tagsRepository, siteId, parsed.tags);
@@ -156,6 +163,10 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
 });
 
 sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
+  const denyIpsRepository = new DenyIpsRepository(context.env.DB);
+  const ip = getIp(context);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  
   const siteIdResult = idParamSchema.safeParse(context.req.param('id'));
   if(!siteIdResult.success) return context.json({ error: 'リクエストパラメータが不正です' }, 400);
   
@@ -179,7 +190,6 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   
   await sitesRepository.markDeleted(siteId);  // 論理削除する
   
-  const ip = getIp(context);
   await siteIpsRepository.create({ ip, is_created: 0, is_self: existing.is_self, site_id: siteId });
   
   return context.json({ result: { id: siteId } }, 200);

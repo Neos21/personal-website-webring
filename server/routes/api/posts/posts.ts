@@ -1,15 +1,16 @@
 import { Hono } from 'hono';
 
+import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { supportPostSchema } from '../../../../shared/schemas/support-post-schema';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { mergeIssues } from '../../../helpers/merge-issues';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
+import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
 import { PostsRepository } from '../../../repositories/posts-repository';
 import { SitesRepository } from '../../../repositories/sites-repository';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
-import { isEmpty } from '../../../../shared/helpers/is-empty';
 
 export const posts = new Hono<{ Bindings: HonoBindings; }>();
 export const postsPath = '/posts';
@@ -31,6 +32,10 @@ posts.get('/', async context => {
 });
 
 posts.post('/', async context => {
+  const denyIpsRepository = new DenyIpsRepository(context.env.DB);
+  const ip = getIp(context);
+  if(ip !== 'Unknown' && await denyIpsRepository.isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, 403);
+  
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, 400);
   
@@ -41,7 +46,6 @@ posts.post('/', async context => {
   const postsRepository = new PostsRepository(context.env.DB);
   const sitesRepository = new SitesRepository(context.env.DB);
   
-  const ip = getIp(context);
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, 400);
   
