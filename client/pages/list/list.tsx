@@ -8,22 +8,15 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 
 import type { SitePublic } from '../../../shared/types/site';
 
-type FetchSitesResult = {
-  result: {
-    page: number;
-    items: Array<SitePublic>;
-  };
-};
-
 export default function List(): ReactElement {
   const [searchParams] = useSearchParams();
   
   const pageParam = searchParams.get('page');
   const page = isEmpty(pageParam) ? 1 : Number(pageParam);
   
-  const [sites, setSites] = useState<Array<SitePublic>>([]);
+  const [sites    , setSites    ] = useState<Array<SitePublic>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
     (async () => {
@@ -31,8 +24,8 @@ export default function List(): ReactElement {
       setError('');
       
       try {
-        const response = await ky.get(`/api/sites?page=${page}`).json<FetchSitesResult>();
-        setSites(response.result.items);
+        const response = await ky.get(`/api/sites?page=${page}`).json<{ result: { page: number; sites: Array<SitePublic>; }; }>();
+        setSites(response.result.sites);
       }
       catch(error) {
         const errorMessage = await extractApiErrorMessage(error, '一覧の取得に失敗しました');

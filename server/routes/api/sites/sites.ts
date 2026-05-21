@@ -33,8 +33,8 @@ sites.get('/', async context => {
   const offset = (page - 1) * pageSize;
   
   const sitesRepository = new SitesRepository(context.env.DB);
-  const items = await sitesRepository.findActivePage(pageSize, offset);
-  return context.json({ result: { page, items } }, httpStatusCode.ok);
+  const sites = await sitesRepository.findActivePage(pageSize, offset);
+  return context.json({ result: { page, sites } }, httpStatusCode.ok);
 });
 
 sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing

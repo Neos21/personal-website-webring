@@ -28,8 +28,8 @@ posts.get('/', async context => {
   const offset = (page - 1) * pageSize;
   
   const postsRepository = new PostsRepository(context.env.DB);
-  const items = await postsRepository.findPage(pageSize, offset, siteId);
-  return context.json({ result: { page, items } }, httpStatusCode.ok);
+  const posts = await postsRepository.findPage(pageSize, offset, siteId);
+  return context.json({ result: { page, posts } }, httpStatusCode.ok);
 });
 
 posts.post('/', async context => {

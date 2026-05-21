@@ -2,10 +2,10 @@ import z from 'zod';
 
 import { reduceNewlines } from '../helpers/reduce-newlines';
 
-const userNameDisplayName = 'ハンドルネーム';
-const userNameMaxLength   = 50;
-const commentDisplayName  = 'コメント';
-const commentMaxLength    = 500;
+export const userNameDisplayName = 'ハンドルネーム';
+export const userNameMaxLength   = 50;
+export const commentDisplayName  = 'コメント';
+export const commentMaxLength    = 500;
 
 export const siteCommentSchema = z.object({
   user_name : z.preprocess(
