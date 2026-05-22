@@ -38,7 +38,8 @@ export function NewSiteForm(): ReactElement {
   const [url               , setUrl               ] = useState<string>('');
   const [ownerName         , setOwnerName         ] = useState<string>('');
   const [description       , setDescription       ] = useState<string>('');
-  const [tagsInput         , setTagsInput         ] = useState<string>('');
+  const [tags              , setTags              ] = useState<Array<string>>([]);
+  const [tagInput          , setTagInput          ] = useState<string>('');
   const [bannerUrl         , setBannerUrl         ] = useState<string>('');
   const [bannerSize        , setBannerSize        ] = useState<BannerSize>('200x40');
   const [password          , setPassword          ] = useState<string>('');
@@ -100,7 +101,7 @@ export function NewSiteForm(): ReactElement {
       url                : url,
       owner_name         : ownerName,
       description        : description,
-      tags               : tagsInput,
+      tags               : tags,
       banner_url         : hasBannerUrl ? bannerUrl          : null,
       banner_height      : hasBannerUrl ? banner_height      : null,
       banner_width       : hasBannerUrl ? banner_width       : null,
@@ -168,8 +169,36 @@ export function NewSiteForm(): ReactElement {
         </label>
         
         <label>
-          <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></div>
-          <input type="text" placeholder={tagDisplayName} value={tagsInput} onChange={event => setTagsInput(event.target.value)} required />
+          <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内・スペース含む可)</span></div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)} onKeyDown={event => {
+              if(event.key !== 'Enter') return;
+              event.preventDefault();
+              const tag = tagInput.trim();
+              // 空欄・上限文字数超過・最大タグ数超過は無視する
+              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
+              // 重複するタグは追加できないようにする
+              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
+              setTags(prevTags => [...prevTags, tag]);
+              setTagInput('');
+            }} disabled={tags.length >= tagsMax} />
+            <button type="button" onClick={() => {
+              const tag = tagInput.trim();
+              // 空欄・上限文字数超過・最大タグ数超過は無視する
+              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
+              // 重複するタグは追加できないようにする
+              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
+              setTags(prevTags => [...prevTags, tag]);
+              setTagInput('');
+            }} disabled={tags.length >= tagsMax}>追加</button>
+          </div>
+          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {tags.map((tag, index) => (
+              <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prevTags => prevTags.filter((_, i) => i !== index))} style={{ padding: '0.25rem 0.5rem' }}>
+                {tag} ×
+              </button>
+            ))}
+          </div>
         </label>
         
         <label>

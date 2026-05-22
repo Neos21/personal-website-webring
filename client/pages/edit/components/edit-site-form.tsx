@@ -36,17 +36,18 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const navigate = useNavigate();
   
   const initialBannerSize: BannerSize = site.banner_width === 88 && site.banner_height === 31 ? '88x31' : '200x40';
-  const initialTags = Array.isArray(site.tags) && site.tags.length > 0 ? site.tags.map(tag => tag.name).join(',') : '';
+  const initialTags = Array.isArray(site.tags) && site.tags.length > 0 ? site.tags.map(tag => tag.name) : [];
   
-  const [siteName          , setSiteName          ] = useState<string>(site.site_name);
-  const [url               , setUrl               ] = useState<string>(site.url);
-  const [ownerName         , setOwnerName         ] = useState<string>(site.owner_name || '');
-  const [description       , setDescription       ] = useState<string>(site.description || '');
-  const [tagsInput         , setTagsInput         ] = useState<string>(initialTags);
-  const [bannerUrl         , setBannerUrl         ] = useState<string>(site.banner_url || '');
-  const [bannerSize        , setBannerSize        ] = useState<BannerSize>(initialBannerSize);
-  const [password          , setPassword          ] = useState<string>('');
-  const [turnstileToken    , setTurnstileToken    ] = useState<string>('');
+  const [siteName      , setSiteName      ] = useState<string>(site.site_name);
+  const [url           , setUrl           ] = useState<string>(site.url);
+  const [ownerName     , setOwnerName     ] = useState<string>(site.owner_name || '');
+  const [description   , setDescription   ] = useState<string>(site.description || '');
+  const [tags          , setTags          ] = useState<Array<string>>(initialTags);
+  const [tagInput      , setTagInput      ] = useState<string>('');
+  const [bannerUrl     , setBannerUrl     ] = useState<string>(site.banner_url || '');
+  const [bannerSize    , setBannerSize    ] = useState<BannerSize>(initialBannerSize);
+  const [password      , setPassword      ] = useState<string>('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   
   const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
   const [exactMatchId, setExactMatchId] = useState<number | null>(null);
@@ -68,7 +69,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
       url            : url,
       owner_name     : ownerName,
       description    : description,
-      tags           : tagsInput,
+      tags           : tags,
       banner_url     : hasBannerUrl ? bannerUrl     : null,
       banner_width   : hasBannerUrl ? banner_width  : null,
       banner_height  : hasBannerUrl ? banner_height : null,
@@ -143,8 +144,36 @@ export function EditSiteForm({ site }: Props): ReactElement {
         </label>
         
         <label>
-          <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></div>
-          <input type="text" placeholder={tagDisplayName} value={tagsInput} onChange={event => setTagsInput(event.target.value)} required />
+          <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内・スペース含む可)</span></div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)} onKeyDown={event => {
+              if(event.key !== 'Enter') return;
+              event.preventDefault();
+              const tag = tagInput.trim();
+              // 空欄・上限文字数超過・最大タグ数超過は無視する
+              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
+              // 重複するタグは追加できないようにする
+              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
+              setTags(prevTags => [...prevTags, tag]);
+              setTagInput('');
+            }} disabled={tags.length >= tagsMax} />
+            <button type="button" onClick={() => {
+              const tag = tagInput.trim();
+              // 空欄・上限文字数超過・最大タグ数超過は無視する
+              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
+              // 重複するタグは追加できないようにする
+              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
+              setTags(prevTags => [...prevTags, tag]);
+              setTagInput('');
+            }} disabled={tags.length >= tagsMax}>追加</button>
+          </div>
+          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {tags.map((tag, index) => (
+              <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prev => prev.filter((_, i) => i !== index))} style={{ padding: '0.25rem 0.5rem' }}>
+                {tag} ×
+              </button>
+            ))}
+          </div>
         </label>
         
         <label>
