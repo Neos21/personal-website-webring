@@ -137,4 +137,23 @@ export class SitesRepository {
       .bind(siteId)
       .run();
   }
+  
+  public async setIsDeleted(siteId: number, isDeleted: 1 | 0): Promise<void> {
+    await this.db.prepare('UPDATE sites SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .bind(isDeleted, siteId)
+      .run();
+  }
+  
+  public async findById(siteId: number): Promise<SiteAdmin | null> {
+    return await this.db
+      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites WHERE id = ? LIMIT 1')
+      .bind(siteId)
+      .first<SiteAdmin>();
+  }
+  
+  public async deleteById(siteId: number): Promise<void> {
+    await this.db.prepare('DELETE FROM sites WHERE id = ?')
+      .bind(siteId)
+      .run();
+  }
 }

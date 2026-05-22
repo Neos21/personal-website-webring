@@ -12,6 +12,7 @@ export default [
   route('/admin'             , './pages/admin/index.tsx'),
   route('/admin/dashboard'   , './pages/admin/dashboard.tsx'),
   route('/admin/sites'       , './pages/admin/sites.tsx'),
+  route('/admin/site'        , './pages/admin/site.tsx'),
   route('/admin/tags'        , './pages/admin/tags.tsx'),
   route('/admin/posts'       , './pages/admin/posts.tsx'),
   route('/admin/deny-ips'    , './pages/admin/deny-ips.tsx'),
