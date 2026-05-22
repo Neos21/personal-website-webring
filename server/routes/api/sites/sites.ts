@@ -52,7 +52,10 @@ sites.get('/search-url', async context => {
   const url = context.req.query('url')!;
   if(isEmpty(url)) return context.json({ error: 'URL パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(new SitesRepository(context.env.DB), url);
+  // ID 指定時はその ID を除外する
+  const ignoreSiteId = convertToInteger(context.req.query('id'));
+  
+  const urlMatch = await new SiteUrlService().findSiteUrlMatch(new SitesRepository(context.env.DB), url, ignoreSiteId);
   return context.json({ result: { exact_match_id: urlMatch.exactMatchId, near_match_id: urlMatch.nearMatchId } }, httpStatusCode.ok);
 });
 
@@ -139,7 +142,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url);
+  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url, siteIdParsed.data);
   if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);

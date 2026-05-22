@@ -6,8 +6,8 @@ type Props = {
 };
 
 export function TurnstileField({ onTokenChange }: Props): ReactElement {
-  const onSuccess       = (token: string): void => { onTokenChange(token); };
-  const onExpireOrError = (             ): void => { onTokenChange(''   ); };
+  const onSuccess       = (token: string): void => onTokenChange(token);
+  const onExpireOrError = ()             : void => onTokenChange('');
   
   return (
     <div className="turnstile-wrapper">

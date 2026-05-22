@@ -4,26 +4,9 @@ import { Link, useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
-import {
-  bannerUrlDisplayName,
-  bannerUrlMaxLength,
-  descriptionDisplayName,
-  descriptionMaxLength,
-  updateSiteSchema,
-  ownerNameDisplayName,
-  ownerNameMaxLength,
-  passwordDisplayName,
-  passwordMaxLength,
-  siteNameDisplayName,
-  siteNameMaxLength,
-  tagDisplayName,
-  tagMaxLength,
-  tagsMax,
-  urlDisplayName,
-  urlMaxLength
-} from '../../../../shared/schemas/site-schema';
+import { bannerUrlDisplayName, bannerUrlMaxLength, descriptionDisplayName, descriptionMaxLength, updateSiteSchema, ownerNameDisplayName, ownerNameMaxLength, passwordDisplayName, passwordMaxLength, siteNameDisplayName, siteNameMaxLength, tagDisplayName, tagMaxLength, tagsMax, urlDisplayName, urlMaxLength } from '../../../../shared/schemas/site-schema';
 import { TurnstileField } from '../../../components/turnstile-field';
-import { bannerSizeToDimensions, type BannerSize } from '../../../helpers/banner-size-to-dimensions';
+import { convertBannerSizeToDimensions, type BannerSize } from '../../../helpers/convert-banner-size-to-dimensions';
 import { extractApiErrorMessage } from '../../../helpers/extract-api-error-message';
 
 import type { SitePublicWithTags } from '../../../../shared/types/site';
@@ -35,9 +18,11 @@ type Props = {
 export function EditSiteForm({ site }: Props): ReactElement {
   const navigate = useNavigate();
   
+  // 初期値
   const initialBannerSize: BannerSize = site.banner_width === 88 && site.banner_height === 31 ? '88x31' : '200x40';
   const initialTags = Array.isArray(site.tags) && site.tags.length > 0 ? site.tags.map(tag => tag.name) : [];
   
+  // 入力フォーム
   const [siteName      , setSiteName      ] = useState<string>(site.site_name);
   const [url           , setUrl           ] = useState<string>(site.url);
   const [ownerName     , setOwnerName     ] = useState<string>(site.owner_name || '');
@@ -49,6 +34,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const [password      , setPassword      ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   
+  // エラー表示系
   const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
   const [exactMatchId, setExactMatchId] = useState<number | null>(null);
   const [nearMatchId , setNearMatchId ] = useState<number | null>(null);
@@ -56,13 +42,67 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const [clientError , setClientError ] = useState<string>('');
   const [serverError , setServerError ] = useState<string>('');
   
+  const onBlurUrl = async (inputUrl: string): Promise<void> => {
+    if(isEmpty(inputUrl)) {
+      setIsDenyDomain(false);
+      setExactMatchId(null);
+      setNearMatchId(null);
+      return;
+    }
+    
+    // `new URL()` で解釈できない文字列はチェックしない
+    try {
+      new URL(inputUrl);
+    }
+    catch {
+      setIsDenyDomain(false);
+      setExactMatchId(null);
+      setNearMatchId(null);
+      return;
+    }
+    
+    // 禁止ドメインのチェック
+    try {
+      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; domain: string | null; } }>();
+      if(response.result.is_denied) {
+        setIsDenyDomain(true);
+        setExactMatchId(null);
+        setNearMatchId(null);
+        return;  // 重複・類似 URL チェックは行わない
+      }
+    }
+    catch { /* Do Nothing */ }
+    setIsDenyDomain(false);
+    
+    // 重複・類似 URL のチェック
+    try {
+      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site.id } }).json<{ result: { exact_match_id: number | null; near_match_id: number | null; } }>();
+      setExactMatchId(response.result.exact_match_id);
+      setNearMatchId(response.result.near_match_id);
+    }
+    catch {
+      setExactMatchId(null);
+      setNearMatchId(null);
+    }
+  };
+  
+  const onAddTag = (tagInput: string): void => {
+    const tag = tagInput.trim();
+    // 空欄・上限文字数超過・最大タグ数超過は無視する
+    if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
+    // 重複するタグは追加できないようにする
+    if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
+    setTags(prevTags => [...prevTags, tag]);
+    setTagInput('');
+  };
+  
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     setClientError('');
     setServerError('');
     
-    const { banner_height, banner_width } = bannerSizeToDimensions(bannerSize);
     const hasBannerUrl = !isEmpty(bannerUrl);
+    const { banner_height, banner_width } = convertBannerSizeToDimensions(bannerSize);
     
     const payload = {
       site_name      : siteName,
@@ -85,40 +125,17 @@ export function EditSiteForm({ site }: Props): ReactElement {
       navigate(`/site?id=${site.id}`);
     }
     catch(error) {
-      const errorMessage = await extractApiErrorMessage(error, '編集に失敗しました');
-      setServerError(errorMessage);
+      setServerError(extractApiErrorMessage(error, '編集に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
     }
   };
   
-  const checkDenyDomain = async (inputUrl: string): Promise<void> => {
-    setIsDenyDomain(false);
-    if(isEmpty(inputUrl)) return;
-    try {
-      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; domain: string | null; } }>();
-      if(response.result.is_denied) setIsDenyDomain(true);
-    }
-    catch { /* Do Nothing */ }
-  };
-  
-  const checkUrlMatch = async (inputUrl: string): Promise<void> => {
-    setExactMatchId(null);
-    setNearMatchId(null);
-    if(isEmpty(inputUrl)) return;
-    try {
-      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl } }).json<{ result: { exact_match_id: number | null; near_match_id: number | null; } }>();
-      if(response.result.exact_match_id != null) setExactMatchId(response.result.exact_match_id);
-      else if(response.result.near_match_id != null) setNearMatchId(response.result.near_match_id);
-    }
-    catch { /* Do Nothing */ }
-  };
-  
   return (
-    <form onSubmit={onSubmit} style={{ marginBottom: '2rem' }}>
+    <form onSubmit={onSubmit}>
       <fieldset>
-        <legend>サイト情報編集</legend>
+        <legend>サイト編集</legend>
         
         <label>
           <div className="form-label">{siteNameDisplayName} <span className="form-label-memo">(必須・{siteNameMaxLength}文字以内)</span></div>
@@ -127,10 +144,15 @@ export function EditSiteForm({ site }: Props): ReactElement {
         
         <label>
           <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
-          <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatchId(null); setNearMatchId(null); }} onBlur={() => { checkDenyDomain(url); checkUrlMatch(url); }} required />
+          <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength}
+            onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatchId(null); setNearMatchId(null); }}
+            onBlur={() => onBlurUrl(url)}
+            required
+          />
           {isDenyDomain && (<p className="text-error">このドメインは登録できません</p>)}
-          {exactMatchId != null && (<p className="text-error">この URL は登録済みです : <Link to={`/site?id=${exactMatchId}`}>ID [{exactMatchId}]</Link></p>)}
-          {nearMatchId  != null && (<p className="text-warning">類似する URL が登録済みです : <Link to={`/site?id=${nearMatchId}`}>ID [{nearMatchId}]</Link></p>)}
+          {/* TODO : 類似サイトの情報をもう少し細かく表示したいかも。せめてサイトタイトルくらいは */}
+          {exactMatchId != null && (<p className="text-error">この URL は登録済みです : <Link to={{ pathname: '/site', search: `?id=${exactMatchId}` }}>ID [{exactMatchId}]</Link></p>)}
+          {nearMatchId  != null && (<p className="text-warning">類似する URL が登録済みです : <Link to={{ pathname: '/site', search: `?id=${nearMatchId}` }}>ID [{nearMatchId}]</Link></p>)}
         </label>
         
         <label>
@@ -145,35 +167,24 @@ export function EditSiteForm({ site }: Props): ReactElement {
         
         <label>
           <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内・スペース含む可)</span></div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)} onKeyDown={event => {
-              if(event.key !== 'Enter') return;
-              event.preventDefault();
-              const tag = tagInput.trim();
-              // 空欄・上限文字数超過・最大タグ数超過は無視する
-              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
-              // 重複するタグは追加できないようにする
-              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
-              setTags(prevTags => [...prevTags, tag]);
-              setTagInput('');
-            }} disabled={tags.length >= tagsMax} />
-            <button type="button" onClick={() => {
-              const tag = tagInput.trim();
-              // 空欄・上限文字数超過・最大タグ数超過は無視する
-              if(isEmpty(tag) || tags.length >= tagsMax || tag.length > tagMaxLength) return;
-              // 重複するタグは追加できないようにする
-              if(tags.map(tag => tag.toLowerCase()).includes(tag.toLowerCase())) return;
-              setTags(prevTags => [...prevTags, tag]);
-              setTagInput('');
-            }} disabled={tags.length >= tagsMax}>追加</button>
+          <div className="tag-input">
+            <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
+              onKeyDown={event => {
+                if(event.key !== 'Enter') return;
+                event.preventDefault();
+                onAddTag(tagInput);
+              }}
+              disabled={tags.length >= tagsMax}
+            />
+            <button type="button" onClick={() => onAddTag(tagInput)} disabled={tags.length >= tagsMax}>追加</button>
           </div>
-          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {tags.map((tag, index) => (
-              <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prev => prev.filter((_, i) => i !== index))} style={{ padding: '0.25rem 0.5rem' }}>
-                {tag} ×
-              </button>
-            ))}
-          </div>
+          {tags.length > 0 && (
+            <p className="tags">
+              {tags.map((tag, index) => (
+                <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prev => prev.filter((_, i) => i !== index))}>{tag} ×</button>
+              ))}
+            </p>
+          )}
         </label>
         
         <label>
@@ -193,8 +204,8 @@ export function EditSiteForm({ site }: Props): ReactElement {
       </fieldset>
       
       <fieldset>
-        <legend>{site.is_self === 1 ? passwordDisplayName : '新しい' + passwordDisplayName}</legend>
-        <p className="form-label-memo">{site.is_self === 1 ? '更新を適用するために現在のパスワードを入力してください。変更する場合は新しいパスワードを入力してください。' : '自薦に切り替えるため、新しいパスワードを設定してください。'}</p>
+        <legend>{site.is_self === 1 ? passwordDisplayName : `新しい${passwordDisplayName}`}</legend>
+        <div className="text-muted">{site.is_self === 1 ? '更新を適用するために管理パスワードを入力してください。' : '自薦に切り替えるため、新しいパスワードを設定してください。'}</div>
         <label>
           <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
           <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
@@ -203,10 +214,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
       
       <TurnstileField onTokenChange={setTurnstileToken} />
       
-      {!isEmpty(clientError) && <p className="text-error">{clientError}</p>}
-      {!isEmpty(serverError) && <p className="text-error">{serverError}</p>}
+      {!isEmpty(clientError) && (<p className="text-error">{clientError}</p>)}
+      {!isEmpty(serverError) && (<p className="text-error">{serverError}</p>)}
       
-      <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatchId != null}>{isSubmitting ? '送信中…' : '更新する'}</button></p>
+      <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatchId != null}>{isSubmitting ? '送信中…' : '編集する'}</button></p>
     </form>
   );
 }

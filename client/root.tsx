@@ -1,5 +1,5 @@
 import { type ReactElement, type ReactNode } from 'react';
-import { isRouteErrorResponse, Links, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import { isRouteErrorResponse, Link, Links, Outlet, Scripts, ScrollRestoration } from 'react-router';
 
 import { isEmpty } from '../shared/helpers/is-empty';
 
@@ -62,6 +62,8 @@ export function HydrateFallback(): ReactElement {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactElement {
+  console.error('ErrorBoundary', error);
+  
   let title = 'エラー';
   let text = 'エラーが発生しました';
   if(isRouteErrorResponse(error)) {
@@ -73,9 +75,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactElement
   }
   
   return (
-    <main className="error-page">
-      <h1>{title}</h1>
-      <p>{text}</p>
+    <main className="page-container">
+      <h1>個人サイトウェブリング</h1>
+      <h2 className="text-error">{title}</h2>
+      <p className="text-error">{text}</p>
+      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
     </main>
   );
 }

@@ -27,6 +27,8 @@ posts.get('/', async context => {
   const page = convertToInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * postsConstants.pageSize;
   
+  // TODO : ID がある場合、そのサイトが生きていることを確認する・生きてなければ 400 あたりを返しておく
+  
   const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, siteIdParsed.success ? siteIdParsed.data : null);
   const hasNext = posts.length > postsConstants.pageSize;
   if(hasNext) posts.length = postsConstants.pageSize;

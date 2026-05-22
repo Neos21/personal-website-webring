@@ -12,6 +12,7 @@ import { SiteCommentsRepository } from '../../../../repositories/site-comments-r
 import { SitesRepository } from '../../../../repositories/sites-repository';
 
 import type { HonoBindings } from '../../../../types/hono-bindings';
+import { validateTurnstile } from '../../../../helpers/validate-turnstile';
 
 export const comments = new Hono<{ Bindings: HonoBindings; }>();
 export const commentsPath = '/comments';
@@ -47,6 +48,9 @@ comments.post('/', async context => {
   
   const parsed = newSiteCommentSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
+  
+  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
+  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
   const id = await new SiteCommentsRepository(context.env.DB).create({ content: parsed.data.content, ip, site_id: siteIdParsed.data, user_name: parsed.data.user_name });
   return context.json({ result: { id } }, httpStatusCode.created);

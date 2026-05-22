@@ -1,8 +1,9 @@
+import { isEmpty } from '../../shared/helpers/is-empty';
+
+/** 1以上の整数に変換する・不正な値は `null` で返す */
 export const convertToInteger = (value: string | null | undefined): number | null => {
-  if(value == null) return null;
-  const trimmed = value.trim();
-  if(trimmed === '') return null;
+  if(isEmpty(value)) return null;
   
-  const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  const number = Number(String(value).trim());
+  return Number.isInteger(number) && number > 0 ? number : null;
 };

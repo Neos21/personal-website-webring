@@ -12,10 +12,14 @@ import type { SitePublicWithTags } from '../../../shared/types/site';
 export default function Edit(): ReactElement {
   const [searchParams] = useSearchParams();
   
+  // サイト ID パラメータ (必須)
   const idParam = searchParams.get('id');
-  const siteId  = isEmpty(idParam) ? null : Number(idParam);
+  const siteId  = isEmpty(idParam) ? null : Number(idParam);  // TODO : 数値以外は「サイト ID が指定されていません」扱いにしたい
   
-  const [site     , setSite     ] = useState<SitePublicWithTags | null>(null);
+  // サイト詳細 (子コンポーネントに渡す)
+  const [site, setSite] = useState<SitePublicWithTags | null>(null);
+  
+  // エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error    , setError    ] = useState<string>('');
   
@@ -24,6 +28,10 @@ export default function Edit(): ReactElement {
       setError('サイト ID が指定されていません');
       setIsLoading(false);
       return;
+    }
+    if(siteId === 0 || Number.isNaN(siteId)) {
+      setError('不正なサイト ID です');
+      return setIsLoading(false);
     }
     
     (async () => {
@@ -35,8 +43,7 @@ export default function Edit(): ReactElement {
         setSite(response.result);
       }
       catch(error) {
-        const errorMessage = await extractApiErrorMessage(error, '情報の取得に失敗しました');
-        setError(errorMessage);
+        setError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
@@ -45,27 +52,27 @@ export default function Edit(): ReactElement {
   }, [siteId]);
   
   return (
-    <main className="edit-page page-container">
+    <main className="page-container">
       <h1>{site?.is_self === 0 ? 'このサイトの管理人ですか？' : '編集・削除'}</h1>
       
       {isLoading ? (
-        <p>読み込み中…</p>
+        <p className="loading">読み込み中…</p>
       ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+        <>
+          <p className="text-error">{error}</p>
+          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+        </>
       ) : site == null ? (
-        <p>サイトが見つかりませんでした。</p>
+        <>
+          <p className="text-error">サイトが見つかりませんでした。</p>
+          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+        </>
       ) : (
         <>
           {site.is_self === 0 ? (
-            <p>
-              このサイトは他薦で登録されています。<br />
-              自薦サイトに切り替えることで、以降は情報を編集できるようになります。新しい管理パスワードを設定して更新してください。
-            </p>
+            <p>このサイトは他薦で登録されています。<br />このサイトの管理人でしたら、新しく管理パスワードを設定してサイトの情報を編集できます。</p>
           ) : (
-            <p>
-              サイト情報を編集・削除できます。<br />
-              いずれの操作も実行時に管理パスワードが必要です。
-            </p>
+            <p>サイト情報を編集・削除できます。<br />いずれの操作も実行時に管理パスワードが必要です。</p>
           )}
           
           <EditSiteForm site={site} />
@@ -74,7 +81,7 @@ export default function Edit(): ReactElement {
             <DeleteSiteForm site={site} />
           )}
           
-          <p className="text-right" style={{ marginTop: '2rem' }}>
+          <p className="text-right">
             <Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト詳細へ戻る</Link>
           </p>
         </>

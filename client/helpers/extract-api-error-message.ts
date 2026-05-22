@@ -1,8 +1,3 @@
-import { isHTTPError } from 'ky';
+import { isEmpty } from '../../shared/helpers/is-empty';
 
-export const extractApiErrorMessage = async (error: unknown, defaultMessage: string): Promise<string> => {
-  if(!isHTTPError(error)) return defaultMessage;
-  
-  const errorJson = await error.response.json<{ error: string; }>().catch(() => ({ error: defaultMessage }));
-  return errorJson.error;
-};
+export const extractApiErrorMessage = (error: any, defaultMessage: string): string => isEmpty(error?.data?.error) ? defaultMessage : error.data.error;

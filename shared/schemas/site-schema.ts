@@ -83,7 +83,7 @@ export const newSiteSchema = z.object({
                             .max(tagsMax, { error: `${tagDisplayName}は最大${tagsMax}個まで指定できます` })
                         ),
   banner_url          : z.preprocess(
-                          value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                          value => value == null ? null : typeof value === 'string' ? value.trim() : null,
                           z.httpUrl({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
                             .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
                             .nullable()
@@ -182,7 +182,7 @@ export const updateSiteSchema = z.object({
                         .max(tagsMax, { error: `${tagDisplayName}は最大${tagsMax}個まで指定できます` })
                     ),
   banner_url      : z.preprocess(
-                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      value => value == null ? null : typeof value === 'string' ? value.trim() : null,
                       z.httpUrl({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
                         .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
                         .nullable()

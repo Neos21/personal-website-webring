@@ -17,11 +17,14 @@ type Props = {
 export function DeleteSiteForm({ site }: Props): ReactElement {
   const navigate = useNavigate();
   
+  // 入力フォーム
   const [password      , setPassword      ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
-  const [isSubmitting  , setIsSubmitting  ] = useState<boolean>(false);
-  const [clientError   , setClientError   ] = useState<string>('');
-  const [serverError   , setServerError   ] = useState<string>('');
+  
+  // エラー表示系
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [clientError , setClientError ] = useState<string>('');
+  const [serverError , setServerError ] = useState<string>('');
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -39,13 +42,11 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     
     setIsSubmitting(true);
     try {
-      await ky.delete(`/api/sites/${site.id}`, { json: parsed.data }).json();
-      alert('サイトを削除しました。');
+      await ky.delete(`/api/sites/${site.id}`, { json: parsed.data }).text();  // 204 No Content が返るため `.json()` でコールするとエラーになる
       navigate('/list');
     }
     catch(error) {
-      const errorMessage = await extractApiErrorMessage(error, '削除に失敗しました');
-      setServerError(errorMessage);
+      setServerError(extractApiErrorMessage(error, '削除に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -53,24 +54,22 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
   };
   
   return (
-    <form onSubmit={onSubmit} style={{ marginTop: '3rem', padding: '1rem', border: '1px solid #ffcccc', borderRadius: '8px', background: '#fffafa' }}>
-      <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-        <legend style={{ color: '#cc0000', fontWeight: 'bold' }}>サイトの削除</legend>
-        <p className="form-label-memo">サイトを削除します。実行するには管理パスワードを入力してください。</p>
+    <form onSubmit={onSubmit} className="form-delete">
+      <fieldset>
+        <legend>サイトの削除</legend>
+        <div className="text-muted">サイトを削除します。実行するには管理パスワードを入力してください。</div>
         
         <label>
           <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
           <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
         </label>
         
-        <div style={{ marginTop: '1rem' }}>
-          <TurnstileField onTokenChange={setTurnstileToken} />
-        </div>
+        <TurnstileField onTokenChange={setTurnstileToken} />
         
         {!isEmpty(clientError) && <p className="text-error">{clientError}</p>}
         {!isEmpty(serverError) && <p className="text-error">{serverError}</p>}
         
-        <p><button type="submit" disabled={isSubmitting} style={{ background: '#cc0000', color: '#fff', border: 'none' }}>{isSubmitting ? '処理中…' : '削除する'}</button></p>
+        <p className="text-right"><button type="submit" disabled={isSubmitting}>{isSubmitting ? '処理中…' : '削除する'}</button></p>
       </fieldset>
     </form>
   );

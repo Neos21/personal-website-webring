@@ -2,7 +2,7 @@ import type { SitesRepository } from '../repositories/sites-repository';
 import type { SiteUrlMatch } from '../types/site-url-match';
 
 export class SiteUrlService {
-  public async findSiteUrlMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number): Promise<SiteUrlMatch> {
+  public async findSiteUrlMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number | null): Promise<SiteUrlMatch> {
     // 大文字小文字を区別せず完全一致する URL を探す
     const exactMatch = await sitesRepository.findActiveUrlByExactUrl(url, ignoreSiteId);
     if(exactMatch != null && exactMatch.id != null) return { exactMatchId: exactMatch.id, nearMatchId: null };

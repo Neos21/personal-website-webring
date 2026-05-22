@@ -45,7 +45,7 @@ export class SitesRepository {
   }
   
   /** 完全一致 URL の存在チェック用 */
-  public async findActiveUrlByExactUrl(url: string, ignoreSiteId?: number): Promise<SiteUrl | null> {
+  public async findActiveUrlByExactUrl(url: string, ignoreSiteId?: number | null): Promise<SiteUrl | null> {
     if(ignoreSiteId == null) {
       return await this.db
         .prepare('SELECT id, url FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
@@ -61,7 +61,7 @@ export class SitesRepository {
   }
   
   /** 類似 URL チェック用 */
-  public async findActiveUrls(ignoreSiteId?: number): Promise<Array<SiteUrl>> {
+  public async findActiveUrls(ignoreSiteId?: number | null): Promise<Array<SiteUrl>> {
     if(ignoreSiteId == null) {
       const result = await this.db
         .prepare('SELECT id, url FROM sites WHERE             is_deleted = 0')
@@ -84,7 +84,7 @@ export class SitesRepository {
       .bind(id)
       .first<SiteUrl>();
     
-    // 見つからない場合は先頭に戻る
+    // 見つからない場合は先頭へ戻る
     if(site == null) site = await this.db
       .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
@@ -100,7 +100,7 @@ export class SitesRepository {
       .bind(id)
       .first<SiteUrl>();
     
-    // 見つからない場合は末尾に戻る
+    // 見つからない場合は末尾へ戻る
     if(site == null) site = await this.db
       .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)

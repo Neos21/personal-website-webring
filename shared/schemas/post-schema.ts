@@ -4,7 +4,7 @@ import { reduceNewlines } from '../helpers/reduce-newlines';
 
 export const siteIdDisplayName   = 'サイト ID';
 export const userNameDisplayName = 'ハンドルネーム';
-export const userNameMaxLength   = 100;
+export const userNameMaxLength   = 50;
 export const contentDisplayName  = '本文';
 export const contentMaxLength    = 500;
 

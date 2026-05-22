@@ -28,7 +28,7 @@ export class DenyDomainsRepository {
   public async findByHostname(hostname: string): Promise<DenyDomain | null> {
     const lowerHostname = hostname.trim().toLowerCase();
     return await this.db
-      .prepare('SELECT id, domain, created_at FROM deny_domains WHERE domain = ? OR ? LIKE \'%\' || domain LIMIT 1')
+      .prepare('SELECT id, domain, created_at FROM deny_domains WHERE domain = ? OR ? LIKE \'%.\' || domain LIMIT 1')
       .bind(lowerHostname, lowerHostname)
       .first<DenyDomain>();
   }
