@@ -1,7 +1,14 @@
+import { convertIpV6AddressTo64Bit } from '../helpers/convert-ip-v6-address-to-64-bit';
+
 import type { DenyIp } from '../../shared/types/deny-ip';
 
 export class DenyIpsRepository {
   constructor(private readonly db: D1Database) { }
+  
+  private normalizeIp(ip: string): string {
+    const trimmed = ip.trim();
+    return trimmed.includes(':') ? convertIpV6AddressTo64Bit(trimmed) : trimmed;
+  }
   
   public async findAll(): Promise<Array<DenyIp>> {
     const result = await this.db
@@ -18,17 +25,19 @@ export class DenyIpsRepository {
   }
   
   public async isIpDenied(ip: string): Promise<boolean> {
+    const normalizedIp = this.normalizeIp(ip);
     const result = await this.db
       .prepare('SELECT 1 FROM deny_ips WHERE ip = ? LIMIT 1')
-      .bind(ip)
+      .bind(normalizedIp)
       .first();
     return result != null;
   }
   
   public async create(ip: string): Promise<number> {
+    const normalizedIp = this.normalizeIp(ip);
     const result = await this.db
       .prepare('INSERT INTO deny_ips (ip) VALUES (?)')
-      .bind(ip)
+      .bind(normalizedIp)
       .run();
     return result.meta.last_row_id;
   }

@@ -21,6 +21,7 @@ export function AdminNavigation(): ReactElement {
         <li><Link to="/admin/tags">タグ管理</Link></li>
         <li><Link to="/admin/posts">投稿管理</Link></li>
         <li><Link to="/admin/deny-ips">IP 制限管理</Link></li>
+        <li><Link to="/admin/deny-domains">禁止ドメイン管理</Link></li>
       </ul>
       {authenticated && (
         <p className="text-right">

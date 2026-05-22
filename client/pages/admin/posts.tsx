@@ -19,42 +19,95 @@ export default function AdminPosts(): ReactElement {
   
   const [posts, setPosts] = useState<Array<PostAdmin>>([]);
   const [hasNext, setHasNext] = useState(false);
+  const [siteId, setSiteId] = useState('');
+  const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const fetchPosts = async (): Promise<void> => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; } }>();
+      setPosts(response.result.posts);
+      setHasNext(response.result.has_next);
+    }
+    catch(error) {
+      if(isHTTPError(error) && error.response.status === 401) {
+        removeJwt();
+        navigate('/admin', { replace: true });
+        return;
+      }
+      setError(await extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
+    }
+    finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
-    (async () => {
-      setError('');
-      setIsLoading(true);
-      
-      try {
-        const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; } }>();
-        setPosts(response.result.posts);
-        setHasNext(response.result.has_next);
-      }
-      catch(error) {
-        if(isHTTPError(error) && error.response.status === 401) {
-          removeJwt();
-          navigate('/admin', { replace: true });
-          return;
-        }
-        setError(await extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
-      }
-      finally {
-        setIsLoading(false);
-      }
-    })();
+    void fetchPosts();
   }, [navigate, page]);
+  
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    
+    try {
+      const requestBody: { site_id?: number; content: string } = {
+        content
+      };
+      const parsedSiteId = Number(siteId);
+      if(siteId !== '' && Number.isInteger(parsedSiteId) && parsedSiteId > 0) {
+        requestBody.site_id = parsedSiteId;
+      }
+      
+      await adminApi.post('/api/admin/posts', { json: requestBody });
+      setSiteId('');
+      setContent('');
+      await fetchPosts();
+    }
+    catch(error) {
+      setError(await extractApiErrorMessage(error, '投稿の送信に失敗しました'));
+    }
+    finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <main className="page-container">
       <AdminNavigation />
       <h1>投稿管理</h1>
       
+      <form onSubmit={handleSubmit} className="form-grid">
+        <label>
+          サイト ID
+          <input
+            type="text"
+            value={siteId}
+            onChange={event => setSiteId(event.target.value)}
+            placeholder="任意"
+            disabled={isSubmitting}
+          />
+        </label>
+        <label>
+          本文
+          <textarea
+            value={content}
+            onChange={event => setContent(event.target.value)}
+            disabled={isSubmitting}
+          />
+        </label>
+        <button type="submit" disabled={isSubmitting}>管理者投稿</button>
+      </form>
+      
+      {error !== '' && <p className="text-error">{error}</p>}
+      
       {isLoading ? (
         <p>読み込み中…</p>
-      ) : error !== '' ? (
-        <p className="text-error">{error}</p>
       ) : posts.length === 0 ? (
         <p>投稿が見つかりませんでした。</p>
       ) : (
