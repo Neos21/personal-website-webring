@@ -47,6 +47,15 @@ sites.get('/', async context => {
   return context.json({ result: { page, sites: sitesWithTags, has_next: hasNext } }, httpStatusCode.ok);
 });
 
+// URL の完全一致・類似チェック (フォームの Blur 時に利用)
+sites.get('/search-url', async context => {
+  const url = context.req.query('url')!;
+  if(isEmpty(url)) return context.json({ error: 'URL パラメータが不正です' }, httpStatusCode.badRequest);
+  
+  const urlMatch = await new SiteUrlService().findSiteUrlMatch(new SitesRepository(context.env.DB), url);
+  return context.json({ result: { exact_match_id: urlMatch.exactMatchId, near_match_id: urlMatch.nearMatchId } }, httpStatusCode.ok);
+});
+
 sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const siteIdParsed = idParamSchema.safeParse(context.req.param('id'));
   if(!siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
@@ -76,7 +85,6 @@ sites.post('/', async context => {
   
   const sitesRepository = new SitesRepository(context.env.DB);
   
-  // TODO : ココでもチェックしておくが、フォーム入力中からも動的にチェックしたい
   const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url);
   if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
   
@@ -130,6 +138,9 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
+  
+  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url);
+  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
   // 自薦状態での編集時はパスワードチェックを行う (他薦から自薦に切り替える最初はパスワードチェックをしない)

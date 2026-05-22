@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useState, type ReactElement, type SubmitEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
@@ -48,6 +48,9 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const [password          , setPassword          ] = useState<string>('');
   const [turnstileToken    , setTurnstileToken    ] = useState<string>('');
   
+  const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
+  const [exactMatchId, setExactMatchId] = useState<number | null>(null);
+  const [nearMatchId , setNearMatchId ] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [clientError , setClientError ] = useState<string>('');
   const [serverError , setServerError ] = useState<string>('');
@@ -89,6 +92,28 @@ export function EditSiteForm({ site }: Props): ReactElement {
     }
   };
   
+  const checkDenyDomain = async (inputUrl: string): Promise<void> => {
+    setIsDenyDomain(false);
+    if(isEmpty(inputUrl)) return;
+    try {
+      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; domain: string | null; } }>();
+      if(response.result.is_denied) setIsDenyDomain(true);
+    }
+    catch { /* Do Nothing */ }
+  };
+  
+  const checkUrlMatch = async (inputUrl: string): Promise<void> => {
+    setExactMatchId(null);
+    setNearMatchId(null);
+    if(isEmpty(inputUrl)) return;
+    try {
+      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl } }).json<{ result: { exact_match_id: number | null; near_match_id: number | null; } }>();
+      if(response.result.exact_match_id != null) setExactMatchId(response.result.exact_match_id);
+      else if(response.result.near_match_id != null) setNearMatchId(response.result.near_match_id);
+    }
+    catch { /* Do Nothing */ }
+  };
+  
   return (
     <form onSubmit={onSubmit} style={{ marginBottom: '2rem' }}>
       <fieldset>
@@ -101,7 +126,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
         
         <label>
           <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
-          <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => setUrl(event.target.value)} required />
+          <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatchId(null); setNearMatchId(null); }} onBlur={() => { checkDenyDomain(url); checkUrlMatch(url); }} required />
+          {isDenyDomain && (<p className="text-error">このドメインは登録できません</p>)}
+          {exactMatchId != null && (<p className="text-error">この URL は登録済みです : <Link to={`/site?id=${exactMatchId}`}>ID [{exactMatchId}]</Link></p>)}
+          {nearMatchId  != null && (<p className="text-warning">類似する URL が登録済みです : <Link to={`/site?id=${nearMatchId}`}>ID [{nearMatchId}]</Link></p>)}
         </label>
         
         <label>
@@ -149,7 +177,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
       {!isEmpty(clientError) && <p className="text-error">{clientError}</p>}
       {!isEmpty(serverError) && <p className="text-error">{serverError}</p>}
       
-      <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '更新する'}</button></p>
+      <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatchId != null}>{isSubmitting ? '送信中…' : '更新する'}</button></p>
     </form>
   );
 }
