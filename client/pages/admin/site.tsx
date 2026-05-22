@@ -37,7 +37,7 @@ export default function AdminSite(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'サイト情報の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイト情報の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -73,7 +73,7 @@ export default function AdminSite(): ReactElement {
       await fetchSite();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, 'サイトの更新に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの更新に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -90,7 +90,7 @@ export default function AdminSite(): ReactElement {
       await fetchSite();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, message));
+      setError(extractApiErrorMessage(error, message));
     }
     finally {
       setIsSubmitting(false);
@@ -108,7 +108,7 @@ export default function AdminSite(): ReactElement {
       navigate('/admin/sites');
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, '物理削除に失敗しました'));
+      setError(extractApiErrorMessage(error, '物理削除に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

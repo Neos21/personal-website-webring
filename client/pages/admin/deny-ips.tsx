@@ -31,7 +31,7 @@ export default function AdminDenyIps(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'IP 制限の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP 制限の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -66,7 +66,7 @@ export default function AdminDenyIps(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'IP 制限の登録に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP 制限の登録に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -89,7 +89,7 @@ export default function AdminDenyIps(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'IP 制限の削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP 制限の削除に失敗しました'));
     }
   };
   

@@ -40,7 +40,7 @@ export default function AdminTags(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'タグ一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, 'タグ一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -63,7 +63,7 @@ export default function AdminTags(): ReactElement {
       await fetchTags();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, 'タグの追加に失敗しました'));
+      setError(extractApiErrorMessage(error, 'タグの追加に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -93,7 +93,7 @@ export default function AdminTags(): ReactElement {
       await fetchTags();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, 'タグの更新に失敗しました'));
+      setError(extractApiErrorMessage(error, 'タグの更新に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -108,7 +108,7 @@ export default function AdminTags(): ReactElement {
       await fetchTags();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, 'タグの削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'タグの削除に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

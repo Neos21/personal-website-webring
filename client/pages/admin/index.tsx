@@ -33,7 +33,7 @@ export default function Admin(): ReactElement {
       navigate('/admin/dashboard');
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, 'ログインに失敗しました'));
+      setError(extractApiErrorMessage(error, 'ログインに失敗しました'));
     }
     finally {
       setIsSubmitting(false);

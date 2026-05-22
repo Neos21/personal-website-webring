@@ -29,7 +29,7 @@ export default function AdminDenyDomains(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, '禁止ドメイン一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止ドメイン一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -50,7 +50,7 @@ export default function AdminDenyDomains(): ReactElement {
       await fetchDomains();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, '禁止ドメインの登録に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止ドメインの登録に失敗しました'));
     }
   };
   
@@ -61,7 +61,7 @@ export default function AdminDenyDomains(): ReactElement {
       await fetchDomains();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, '禁止ドメインの削除に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止ドメインの削除に失敗しました'));
     }
   };
   

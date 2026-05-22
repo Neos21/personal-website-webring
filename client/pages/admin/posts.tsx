@@ -39,7 +39,7 @@ export default function AdminPosts(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -70,7 +70,7 @@ export default function AdminPosts(): ReactElement {
       await fetchPosts();
     }
     catch(error) {
-      setError(await extractApiErrorMessage(error, '投稿の送信に失敗しました'));
+      setError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

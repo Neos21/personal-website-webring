@@ -32,7 +32,7 @@ export default function AdminSites(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'サイト一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイト一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -65,7 +65,7 @@ export default function AdminSites(): ReactElement {
         navigate('/admin', { replace: true });
         return;
       }
-      setError(await extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
     }
     finally {
       setIsDeleting(false);
