@@ -36,12 +36,13 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const navigate = useNavigate();
   
   const initialBannerSize: BannerSize = site.banner_width === 88 && site.banner_height === 31 ? '88x31' : '200x40';
+  const initialTags = Array.isArray(site.tags) && site.tags.length > 0 ? site.tags.map(tag => tag.name).join(',') : '';
   
   const [siteName          , setSiteName          ] = useState<string>(site.site_name);
   const [url               , setUrl               ] = useState<string>(site.url);
   const [ownerName         , setOwnerName         ] = useState<string>(site.owner_name || '');
   const [description       , setDescription       ] = useState<string>(site.description || '');
-  const [tagsInput         , setTagsInput         ] = useState<string>('');  // TODO : site.tags が Array<Tags> なのでコレを元に実装する
+  const [tagsInput         , setTagsInput         ] = useState<string>(initialTags);
   const [bannerUrl         , setBannerUrl         ] = useState<string>(site.banner_url || '');
   const [bannerSize        , setBannerSize        ] = useState<BannerSize>(initialBannerSize);
   const [password          , setPassword          ] = useState<string>('');
@@ -116,7 +117,6 @@ export function EditSiteForm({ site }: Props): ReactElement {
         <label>
           <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・区切りはカンマまたは空白・1つ{tagMaxLength}文字以内)</span></div>
           <input type="text" placeholder={tagDisplayName} value={tagsInput} onChange={event => setTagsInput(event.target.value)} required />
-          {/* TODO : tags は API の戻り値に含まれていないため空欄で表示しています。更新時はここに入力した値で上書きされます。 */}
         </label>
         
         <label>

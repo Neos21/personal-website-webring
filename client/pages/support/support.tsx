@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { supportPostSchema, contentDisplayName, contentMaxLength, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/support-post-schema';
+import { newPostSchema, contentDisplayName, contentMaxLength, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
@@ -68,8 +68,6 @@ export default function Support(): ReactElement {
     })();
   }, [page, siteIdParam, isValidInitialSiteId, initialSiteId]);
   
-  
-  
   const handleSiteIdBlur = async (): Promise<void> => {
     setLookupError('');
     setLookupSiteInfo(null);
@@ -109,7 +107,7 @@ export default function Support(): ReactElement {
       content        : content,
       turnstile_token: turnstileToken
     };
-    const parsed = supportPostSchema.safeParse(payload);
+    const parsed = newPostSchema.safeParse(payload);
     if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
@@ -195,7 +193,7 @@ export default function Support(): ReactElement {
               <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
                 <label style={{ display: 'block', marginBottom: '1rem' }}>
                   <div style={{ marginBottom: '0.5rem' }}>サイト ID <span style={{ color: '#666', fontSize: '0.9rem' }}>(任意)</span></div>
-                  <input type="number" value={formSiteId} min="1" placeholder="サイト ID" onChange={event => setFormSiteId(event.target.value)} onBlur={handleSiteIdBlur} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }} />
+                  <input type="text" value={formSiteId} min="1" placeholder="サイト ID" onChange={event => setFormSiteId(event.target.value)} onBlur={handleSiteIdBlur} style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }} />
                 </label>
                 
                 {!isEmpty(lookupError) && <p className="text-error">{lookupError}</p>}
