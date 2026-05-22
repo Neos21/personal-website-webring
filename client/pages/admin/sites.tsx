@@ -1,6 +1,6 @@
 import { isHTTPError } from 'ky';
 import { useEffect, useState, type ReactElement } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
 import { adminApi } from '../../helpers/admin-api';
@@ -12,17 +12,19 @@ import type { SiteAdmin } from '../../../shared/types/site';
 export default function AdminSites(): ReactElement {
   const navigate = useNavigate();
   const [sites, setSites] = useState<Array<SiteAdmin>>([]);
+  const [hasNext, setHasNext] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const loadSites = async (): Promise<void> => {
+  const loadSites = async (page: number): Promise<void> => {
     setError('');
     setIsLoading(true);
     
     try {
-      const response = await adminApi.get('/api/admin/sites').json<{ result: Array<SiteAdmin> }>();
-      setSites(response.result);
+      const response = await adminApi.get(`/api/admin/sites?page=${page}`).json<{ result: { page: number; sites: Array<SiteAdmin>; has_next: boolean; } }>();
+      setSites(response.result.sites);
+      setHasNext(response.result.has_next);
     }
     catch(error) {
       if(isHTTPError(error) && error.response.status === 401) {
@@ -37,9 +39,14 @@ export default function AdminSites(): ReactElement {
     }
   };
   
+  const [searchParams] = useSearchParams();
+  const pageParam = searchParams.get('page');
+  const pageNumber = pageParam == null ? 1 : Number(pageParam);
+  const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  
   useEffect(() => {
-    loadSites();
-  }, [navigate]);
+    loadSites(page);
+  }, [navigate, page]);
   
   const handleDelete = async (siteId: number): Promise<void> => {
     const confirmed = window.confirm('このサイトを削除してもよろしいですか？');
@@ -50,7 +57,7 @@ export default function AdminSites(): ReactElement {
     
     try {
       await adminApi.delete(`/api/admin/sites/${siteId}`);
-      await loadSites();
+      await loadSites(page);
     }
     catch(error) {
       if(isHTTPError(error) && error.response.status === 401) {
@@ -114,6 +121,11 @@ export default function AdminSites(): ReactElement {
           </tbody>
         </table>
       )}
+      
+      <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+        {page > 1 && <Link to={{ pathname: '/admin/sites', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>}
+        {hasNext && <Link to={{ pathname: '/admin/sites', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>}
+      </div>
     </main>
   );
 }

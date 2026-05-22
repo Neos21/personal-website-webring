@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 
+import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
-import { postsConstants } from '../../../../shared/constants/posts';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { PostsRepository } from '../../../repositories/posts-repository';
 
@@ -15,10 +15,10 @@ adminPosts.use((context, next) => jwt({ secret: context.env.ADMIN_JWT_SECRET, al
 
 adminPosts.get('/', async context => {
   const page = convertToInteger(context.req.query('page')) ?? 1;
-  const offset = (page - 1) * postsConstants.pageSize;
+  const offset = (page - 1) * adminConstants.postsPageSize;
   
-  const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, null);
-  const hasNext = posts.length > postsConstants.pageSize;
-  if(hasNext) posts.length = postsConstants.pageSize;
+  const posts = await new PostsRepository(context.env.DB).findPage(adminConstants.postsPageSize + 1, offset, null);
+  const hasNext = posts.length > adminConstants.postsPageSize;
+  if(hasNext) posts.length = adminConstants.postsPageSize;
   return context.json({ result: { page, posts, has_next: hasNext } }, httpStatusCode.ok);
 });

@@ -1,6 +1,6 @@
 import { isHTTPError } from 'ky';
 import { useEffect, useState, type ReactElement } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -14,9 +14,15 @@ export default function AdminTags(): ReactElement {
   const navigate = useNavigate();
   
   const [tags, setTags] = useState<Array<Tag>>([]);
+  const [hasNext, setHasNext] = useState(false);
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [searchParams] = useSearchParams();
+  const pageParam = searchParams.get('page');
+  const pageNumber = pageParam == null ? 1 : Number(pageParam);
+  const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
   
   useEffect(() => {
     (async () => {
@@ -24,8 +30,9 @@ export default function AdminTags(): ReactElement {
       setError('');
       
       try {
-        const response = await adminApi.get('/api/admin/tags').json<{ result: Array<Tag> }>();
-        setTags(response.result);
+        const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; } }>();
+        setTags(response.result.tags);
+        setHasNext(response.result.has_next);
       }
       catch(error) {
         if(isHTTPError(error) && error.response.status === 401) {
@@ -39,7 +46,7 @@ export default function AdminTags(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [navigate]);
+  }, [navigate, page]);
   
   return (
     <main className="page-container">
@@ -70,6 +77,11 @@ export default function AdminTags(): ReactElement {
           </tbody>
         </table>
       )}
+      
+      <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+        {page > 1 && <Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>}
+        {hasNext && <Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>}
+      </div>
     </main>
   );
 }

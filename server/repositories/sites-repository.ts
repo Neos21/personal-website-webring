@@ -11,6 +11,15 @@ export class SitesRepository {
     return result.results ?? [];
   }
   
+  /** 管理画面向けページング一覧 */
+  public async findPage(pageSize: number, offset: number): Promise<Array<SiteAdmin>> {
+    const result = await this.db
+      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites ORDER BY id DESC LIMIT ? OFFSET ?')
+      .bind(pageSize, offset)
+      .all<SiteAdmin>();
+    return result.results ?? [];
+  }
+  
   /** ページング処理付き一覧 */
   public async findActivePage(pageSize: number, offset: number): Promise<Array<SitePublic>> {
     const result = await this.db

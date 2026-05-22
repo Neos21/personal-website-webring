@@ -11,6 +11,14 @@ export class TagsRepository {
     return result.results ?? [];
   }
   
+  public async findPage(pageSize: number, offset: number): Promise<Array<Tag>> {
+    const result = await this.db
+      .prepare('SELECT id, name FROM tags ORDER BY id DESC LIMIT ? OFFSET ?')
+      .bind(pageSize, offset)
+      .all<Tag>();
+    return result.results ?? [];
+  }
+  
   /** タグ1件を大文字小文字区別せず取得する */
   public async findByNameCaseInsensitive(name: string): Promise<Tag | null> {
     return await this.db
