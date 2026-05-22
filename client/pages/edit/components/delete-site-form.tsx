@@ -30,7 +30,10 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     
     if(!window.confirm('本当にこのサイトを削除しますか？\nこの操作は取り消せません。')) return;
     
-    const payload = { password, turnstile_token: turnstileToken };
+    const payload = {
+      password       : password,
+      turnstile_token: turnstileToken
+    };
     const parsed = deleteSiteSchema.safeParse(payload);
     if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     

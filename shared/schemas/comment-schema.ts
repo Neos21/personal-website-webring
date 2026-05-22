@@ -7,7 +7,7 @@ export const userNameMaxLength   = 50;
 export const commentDisplayName  = 'コメント';
 export const commentMaxLength    = 500;
 
-export const siteCommentSchema = z.object({
+export const newSiteCommentSchema = z.object({
   user_name : z.preprocess(
                 value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
                 z.string({ error: `${userNameDisplayName}に文字列でないデータが入力されています` })

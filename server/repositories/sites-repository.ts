@@ -1,13 +1,13 @@
-import type { NewSite, Site, SiteAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
+import type { NewSite, SiteAdmin, SiteForAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
 
 export class SitesRepository {
   constructor(private readonly db: D1Database) { }
   
   /** 管理画面向け全件取得 */
-  public async findAll(): Promise<Array<Site>> {
+  public async findAll(): Promise<Array<SiteAdmin>> {
     const result = await this.db
       .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites')
-      .all<Site>();
+      .all<SiteAdmin>();
     return result.results ?? [];
   }
   
@@ -20,6 +20,7 @@ export class SitesRepository {
     return result.results ?? [];
   }
   
+  /** 1件取得用・関連リソース操作時の存在チェック用 */
   public async findActiveById(siteId: number): Promise<SitePublic | null> {
     return await this.db
       .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, created_at, updated_at FROM sites WHERE id = ? AND is_deleted = 0 LIMIT 1')
@@ -27,28 +28,30 @@ export class SitesRepository {
       .first<SitePublic>();
   }
   
-  public async findAuthById(siteId: number): Promise<SiteAuth | null> {
+  public async findAuthById(siteId: number): Promise<SiteForAuth | null> {
     return await this.db
-      .prepare('SELECT id, is_deleted, password_hash, is_self FROM sites WHERE id = ? LIMIT 1')
+      .prepare('SELECT id, is_self, password_hash, is_deleted FROM sites WHERE id = ? LIMIT 1')
       .bind(siteId)
-      .first<SiteAuth>();
+      .first<SiteForAuth>();
   }
   
-  public async findActiveByExactUrl(url: string, ignoreSiteId?: number): Promise<Pick<Site, 'id'> | null> {
+  /** 完全一致 URL の存在チェック用 */
+  public async findActiveUrlByExactUrl(url: string, ignoreSiteId?: number): Promise<SiteUrl | null> {
     if(ignoreSiteId == null) {
       return await this.db
-        .prepare('SELECT id FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
+        .prepare('SELECT id, url FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
         .bind(url)
-        .first<Pick<Site, 'id'>>();
+        .first<SiteUrl>();
     }
     else {
       return await this.db
-        .prepare('SELECT id FROM sites WHERE lower(url) = lower(?) AND id != ? AND is_deleted = 0 LIMIT 1')
+        .prepare('SELECT id, url FROM sites WHERE lower(url) = lower(?) AND id != ? AND is_deleted = 0 LIMIT 1')
         .bind(url, ignoreSiteId)
-        .first<Pick<Site, 'id'>>();
+        .first<SiteUrl>();
     }
   }
   
+  /** 類似 URL チェック用 */
   public async findActiveUrls(ignoreSiteId?: number): Promise<Array<SiteUrl>> {
     if(ignoreSiteId == null) {
       const result = await this.db
@@ -65,6 +68,45 @@ export class SitesRepository {
     }
   }
   
+  public async findNext(id: number): Promise<SiteUrl | null> {
+    // 現在の ID より大きい最初のサイトを取得する
+    let site = await this.db
+      .prepare('SELECT id, url FROM sites WHERE id > ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .bind(id)
+      .first<SiteUrl>();
+    
+    // 見つからない場合は先頭に戻る
+    if(site == null) site = await this.db
+      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .bind(id)
+      .first<SiteUrl>();
+    
+    return site;
+  }
+  
+  public async findPrev(id: number): Promise<SiteUrl | null> {
+    // 現在の ID より小さい最後のサイトを取得する
+    let site = await this.db
+      .prepare('SELECT id, url FROM sites WHERE id < ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .bind(id)
+      .first<SiteUrl>();
+    
+    // 見つからない場合は末尾に戻る
+    if(site == null) site = await this.db
+      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .bind(id)
+      .first<SiteUrl>();
+    
+    return site;
+  }
+  
+  public async findRandom(id: number): Promise<SiteUrl | null> {
+    return await this.db
+      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
+      .bind(id)
+      .first<SiteUrl>();
+  }
+  
   public async create(site: NewSite): Promise<number> {
     const result = await this.db
       .prepare('INSERT INTO sites (is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)')
@@ -75,8 +117,8 @@ export class SitesRepository {
   
   public async update(site: UpdateSite): Promise<void> {
     await this.db
-      .prepare('UPDATE sites SET is_self = ?, url = ?, site_name = ?, owner_name = ?, description = ?, banner_url = ?, banner_width = ?, banner_height = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .bind(site.is_self, site.url, site.site_name, site.owner_name, site.description, site.banner_url, site.banner_width, site.banner_height, site.password_hash, site.id)
+      .prepare('UPDATE sites SET is_self = 1, url = ?, site_name = ?, owner_name = ?, description = ?, banner_url = ?, banner_width = ?, banner_height = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .bind(site.url, site.site_name, site.owner_name, site.description, site.banner_url, site.banner_width, site.banner_height, site.password_hash, site.id)
       .run();
   }
   

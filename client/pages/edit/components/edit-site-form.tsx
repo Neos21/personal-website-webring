@@ -9,7 +9,7 @@ import {
   bannerUrlMaxLength,
   descriptionDisplayName,
   descriptionMaxLength,
-  newSiteSchema,
+  updateSiteSchema,
   ownerNameDisplayName,
   ownerNameMaxLength,
   passwordDisplayName,
@@ -41,7 +41,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const [url               , setUrl               ] = useState<string>(site.url);
   const [ownerName         , setOwnerName         ] = useState<string>(site.owner_name || '');
   const [description       , setDescription       ] = useState<string>(site.description || '');
-  const [tagsInput         , setTagsInput         ] = useState<string>('');  // TODO : タグは API レスポンスに含まれていないため空で初期化 (実際には tags API がないので今回は別途対応するか、上書きになる)
+  const [tagsInput         , setTagsInput         ] = useState<string>('');  // TODO : site.tags が Array<Tags> なのでコレを元に実装する
   const [bannerUrl         , setBannerUrl         ] = useState<string>(site.banner_url || '');
   const [bannerSize        , setBannerSize        ] = useState<BannerSize>(initialBannerSize);
   const [password          , setPassword          ] = useState<string>('');
@@ -60,27 +60,24 @@ export function EditSiteForm({ site }: Props): ReactElement {
     const hasBannerUrl = !isEmpty(bannerUrl);
     
     const payload = {
-      banner_height      : hasBannerUrl ? banner_height : null,
-      banner_url         : hasBannerUrl ? bannerUrl : null,
-      banner_width       : hasBannerUrl ? banner_width : null,
-      description        : description,
-      is_self            : 1,  // 編集時は必ず自薦扱いにする
-      owner_name         : ownerName,
-      password           : password,
-      recommender_comment: null,
-      recommender_name   : null,
-      site_name          : siteName,
-      tags               : tagsInput,
-      turnstile_token    : turnstileToken,
-      url                : url
+      site_name      : siteName,
+      url            : url,
+      owner_name     : ownerName,
+      description    : description,
+      tags           : tagsInput,
+      banner_url     : hasBannerUrl ? bannerUrl     : null,
+      banner_width   : hasBannerUrl ? banner_width  : null,
+      banner_height  : hasBannerUrl ? banner_height : null,
+      password       : password,
+      turnstile_token: turnstileToken
     };
-    const parsed = newSiteSchema.safeParse(payload);
+    const parsed = updateSiteSchema.safeParse(payload);
     if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      const response = await ky.put(`/api/sites/${site.id}`, { json: parsed.data }).json<{ result: { id: number; tags: Array<string>; warning: string | null; }; }>();
-      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });  // TODO : この state・warning は使ってるのか？
+      await ky.put(`/api/sites/${site.id}`, { json: parsed.data }).json();
+      navigate(`/site?id=${site.id}`);
     }
     catch(error) {
       const errorMessage = await extractApiErrorMessage(error, '編集に失敗しました');

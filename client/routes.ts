@@ -13,6 +13,6 @@ export default [
   route('/admin/dashboard', './pages/admin/dashboard.tsx'),
   route('/admin/sites'    , './pages/admin/sites.tsx'),
   route('/admin/tags'     , './pages/admin/tags.tsx'),
-  route('/admin/support'  , './pages/admin/support.tsx'),
+  route('/admin/posts'    , './pages/admin/posts.tsx'),
   route('/admin/deny-ips' , './pages/admin/deny-ips.tsx')
 ] satisfies RouteConfig;

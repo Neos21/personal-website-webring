@@ -38,9 +38,9 @@ a {
 
 input[type="text"], input[type="url"], input[type="password"], textarea, button {
   border: 2px dashed #2abbf4;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: .3rem .5rem;
-  color: #0080ff;
+  color: rgb(0, 128, 255);
   font-size: 1rem;
   font-family: var(--font-family-monospace);
   background: #ecf9ff;
@@ -67,10 +67,10 @@ button {
   &:disabled {
     cursor: not-allowed;
   }
-  &:hover {
+  &:hover:not(:disabled) {
     background: #d1f1ff;
   }
-  &:focus {
+  &:focus:not(:disabled) {
     background: #b7e9ff;
   }
 }

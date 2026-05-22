@@ -1,4 +1,4 @@
-export type SiteComment = {
+export type SiteCommentAdmin = {
   id: number;
   site_id: number;
   user_name: string | null;
@@ -7,6 +7,6 @@ export type SiteComment = {
   created_at: string;
 };
 
-export type SiteCommentPublic = Omit<SiteComment, 'site_id' | 'ip'>;
+export type SiteCommentPublic = Omit<SiteCommentAdmin, 'ip'>;
 
-export type NewSiteComment = Pick<SiteComment, 'site_id' | 'user_name' | 'content' | 'ip'>;
+export type NewSiteComment = Pick<SiteCommentAdmin, 'site_id' | 'user_name' | 'content' | 'ip'>;

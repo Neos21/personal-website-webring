@@ -138,11 +138,92 @@ export const newSiteSchema = z.object({
   }
 });
 
+export const updateSiteSchema = z.object({
+  site_name       : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${siteNameDisplayName}に文字列でないデータが入力されています` })
+                        .min(1, { error: `${siteNameDisplayName}を入力してください` })
+                        .max(siteNameMaxLength, { error: `${siteNameDisplayName}は${siteNameMaxLength}文字以内で入力してください` })
+                    ),
+  url             : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
+                        .min(1, { error: `${urlDisplayName}を入力してください` })
+                        .max(urlMaxLength, { error: `${urlDisplayName}は${urlMaxLength}文字以内で入力してください` })
+                    ),
+  owner_name      : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${ownerNameDisplayName}に文字列でないデータが入力されています` })
+                        .max(ownerNameMaxLength, { error: `${ownerNameDisplayName}は${ownerNameMaxLength}文字以内で入力してください` })
+                        .nullable()
+                    ),
+  description     : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? reduceNewlines(value.trim()) : value,
+                      z.string({ error: `${descriptionDisplayName}に文字列でないデータが入力されています` })
+                        .max(descriptionMaxLength, { error: `${descriptionDisplayName}は${descriptionMaxLength}文字以内で入力してください` })
+                        .nullable()
+                    ),
+  tags            : z.preprocess(
+                      value => {
+                        if(value == null) return [];
+                        if(Array.isArray(value)) return value;
+                        // 文字列の場合、スペースまたはカンマで区切り配列にする
+                        if(typeof value === 'string') return value
+                          .split((/[\s,]+/))
+                          .map(tag => typeof tag === 'string' ? tag.trim() : String(tag).trim())
+                          .filter(Boolean);
+                        return [];
+                      },
+                      z.array(
+                        z.string({ error: `${tagDisplayName}に文字列でないデータが入力されています` })
+                          .max(tagMaxLength, { error: `${tagDisplayName}は${tagMaxLength}文字以内で入力してください` })
+                      )
+                        .min(1, { error: `${tagDisplayName}を1つ以上指定してください` })
+                        .max(tagsMax, { error: `${tagDisplayName}は最大${tagsMax}個まで指定できます` })
+                    ),
+  banner_url      : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
+                        .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
+                        .nullable()
+                    ),
+  banner_width    : z.coerce.number({ error: `${bannerWidthDisplayName}に数値が指定されていません` })
+                      .int({ error: `${bannerWidthDisplayName}に整数が指定されていません` })
+                      .min(1, { error: `${bannerWidthDisplayName}に1以上の整数が指定されていません` })
+                      .nullish(),
+  banner_height   : z.coerce.number({ error: `${bannerHeightDisplayName}に数値が指定されていません` })
+                      .int({ error: `${bannerHeightDisplayName}に整数が指定されていません` })
+                      .min(1, { error: `${bannerHeightDisplayName}に1以上の整数が指定されていません` })
+                      .nullish(),
+  password        : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
+                        .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
+                    ),
+  turnstile_token : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: 'Turnstile 認証を行ってください' })
+                        .min(1, { error: 'Turnstile 認証を行ってください' })
+                    )
+}).superRefine((data, context) => {
+  if(!isEmpty(data.banner_url) && (isEmpty(data.banner_width) || isEmpty(data.banner_height))) context.addIssue({ code: 'custom', message: `${bannerUrlDisplayName} を指定する場合はバナーサイズも選択してください` });
+  
+  if(!isEmpty(data.banner_url) && !isEmpty(data.banner_width) && !isEmpty(data.banner_height)) {
+    const isValidSize = (data.banner_width === 200 && data.banner_height === 40) || (data.banner_width === 88 && data.banner_height === 31);
+    if(!isValidSize) context.addIssue({ code: 'custom', message: 'バナー画像のサイズは 200x40 または 88x31 のいずれかを選択してください' });
+  }
+});
+
 export const deleteSiteSchema = z.object({
-  password: z.preprocess(
-              value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
-              z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
-                .min(1, { error: `${passwordDisplayName}を入力してください` })
-                .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
-            )
+  password        : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
+                        .min(1, { error: `${passwordDisplayName}を入力してください` })
+                        .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
+                    ),
+  turnstile_token : z.preprocess(
+                      value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
+                      z.string({ error: 'Turnstile 認証を行ってください' })
+                        .min(1, { error: 'Turnstile 認証を行ってください' })
+                    )
 });

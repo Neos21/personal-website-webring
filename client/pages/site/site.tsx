@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { siteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/comment-schema';
+import { newSiteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/comment-schema';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { SitePublicWithTags } from '../../../shared/types/site';
@@ -74,7 +74,7 @@ export default function Site(): ReactElement {
       user_name: commentUserName,
       content  : commentContent
     };
-    const parsed = siteCommentSchema.safeParse(payload);
+    const parsed = newSiteCommentSchema.safeParse(payload);
     if(!parsed.success) return setCommentClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);

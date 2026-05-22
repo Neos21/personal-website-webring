@@ -1,5 +1,5 @@
 import ky from 'ky';
-import { useCallback, useState, type ReactElement, type SubmitEvent } from 'react';
+import { useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../../shared/helpers/is-empty';
@@ -50,7 +50,7 @@ export function NewSiteForm(): ReactElement {
   const [clientError , setClientError ] = useState<string>('');
   const [serverError , setServerError ] = useState<string>('');
   
-  const handleIsSelfChange = useCallback((value: 0 | 1) => {
+  const onChangeIsSelf = (value: 0 | 1): void => {
     setIsSelf(value);
     setClientError('');
     setServerError('');
@@ -59,7 +59,7 @@ export function NewSiteForm(): ReactElement {
       setRecommenderName('');
       setRecommenderComment('');
     }
-  }, []);
+  };
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -70,27 +70,27 @@ export function NewSiteForm(): ReactElement {
     const hasBannerUrl = !isEmpty(bannerUrl);
     
     const payload = {
-      banner_height      : hasBannerUrl ? banner_height : null,
-      banner_url         : hasBannerUrl ? bannerUrl : null,
-      banner_width       : hasBannerUrl ? banner_width : null,
-      description        : description,
       is_self            : isSelf,
-      owner_name         : ownerName,
-      password           : isSelf === 1 ? password : null,
-      recommender_comment: isSelf === 0 ? recommenderComment : null,
-      recommender_name   : isSelf === 0 ? recommenderName : null,
       site_name          : siteName,
+      url                : url,
+      owner_name         : ownerName,
+      description        : description,
       tags               : tagsInput,
-      turnstile_token    : turnstileToken,
-      url                : url
+      banner_url         : hasBannerUrl ? bannerUrl          : null,
+      banner_height      : hasBannerUrl ? banner_height      : null,
+      banner_width       : hasBannerUrl ? banner_width       : null,
+      password           : isSelf === 1 ? password           : null,
+      recommender_comment: isSelf === 0 ? recommenderComment : null,
+      recommender_name   : isSelf === 0 ? recommenderName    : null,
+      turnstile_token    : turnstileToken
     };
     const parsed = newSiteSchema.safeParse(payload);
     if(!parsed.success) return setClientError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
-      const response = await ky.post('/api/sites', { json: parsed.data }).json<{ result: { id: number; tags: Array<string>; warning: string | null; }; }>();
-      navigate(`/site?id=${response.result.id}`, { state: { warning: response.result.warning } });  // TODO : この state・warning は使ってるのか？
+      const response = await ky.post('/api/sites', { json: parsed.data }).json<{ result: { id: number; }; }>();
+      navigate(`/site?id=${response.result.id}`);
     }
     catch(error) {
       const errorMessage = await extractApiErrorMessage(error, '登録に失敗しました');
@@ -108,10 +108,10 @@ export function NewSiteForm(): ReactElement {
         
         <div className="form-radio-2columns">
           <label>
-            <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => handleIsSelfChange(0)} /> 他薦
+            <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => onChangeIsSelf(0)} /> 他薦
           </label>
           <label>
-            <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => handleIsSelfChange(1)} /> 自薦
+            <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => onChangeIsSelf(1)} /> 自薦
           </label>
         </div>
       </fieldset>

@@ -4,7 +4,8 @@ import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { postsConstants } from '../../../../shared/constants/posts';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
-import { supportPostSchema } from '../../../../shared/schemas/support-post-schema';
+import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
+import { newPostSchema } from '../../../../shared/schemas/post-schema';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
@@ -18,15 +19,15 @@ export const posts = new Hono<{ Bindings: HonoBindings; }>();
 export const postsPath = '/posts';
 
 posts.get('/', async context => {
-  const rawSiteId = context.req.query('id');
-  const siteId = convertToInteger(rawSiteId);
-  // `?id=abc` などの異常値を弾く
-  if(!isEmpty(rawSiteId) && siteId == null) return context.json({ error: 'サイト ID が不正です' }, httpStatusCode.badRequest);
+  // ID 指定がある場合は `?id=abc` などの異常値を弾く
+  const siteIdParam  = context.req.query('id');
+  const siteIdParsed = idParamSchema.safeParse(siteIdParam);
+  if(!isEmpty(siteIdParam) && !siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
   const page = convertToInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * postsConstants.pageSize;
   
-  const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, siteId);
+  const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, siteIdParsed.success ? siteIdParsed.data : null);
   const hasNext = posts.length > postsConstants.pageSize;
   if(hasNext) posts.length = postsConstants.pageSize;
   return context.json({ result: { page, posts, has_next: hasNext } }, httpStatusCode.ok);
@@ -39,7 +40,7 @@ posts.post('/', async context => {
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsed = supportPostSchema.safeParse(body);
+  const parsed = newPostSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
@@ -51,6 +52,12 @@ posts.post('/', async context => {
     if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   }
   
-  const postId = await new PostsRepository(context.env.DB).create({ content: parsed.data.content, ip, is_admin: 0, site_id: parsed.data.site_id ?? null, user_name: parsed.data.user_name });
-  return context.json({ result: { id: postId } }, httpStatusCode.created);
+  const id = await new PostsRepository(context.env.DB).create({
+    site_id  : parsed.data.site_id ?? null,
+    user_name: parsed.data.user_name,
+    content  : parsed.data.content,
+    ip       : ip,
+    is_admin : 0
+  });
+  return context.json({ result: { id } }, httpStatusCode.created);
 });

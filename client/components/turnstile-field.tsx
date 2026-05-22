@@ -1,18 +1,13 @@
 import { Turnstile } from '@marsidev/react-turnstile';
-import { useCallback, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 
 type Props = {
   onTokenChange: (token: string) => void;
 };
 
 export function TurnstileField({ onTokenChange }: Props): ReactElement {
-  const onSuccess = useCallback((token: string) => {
-    onTokenChange(token);
-  }, [onTokenChange]);
-  
-  const onExpireOrError = useCallback(() => {
-    onTokenChange('');
-  }, [onTokenChange]);
+  const onSuccess       = (token: string): void => { onTokenChange(token); };
+  const onExpireOrError = (             ): void => { onTokenChange(''   ); };
   
   return (
     <div className="turnstile-wrapper">

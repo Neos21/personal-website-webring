@@ -8,7 +8,7 @@ export const userNameMaxLength   = 100;
 export const contentDisplayName  = '本文';
 export const contentMaxLength    = 500;
 
-export const supportPostSchema = z.object({
+export const newPostSchema = z.object({
   site_id         : z.coerce.number({ error: `${siteIdDisplayName} 数値が指定されていません` })
                       .int({ error: `${siteIdDisplayName} に整数が指定されていません` })
                       .min(1, { error: `${siteIdDisplayName} に1以上の整数が指定されていません` })

@@ -1,4 +1,4 @@
-export type SiteIp = {
+export type SiteIpAdmin = {
   id: number;
   site_id: number;
   is_created: number;
@@ -7,4 +7,4 @@ export type SiteIp = {
   created_at: string;
 };
 
-export type NewSiteIp = Pick<SiteIp, 'site_id' | 'is_created' | 'is_self' | 'ip'>;
+export type NewSiteIp = Pick<SiteIpAdmin, 'site_id' | 'is_created' | 'is_self' | 'ip'>;

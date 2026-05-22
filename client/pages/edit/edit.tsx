@@ -34,8 +34,8 @@ export default function Edit(): ReactElement {
         const response = await ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>();
         setSite(response.result);
       }
-      catch(err) {
-        const errorMessage = await extractApiErrorMessage(err, '情報の取得に失敗しました');
+      catch(error) {
+        const errorMessage = await extractApiErrorMessage(error, '情報の取得に失敗しました');
         setError(errorMessage);
       }
       finally {
