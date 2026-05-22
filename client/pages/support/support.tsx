@@ -128,7 +128,6 @@ export default function Support(): ReactElement {
       setPosts(response.result.posts);
       setHasNext(response.result.has_next);
       // TODO : URL のパラメータ、および `initialSiteId` が書き換わらなさそうなので書き換えたい
-      // TODO : ページトップに移動させたい
     }
     catch(error) {
       setServerError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));

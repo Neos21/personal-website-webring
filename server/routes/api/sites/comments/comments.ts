@@ -7,12 +7,12 @@ import { newSiteCommentSchema } from '../../../../../shared/schemas/comment-sche
 import { idParamSchema } from '../../../../../shared/schemas/id-param-schema';
 import { convertToInteger } from '../../../../helpers/convert-to-integer';
 import { getIp } from '../../../../helpers/get-ip';
+import { validateTurnstile } from '../../../../helpers/validate-turnstile';
 import { DenyIpsRepository } from '../../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../../repositories/site-comments-repository';
 import { SitesRepository } from '../../../../repositories/sites-repository';
 
 import type { HonoBindings } from '../../../../types/hono-bindings';
-import { validateTurnstile } from '../../../../helpers/validate-turnstile';
 
 export const comments = new Hono<{ Bindings: HonoBindings; }>();
 export const commentsPath = '/comments';

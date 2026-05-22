@@ -14,7 +14,7 @@ export default function Edit(): ReactElement {
   
   // サイト ID パラメータ (必須)
   const idParam = searchParams.get('id');
-  const siteId  = isEmpty(idParam) ? null : Number(idParam);  // TODO : 数値以外は「サイト ID が指定されていません」扱いにしたい
+  const siteId  = isEmpty(idParam) ? null : Number(idParam);
   
   // サイト詳細 (子コンポーネントに渡す)
   const [site, setSite] = useState<SitePublicWithTags | null>(null);
