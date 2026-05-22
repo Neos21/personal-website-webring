@@ -113,6 +113,12 @@ CREATE TABLE deny_ips (  -- IP 制限 (荒らし対策用)
   ip          TEXT     NOT NULL     UNIQUE,                    -- IP アドレス
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
 );
+
+CREATE TABLE deny_domains (  -- 禁止ドメイン
+  id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
+  domain      TEXT     NOT NULL     UNIQUE,                    -- ドメイン名
+  created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
+);
 ```
 
 

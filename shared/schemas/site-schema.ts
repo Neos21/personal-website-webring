@@ -48,7 +48,7 @@ export const newSiteSchema = z.object({
                         ),
   url                 : z.preprocess(
                           value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
-                          z.string({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
+                          z.httpUrl({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
                             .min(1, { error: `${urlDisplayName}を入力してください` })
                             .max(urlMaxLength, { error: `${urlDisplayName}は${urlMaxLength}文字以内で入力してください` })
                         ),
@@ -84,7 +84,7 @@ export const newSiteSchema = z.object({
                         ),
   banner_url          : z.preprocess(
                           value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
-                          z.string({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
+                          z.httpUrl({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
                             .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
                             .nullable()
                         ),
@@ -147,7 +147,7 @@ export const updateSiteSchema = z.object({
                     ),
   url             : z.preprocess(
                       value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
-                      z.string({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
+                      z.httpUrl({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
                         .min(1, { error: `${urlDisplayName}を入力してください` })
                         .max(urlMaxLength, { error: `${urlDisplayName}は${urlMaxLength}文字以内で入力してください` })
                     ),
@@ -183,7 +183,7 @@ export const updateSiteSchema = z.object({
                     ),
   banner_url      : z.preprocess(
                       value => value == null ? '' : typeof value === 'string' ? value.trim() : value,
-                      z.string({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
+                      z.httpUrl({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
                         .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
                         .nullable()
                     ),

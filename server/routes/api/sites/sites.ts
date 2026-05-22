@@ -11,12 +11,14 @@ import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
+import { DenyDomainsRepository } from '../../../repositories/deny-domains-repository';
 import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
 import { SiteCommentsRepository } from '../../../repositories/site-comments-repository';
 import { SiteIpsRepository } from '../../../repositories/site-ips-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
 import { SitesRepository } from '../../../repositories/sites-repository';
 import { TagsRepository } from '../../../repositories/tags-repository';
+import { DenyDomainService } from '../../../services/deny-domain-service';
 import { SiteTagService } from '../../../services/site-tag-service';
 import { SiteUrlService } from '../../../services/site-url-service';
 
@@ -68,6 +70,9 @@ sites.post('/', async context => {
   
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
+  
+  const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
+  if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
   const sitesRepository = new SitesRepository(context.env.DB);
   
@@ -123,9 +128,8 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const parsed = updateSiteSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
-  // TODO : ココでもチェックしておくが、フォーム入力中からも動的にチェックしたい
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url, siteIdParsed.data);
-  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
+  const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
+  if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
   // 自薦状態での編集時はパスワードチェックを行う (他薦から自薦に切り替える最初はパスワードチェックをしない)
