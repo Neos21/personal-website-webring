@@ -28,7 +28,7 @@ adminPosts.get('/', async context => {
   return context.json({ result: { page, posts, has_next: hasNext } }, httpStatusCode.ok);
 });
 
-adminPosts.get('/ : id', async context => {
+adminPosts.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const idParsed = idParamSchema.safeParse(context.req.param('id'));
   if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   

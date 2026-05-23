@@ -44,7 +44,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
       navigate('/list');
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

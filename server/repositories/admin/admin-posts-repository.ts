@@ -24,7 +24,7 @@ export class AdminPostsRepository {
   
   public async findById(id: number): Promise<PostAdmin | null> {
     return await this.db
-      .prepare('SELECT id, site_id, user_name, content, ip, is_admin, created_at FROM posts WHERE site_id = ? LIMIT 1')
+      .prepare('SELECT id, site_id, user_name, content, ip, is_admin, created_at FROM posts WHERE id = ? LIMIT 1')
       .bind(id)
       .first<PostAdmin>();
   }

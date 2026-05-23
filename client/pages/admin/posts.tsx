@@ -126,7 +126,7 @@ export default function AdminPosts(): ReactElement {
           <tbody>
             {posts.map(post => (
               <tr key={post.id} className={post.is_admin === 1 ? 'row-admin' : ''}>
-                <td className="nowrap">{post.id}</td>
+                <td className="nowrap"><Link to={{ pathname: '/admin/post', search: `?id=${post.id}` }}>${post.id}</Link></td>
                 <td className="nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
                 <td>{post.user_name || '-'}</td>
                 <td className="pre-wrap">{post.content}</td>

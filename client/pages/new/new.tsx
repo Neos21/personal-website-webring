@@ -133,7 +133,7 @@ export default function New(): ReactElement {
       navigate(`/site?id=${response.result.id}`);
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '登録に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの登録に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

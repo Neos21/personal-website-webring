@@ -39,24 +39,22 @@ export default function AdminSite(): ReactElement {
   
   // エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string>('');
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
     if(id == null) {
-      setError('サイト ID が指定されていません');
+      setLoadError('サイト ID が指定されていません');
       setIsLoading(false);
       return;
     }
     if(!Number.isInteger(id) || id <= 0) {
-      setError('サイト ID が不正です');
+      setLoadError('サイト ID が不正です');
       setIsLoading(false);
       return;
     }
     
     (async () => {
-      setIsLoading(true);
-      setError('');
-      
       try {
         const response = await adminApi.get(`/api/admin/sites/${id}`).json<{ result: SiteAdminWithTags; }>();
         setSite(response.result);
@@ -128,7 +126,7 @@ export default function AdminSite(): ReactElement {
     setError('');
     try {
       await adminApi.delete(`/api/admin/sites/${id}`);
-      navigate('/admin/sites');
+      navigate('/admin/sites?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
@@ -142,8 +140,8 @@ export default function AdminSite(): ReactElement {
       
       {isLoading ? (
         <p className="loading">読み込み中…</p>
-      ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+      ) : !isEmpty(loadError) ? (
+        <p className="text-error">{loadError}</p>
       ) : site == null ? (
         <p className="text-error">サイトが見つかりませんでした。</p>
       ) : (
@@ -234,9 +232,11 @@ export default function AdminSite(): ReactElement {
           </label>
           <div className="text-muted">現在の{passwordDisplayName} : {site.password_hash}</div>
           
+          {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+          
           <p><button type="submit">編集</button></p>
           
-          <p className="form-delete text-right"><button type="button" onClick={() => onDelete()}>物理削除</button></p>
+          <p className="form-delete text-right"><button type="button" onClick={onDelete}>削除</button></p>
         </form>
       )}
     </main>

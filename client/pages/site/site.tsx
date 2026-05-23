@@ -34,7 +34,7 @@ export default function Site(): ReactElement {
   
   // コメント一覧 エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error    , setError    ] = useState<string>('');
+  const [loadError, setLoadError] = useState<string>('');
   
   // コメント入力フォーム
   const [commentUserName, setCommentUserName] = useState<string>('');
@@ -44,16 +44,16 @@ export default function Site(): ReactElement {
   
   // コメント入力フォーム エラー表示系
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [formError   , setFormError   ] = useState<string>('');
+  const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
     if(siteId == null) {
-      setError('サイト ID が指定されていません');
+      setLoadError('サイト ID が指定されていません');
       setIsLoading(false);
       return;
     }
     if(!Number.isInteger(siteId) || siteId <= 0) {
-      setError('サイト ID が不正です');
+      setLoadError('サイト ID が不正です');
       setIsLoading(false);
       return;
     }
@@ -77,7 +77,7 @@ export default function Site(): ReactElement {
         setHasNext(commentsResponse.result.has_next);
       }
       catch(error) {
-        setError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
+        setLoadError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
@@ -87,7 +87,7 @@ export default function Site(): ReactElement {
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setFormError('');
+    setError('');
     
     const payload = {
       user_name      : commentUserName,
@@ -95,7 +95,7 @@ export default function Site(): ReactElement {
       turnstile_token: turnstileToken
     };
     const parsed = newSiteCommentSchema.safeParse(payload);
-    if(!parsed.success) return setFormError(mergeIssues(parsed.error));
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
@@ -109,7 +109,7 @@ export default function Site(): ReactElement {
       navigate(`/support?id=${siteId}&page=1`);
     }
     catch(error) {
-      setFormError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
+      setError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -122,9 +122,9 @@ export default function Site(): ReactElement {
       
       {isLoading ? (
         <p className="loading">読み込み中…</p>
-      ) : !isEmpty(error) ? (
+      ) : !isEmpty(loadError) ? (
         <>
-          <p className="text-error">{error}</p>
+          <p className="text-error">{loadError}</p>
           <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
         </>
       ) : site == null ? (
@@ -220,7 +220,7 @@ export default function Site(): ReactElement {
               
               <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(formError) && (<p className="text-error">{formError}</p>)}
+              {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               
               <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
             </fieldset>

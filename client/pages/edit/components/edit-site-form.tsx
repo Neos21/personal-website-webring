@@ -123,7 +123,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
       navigate(`/site?id=${site.id}`);
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '編集に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの編集に失敗しました'));
     }
     finally {
       setIsSubmitting(false);

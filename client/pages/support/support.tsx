@@ -29,7 +29,7 @@ export default function Support(): ReactElement {
   const [posts    , setPosts    ] = useState<Array<PostPublic>>([]);
   const [hasNext  , setHasNext  ] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error    , setError    ] = useState<string>('');
+  const [loadError, setLoadError] = useState<string>('');
   
   // 投稿フォーム
   const [formSiteId    , setFormSiteId    ] = useState<string>(siteId != null ? String(siteId) : '');
@@ -42,11 +42,11 @@ export default function Support(): ReactElement {
   const [lookupSite  , setLookupSite  ] = useState<SiteNameUrl | null>(null);
   const [lookupError , setLookupError ] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [formError   , setFormError   ] = useState<string>('');
+  const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
     if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
-      setError('サイト ID が不正です');
+      setLoadError('サイト ID が不正です');
       setIsLoading(false);
       return;
     }
@@ -72,7 +72,7 @@ export default function Support(): ReactElement {
         setHasNext(response.result.has_next);
       }
       catch(error) {
-        setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
+        setLoadError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
@@ -106,7 +106,7 @@ export default function Support(): ReactElement {
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setFormError('');
+    setError('');
     
     const submittedSiteId        = isEmpty(formSiteId) ? null : Number(formSiteId);
     const isValidSubmittedSiteId = isEmpty(formSiteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
@@ -118,7 +118,7 @@ export default function Support(): ReactElement {
       turnstile_token: turnstileToken
     };
     const parsed = newPostSchema.safeParse(payload);
-    if(!parsed.success) return setFormError(mergeIssues(parsed.error));
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
@@ -131,12 +131,12 @@ export default function Support(): ReactElement {
       
       // 投稿したサイト ID に基づいて1ページ目の URL に遷移する
       const query = new URLSearchParams();
-      query.set('page', '1');
       if(submittedSiteId != null) query.set('id', String(submittedSiteId));
+      query.set('page', '1');
       navigate(`/support?${query.toString()}`);
     }
     catch(error) {
-      setFormError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
+      setError(extractApiErrorMessage(error, '投稿に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -158,8 +158,8 @@ export default function Support(): ReactElement {
       
       {isLoading ? (
         <p className="loading">読み込み中…</p>
-      ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+      ) : !isEmpty(loadError) ? (
+        <p className="text-error">{loadError}</p>
       ) : (
         <>
           <form onSubmit={onSubmit}>
@@ -189,7 +189,7 @@ export default function Support(): ReactElement {
               
               <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(formError) && (<p className="text-error">{formError}</p>)}
+              {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               
               <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
             </fieldset>
