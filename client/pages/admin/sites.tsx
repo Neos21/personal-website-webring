@@ -30,7 +30,7 @@ export default function AdminSites(): ReactElement {
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
     if(needsPageFix) {
-      navigate('/admin/sites?&page=1', { replace: true });
+      navigate('/admin/sites?page=1', { replace: true });
       return;
     }
     

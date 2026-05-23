@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -13,6 +13,7 @@ import type { SitePublicWithTags } from '../../../shared/types/site';
 import type { SiteCommentPublic } from '../../../shared/types/site-comment';
 
 export default function Site(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -37,7 +38,7 @@ export default function Site(): ReactElement {
   const [loadError, setLoadError] = useState<string>('');
   
   // コメント入力フォーム
-  const [userName      , setUserName      ] = useState<string>('');
+  const [userName      , setUserName      ] = useState<string>('');  // TODO : support.tsx と同じ、userName の Zustand ストアがあればそれを初期表示時に復元する
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   
@@ -61,7 +62,7 @@ export default function Site(): ReactElement {
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
     if(needsPageFix) {
-      navigate(`/support?id=${siteId}&page=1`, { replace: true });
+      navigate(`/site?id=${siteId}&page=1`, { replace: true });
       return;
     }
     
@@ -82,7 +83,7 @@ export default function Site(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [siteId, pageParam, page]);
+  }, [location.key, siteId, pageParam, page]);  // `onSubmit` 時の `navigate()` でパラメータが変わらない場合も再読込させるため `location.key` を依存関係に入れる
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -99,7 +100,10 @@ export default function Site(): ReactElement {
     setIsSubmitting(true);
     try {
       await ky.post(`/api/sites/${siteId}/comments`, { json: parsed.data }).json();
-      navigate(`/support?id=${siteId}&page=1`);
+      // TODO : 名前は localStorage 保存 (Zustand 使う)
+      setContent('');
+      setTurnstileToken('');
+      navigate(`/site?id=${siteId}&page=1`);
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
@@ -148,7 +152,8 @@ export default function Site(): ReactElement {
             
             <ul>
               <li>管理人 : {site.owner_name || '-'}</li>
-              <li>登録日 : {convertUtcToJst(site.created_at)}</li>
+              <li>登録日 : {convertUtcToJst(site.created_at, true)}</li>
+              <li>更新日 : {convertUtcToJst(site.updated_at, true)}</li>
               <li>{site.is_self === 1 ? '自薦' : '他薦'}</li>
             </ul>
             
@@ -160,7 +165,7 @@ export default function Site(): ReactElement {
           </article>
           
           <p className="text-right"><Link to={{ pathname: '/edit', search: `?id=${siteId}` }}>{site.is_self === 1 ? '管理人様用 : 編集・削除' : 'このサイトの管理人ですか？'}</Link></p>
-          <p className="text-right"><Link to={{ pathname: '/support', search: `?id=${siteId}` }}>このサイトについてサポート掲示板で問い合わせる</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/support', search: `?id=${siteId}&page=1` }}>このサイトについてサポート掲示板で問い合わせる</Link></p>
           
           <section>
             <h2>サイトへのコメント</h2>
@@ -211,7 +216,8 @@ export default function Site(): ReactElement {
                 <textarea placeholder={commentDisplayName} value={content} maxLength={commentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
               </label>
               
-              <TurnstileField onTokenChange={setTurnstileToken} />
+              {/* 投稿後の再読込でリセットするため `key` に `location.key` を指定する */}
+              <TurnstileField key={location.key} onTokenChange={setTurnstileToken} />
               
               {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               

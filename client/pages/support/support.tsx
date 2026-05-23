@@ -13,6 +13,7 @@ import type { PostPublic } from '../../../shared/types/post';
 import type { SiteNameUrl } from '../../../shared/types/site';
 
 export default function Support(): ReactElement {
+  // TODO : useLocation 追加 (site.tsx 参照)
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -33,7 +34,7 @@ export default function Support(): ReactElement {
   
   // 投稿フォーム
   const [formSiteId    , setFormSiteId    ] = useState<string>(siteId != null ? String(siteId) : '');
-  const [userName      , setUserName      ] = useState<string>('');
+  const [userName      , setUserName      ] = useState<string>('');  // TODO : site.tsx と同じ、userName の Zustand ストアがあればそれを初期表示時に復元する
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [turnstileKey  , setTurnstileKey  ] = useState<string>(String(Date.now()));  // `key` を変更すると Turnstile ウィジェットを再読み込みできる
@@ -137,8 +138,6 @@ export default function Support(): ReactElement {
     }
     catch(error) {
       setError(extractApiErrorMessage(error, '投稿に失敗しました'));
-    }
-    finally {
       setIsSubmitting(false);
     }
   };
@@ -172,7 +171,7 @@ export default function Support(): ReactElement {
               </label>
               {lookupSite != null && (
                 <div className="alert-success">
-                  [${lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}` }}>{lookupSite.site_name}</Link>
+                  [{lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}` }}>{lookupSite.site_name}</Link>
                 </div>
               )}
               {!isEmpty(lookupError) && (<p className="text-error">{lookupError}</p>)}

@@ -38,7 +38,7 @@ export default function AdminTags(): ReactElement {
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
     if(needsPageFix) {
-      navigate('/admin/tags?&page=1', { replace: true });
+      navigate('/admin/tags?page=1', { replace: true });
       return;
     }
     

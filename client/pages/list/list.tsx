@@ -30,7 +30,7 @@ export default function List(): ReactElement {
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
     if(needsPageFix) {
-      navigate('/list?&page=1', { replace: true });
+      navigate('/list?page=1', { replace: true });
       return;
     }
     

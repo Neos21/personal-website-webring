@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 import { preprocessBooleanNumber } from '../schema-utilities';
-import { refineBanneSize, updateSiteSchema } from '../site-schema';
+import { refineBannerUrl, refineBanneSize, updateSiteSchemaObject } from '../site-schema';
 
-export const adminUpdateSiteSchema = updateSiteSchema.omit({ turnstile_token: true }).extend({
+export const adminUpdateSiteSchema = updateSiteSchemaObject.omit({ turnstile_token: true }).extend({
   is_self   : z.preprocess(
                 preprocessBooleanNumber,
                 z.union([z.literal(0), z.literal(1)])
@@ -13,5 +13,6 @@ export const adminUpdateSiteSchema = updateSiteSchema.omit({ turnstile_token: tr
                 z.union([z.literal(0), z.literal(1)])
               )
 }).superRefine((data, context) => {
+  refineBannerUrl(data, context);
   refineBanneSize(data, context);
 });

@@ -120,12 +120,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
     setIsSubmitting(true);
     try {
       await ky.put(`/api/sites/${site.id}`, { json: parsed.data }).json();
-      navigate(`/site?id=${site.id}`);
+      navigate(`/site?id=${site.id}&page=1`);
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'サイトの編集に失敗しました'));
-    }
-    finally {
       setIsSubmitting(false);
     }
   };
@@ -152,14 +150,14 @@ export function EditSiteForm({ site }: Props): ReactElement {
         {exactMatch != null && (
           <div className="alert-error">
             <div className="text-error">この URL は登録済みです</div>
-            <div>ID <Link to={{ pathname: '/show', search: `?id=${exactMatch.id}` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
+            <div>ID <Link to={{ pathname: '/site', search: `?id=${exactMatch.id}&page=1` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
             <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
           </div>
         )}
         {nearMatch != null && (
           <div className="alert-warning">
             <div className="text-warning">類似する URL が登録されています</div>
-            <div>ID <Link to={{ pathname: '/show', search: `?id=${nearMatch.id}` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
+            <div>ID <Link to={{ pathname: '/site', search: `?id=${nearMatch.id}&page=1` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
             <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
           </div>
         )}

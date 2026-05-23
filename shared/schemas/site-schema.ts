@@ -1,8 +1,8 @@
 import z from 'zod';
 
-import { preprocessBooleanNumber, preprocessMultiLinesString, preprocessOneLineString, propertyTurnstileToken } from './schema-utilities';
+import { preprocessBooleanNumber, preprocessMultiLinesString, preprocessOneLineString, preprocessUrl, propertyTurnstileToken } from './schema-utilities';
+import { tagNameSchema } from './tag-schema';
 import { isEmpty } from '../helpers/is-empty';
-import { tagNameSchema } from './admin/admin-tag-schema';
 
 export const siteNameDisplayName           = 'サイト名'             as const;
 export const siteNameMaxLength             = 100                    as const;
@@ -26,6 +26,13 @@ export const recommenderNameMaxLength      = 50                     as const;
 export const recommenderCommentDisplayName = '推薦コメント'         as const;
 export const recommenderCommentMaxLength   = 500                    as const;
 
+export const refineBannerUrl = (data: any, context: any): void => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  if(isEmpty(data.banner_url)) return;
+  const lowerBannerUrl = data.banner_url.toLowerCase();
+  if(['.jpg', '.jpeg', '.gif', '.png', '.webp'].some(extension => lowerBannerUrl.endsWith(extension))) return;
+  context.addIssue({ code: 'custom', message: `${bannerUrlDisplayName} の末尾は .jpg .jpeg .gif .png .webp のみです` });
+};
+
 export const refineBanneSize = (data: any, context: any): void => {  // eslint-disable-line @typescript-eslint/no-explicit-any
   if(!isEmpty(data.banner_url) && (isEmpty(data.banner_width) || isEmpty(data.banner_height))) context.addIssue({ code: 'custom', message: `${bannerUrlDisplayName} を指定する場合はバナーサイズも選択してください` });
   
@@ -35,7 +42,8 @@ export const refineBanneSize = (data: any, context: any): void => {  // eslint-d
   }
 };
 
-export const newSiteSchema = z.object({
+// `superRefine()` 後に `omit()` ができないのでオブジェクト単体で用意しておく
+export const newSiteSchemaObject = z.object({
   is_self             : z.preprocess(
                           preprocessBooleanNumber,
                           z.union([z.literal(0), z.literal(1)])
@@ -80,7 +88,7 @@ export const newSiteSchema = z.object({
                             .max(tagsMax, { error: `${tagDisplayName}は最大${tagsMax}個まで指定できます` })
                         ),
   banner_url          : z.preprocess(
-                          preprocessOneLineString,
+                          preprocessUrl,
                           z.httpUrl({ error: `${bannerUrlDisplayName} に文字列でないデータが入力されています` })
                             .max(bannerUrlMaxLength, { error: `${bannerUrlDisplayName} は${bannerUrlMaxLength}文字以内で入力してください` })
                             .nullish()
@@ -112,7 +120,22 @@ export const newSiteSchema = z.object({
                             .nullish()
                         ),
   turnstile_token     : propertyTurnstileToken
-}).superRefine((data, context) => {
+});
+
+export const updateSiteSchemaObject = newSiteSchemaObject.omit({
+  is_self            : true,
+  recommender_name   : true,
+  recommender_comment: true
+}).extend({
+  password: z.preprocess(
+            preprocessOneLineString,
+            z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
+              .min(1, { error: `${passwordDisplayName}を入力してください` })
+              .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
+          )
+});
+
+export const newSiteSchema = newSiteSchemaObject.superRefine((data, context) => {
   if(data.is_self === 1 && isEmpty(data.password)) context.addIssue({ code: 'custom', message: `${passwordDisplayName}は自薦登録時に必須です` });
   
   if(data.is_self === 1 && !isEmpty(data.recommender_name)) context.addIssue({ code: 'custom', message: `${recommenderNameDisplayName}は自薦登録時には入力できません` });
@@ -123,21 +146,12 @@ export const newSiteSchema = z.object({
   
   if(data.is_self === 0 && isEmpty(data.recommender_comment)) context.addIssue({ code: 'custom', message: `${recommenderCommentDisplayName} は他薦登録時に必須です` });
   
+  refineBannerUrl(data, context);
   refineBanneSize(data, context);
 });
 
-export const updateSiteSchema = newSiteSchema.omit({
-  is_self            : true,
-  recommender_name   : true,
-  recommender_comment: true
-}).extend({
-  password: z.preprocess(
-            preprocessOneLineString,
-            z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
-              .min(1, { error: `${passwordDisplayName}を入力してください` })
-              .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
-          ),
-}).superRefine((data, context) => {
+export const updateSiteSchema = updateSiteSchemaObject.superRefine((data, context) => {
+  refineBannerUrl(data, context);
   refineBanneSize(data, context);
 });
 

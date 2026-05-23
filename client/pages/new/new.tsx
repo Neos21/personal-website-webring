@@ -17,7 +17,7 @@ export default function New(): ReactElement {
   // 入力フォーム
   const [isSelf            , setIsSelf            ] = useState<0 | 1>(0);
   const [siteName          , setSiteName          ] = useState<string>('');
-  const [url               , setUrl               ] = useState<string>('');
+  const [url               , setUrl               ] = useState<string>('https://');
   const [ownerName         , setOwnerName         ] = useState<string>('');
   const [description       , setDescription       ] = useState<string>('');
   const [tags              , setTags              ] = useState<Array<string>>([]);
@@ -130,12 +130,10 @@ export default function New(): ReactElement {
     setIsSubmitting(true);
     try {
       const response = await ky.post('/api/sites', { json: parsed.data }).json<{ result: { id: number; }; }>();
-      navigate(`/site?id=${response.result.id}`);
+      navigate(`/site?id=${response.result.id}&page=1`);
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'サイトの登録に失敗しました'));
-    }
-    finally {
       setIsSubmitting(false);
     }
   };
@@ -179,14 +177,14 @@ export default function New(): ReactElement {
           {exactMatch != null && (
             <div className="alert-error">
               <div className="text-error">この URL は登録済みです</div>
-              <div>ID <Link to={{ pathname: '/show', search: `?id=${exactMatch.id}` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
+              <div>ID <Link to={{ pathname: '/site', search: `?id=${exactMatch.id}&page=1` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
               <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
             </div>
           )}
           {nearMatch != null && (
             <div className="alert-warning">
               <div className="text-warning">類似する URL が登録されています</div>
-              <div>ID <Link to={{ pathname: '/show', search: `?id=${nearMatch.id}` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
+              <div>ID <Link to={{ pathname: '/site', search: `?id=${nearMatch.id}&page=1` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
               <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
             </div>
           )}

@@ -68,10 +68,6 @@ input[type="text"], input[type="url"], input[type="password"], textarea, button 
   }
 }
 
-input[type="radio"] {
-  accent-color: #2abbf4;
-}
-
 input[type="text"], input[type="url"], input[type="password"], textarea {
   display: block;
   width: 100%;
@@ -219,11 +215,17 @@ table {
   border-radius: 8px;
   padding: 1rem;
   
-  & > :not(:first-child) {
-    margin-bottom: 1rem;
+  & > :first-child {
+    margin-top: 0;
   }
   & > :not(:first-child) {
     margin-top: 1rem;
+  }
+  & > :not(:last-child) {
+    margin-bottom: 1rem;
+  }
+  & > :last-child {
+    margin-bottom: 0;
   }
   
   & > ul {

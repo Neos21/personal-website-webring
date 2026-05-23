@@ -41,12 +41,10 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     setIsSubmitting(true);
     try {
       await ky.delete(`/api/sites/${site.id}`, { json: parsed.data }).text();  // 204 No Content が返るため `.json()` でコールするとエラーになる
-      navigate('/list');
+      navigate('/list&page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
-    }
-    finally {
       setIsSubmitting(false);
     }
   };
