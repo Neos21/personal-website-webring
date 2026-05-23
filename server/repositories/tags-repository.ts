@@ -3,25 +3,11 @@ import type { Tag } from '../../shared/types/tag';
 export class TagsRepository {
   constructor(private readonly db: D1Database) { }
   
-  /** 管理画面向け全件取得 */
-  public async findAll(): Promise<Array<Tag>> {
+  /** 指定のサイト ID に紐付くタグ一覧を取得する */
+  public async findTagsBySiteId(siteId: number): Promise<Array<Tag>> {
     const result = await this.db
-      .prepare('SELECT id, name FROM tags ORDER BY id DESC')
-      .all<Tag>();
-    return result.results ?? [];
-  }
-  
-  public async findById(id: number): Promise<Tag | null> {
-    return await this.db
-      .prepare('SELECT id, name FROM tags WHERE id = ? LIMIT 1')
-      .bind(id)
-      .first<Tag>();
-  }
-  
-  public async findPage(pageSize: number, offset: number): Promise<Array<Tag>> {
-    const result = await this.db
-      .prepare('SELECT id, name FROM tags ORDER BY id DESC LIMIT ? OFFSET ?')
-      .bind(pageSize, offset)
+      .prepare('SELECT tags.id, tags.name FROM tags INNER JOIN site_tags ON tags.id = site_tags.tag_id WHERE site_tags.site_id = ? ORDER BY tags.id ASC')
+      .bind(siteId)
       .all<Tag>();
     return result.results ?? [];
   }
@@ -40,28 +26,6 @@ export class TagsRepository {
       .bind(name)
       .run();
     return result.meta.last_row_id;
-  }
-  
-  public async updateById(id: number, name: string): Promise<void> {
-    await this.db
-      .prepare('UPDATE tags SET name = ? WHERE id = ?')
-      .bind(name, id)
-      .run();
-  }
-  
-  public async deleteById(id: number): Promise<void> {
-    await this.db
-      .prepare('DELETE FROM tags WHERE id = ?')
-      .bind(id)
-      .run();
-  }
-  
-  public async countSitesByTagId(id: number): Promise<number> {
-    const result = await this.db
-      .prepare('SELECT COUNT(*) AS count FROM site_tags WHERE tag_id = ?')
-      .bind(id)
-      .first<Record<string, number>>();
-    return Number(result?.count ?? 0);
   }
   
   public async findOrCreate(name: string): Promise<Tag> {

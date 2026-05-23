@@ -4,7 +4,7 @@ import { newPostSchema, userNameDisplayName, userNameMaxLength } from '../post-s
 import { preprocessOneLineString } from '../schema-utilities';
 
 /** 管理画面では Turnstile 認証は省きハンドルネームは必須入力にする */
-export const newAdminPostSchema = newPostSchema.omit({ turnstile_token: true }).extend({
+export const adminNewPostSchema = newPostSchema.omit({ turnstile_token: true }).extend({
   user_name : z.preprocess(
                 preprocessOneLineString,
                 z.string({ error: `${userNameDisplayName}に文字列でないデータが入力されています` })

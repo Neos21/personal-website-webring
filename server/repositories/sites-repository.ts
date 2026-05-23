@@ -1,24 +1,7 @@
-import type { NewSite, SiteAdmin, SiteForAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
+import type { NewSite, SiteForAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
 
 export class SitesRepository {
   constructor(private readonly db: D1Database) { }
-  
-  /** 管理画面向け全件取得 */
-  public async findAll(): Promise<Array<SiteAdmin>> {
-    const result = await this.db
-      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites')
-      .all<SiteAdmin>();
-    return result.results ?? [];
-  }
-  
-  /** 管理画面向けページング一覧 */
-  public async findPage(pageSize: number, offset: number): Promise<Array<SiteAdmin>> {
-    const result = await this.db
-      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites ORDER BY id DESC LIMIT ? OFFSET ?')
-      .bind(pageSize, offset)
-      .all<SiteAdmin>();
-    return result.results ?? [];
-  }
   
   /** ページング処理付き一覧 */
   public async findActivePage(pageSize: number, offset: number): Promise<Array<SitePublic>> {
@@ -83,13 +66,11 @@ export class SitesRepository {
       .prepare('SELECT id, url FROM sites WHERE id > ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
       .first<SiteUrl>();
-    
     // 見つからない場合は先頭へ戻る
     if(site == null) site = await this.db
       .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
       .first<SiteUrl>();
-    
     return site;
   }
   
@@ -99,13 +80,11 @@ export class SitesRepository {
       .prepare('SELECT id, url FROM sites WHERE id < ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
       .first<SiteUrl>();
-    
     // 見つからない場合は末尾へ戻る
     if(site == null) site = await this.db
       .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
       .first<SiteUrl>();
-    
     return site;
   }
   
@@ -134,25 +113,6 @@ export class SitesRepository {
   /** 論理削除する */
   public async markDeleted(siteId: number): Promise<void> {
     await this.db.prepare('UPDATE sites SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .bind(siteId)
-      .run();
-  }
-  
-  public async setIsDeleted(siteId: number, isDeleted: 1 | 0): Promise<void> {
-    await this.db.prepare('UPDATE sites SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .bind(isDeleted, siteId)
-      .run();
-  }
-  
-  public async findById(siteId: number): Promise<SiteAdmin | null> {
-    return await this.db
-      .prepare('SELECT id, is_self, url, site_name, owner_name, description, banner_url, banner_width, banner_height, password_hash, created_at, updated_at, is_deleted FROM sites WHERE id = ? LIMIT 1')
-      .bind(siteId)
-      .first<SiteAdmin>();
-  }
-  
-  public async deleteById(siteId: number): Promise<void> {
-    await this.db.prepare('DELETE FROM sites WHERE id = ?')
       .bind(siteId)
       .run();
   }

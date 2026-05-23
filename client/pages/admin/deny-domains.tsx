@@ -6,7 +6,7 @@ import { isEmpty } from '../../../shared/helpers/is-empty';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { DenyDomain } from '../../../shared/types/deny-domain';
+import type { DenyDomainAdmin } from '../../../shared/types/admin/admin-deny-domain';
 
 export default function AdminDenyDomains(): ReactElement {
   // 入力フォーム
@@ -17,7 +17,7 @@ export default function AdminDenyDomains(): ReactElement {
   
   // 一覧
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [domains  , setDomains  ] = useState<Array<DenyDomain>>([]);
+  const [domains  , setDomains  ] = useState<Array<DenyDomainAdmin>>([]);
   
   useEffect(() => {
     fetchDenyDomains();
@@ -28,7 +28,7 @@ export default function AdminDenyDomains(): ReactElement {
     setIsLoading(true);
     
     try {
-      const response = await adminApi.get('/api/admin/deny-domains').json<{ result: Array<DenyDomain>; }>();
+      const response = await adminApi.get('/api/admin/deny-domains').json<{ result: Array<DenyDomainAdmin>; }>();
       setDomains(response.result);
     }
     catch(error) {

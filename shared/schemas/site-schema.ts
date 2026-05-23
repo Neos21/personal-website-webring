@@ -1,7 +1,7 @@
 import z from 'zod';
 
-import { isEmpty } from '../helpers/is-empty';
 import { preprocessBooleanNumber, preprocessMultiLinesString, preprocessOneLineString, propertyTurnstileToken } from './schema-utilities';
+import { isEmpty } from '../helpers/is-empty';
 import { tagNameSchema } from './admin/tag-schema';
 
 export const siteNameDisplayName           = 'サイト名'             as const;

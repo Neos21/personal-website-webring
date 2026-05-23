@@ -4,7 +4,7 @@ import { sign } from 'hono/jwt';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
-import { adminLoginSchema, adminPasswordDisplayName } from '../../../../shared/schemas/admin-login-schema';
+import { adminLoginSchema, adminPasswordDisplayName } from '../../../../shared/schemas/admin/admin-login-schema';
 import { getIp } from '../../../helpers/get-ip';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { adminLoginSchema, adminPasswordDisplayName } from '../../../shared/schemas/admin-login-schema';
+import { adminLoginSchema, adminPasswordDisplayName } from '../../../shared/schemas/admin/admin-login-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { isAuthenticated, saveJwt } from '../../helpers/admin-auth';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';

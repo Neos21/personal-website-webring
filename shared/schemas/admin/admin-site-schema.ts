@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { refineBanneSize, updateSiteSchema } from '../site-schema';
 import { preprocessBooleanNumber } from '../schema-utilities';
+import { refineBanneSize, updateSiteSchema } from '../site-schema';
 
 export const adminUpdateSiteSchema = updateSiteSchema.omit({ turnstile_token: true }).extend({
   is_self   : z.preprocess(

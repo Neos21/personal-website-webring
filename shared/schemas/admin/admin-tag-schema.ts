@@ -1,6 +1,7 @@
 import z from 'zod';
-import { tagDisplayName, tagMaxLength } from '../site-schema';
+
 import { preprocessOneLineString } from '../schema-utilities';
+import { tagDisplayName, tagMaxLength } from '../site-schema';
 
 export const tagNameSchema = z.preprocess(
   preprocessOneLineString,
@@ -9,6 +10,6 @@ export const tagNameSchema = z.preprocess(
     .max(tagMaxLength, { error: `${tagDisplayName}は文字以内で入力してください` })
 );
 
-export const newTagSchema = z.object({
+export const adminNewTagSchema = z.object({
   name: tagNameSchema
 });

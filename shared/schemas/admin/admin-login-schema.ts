@@ -1,4 +1,5 @@
 import z from 'zod';
+
 import { preprocessOneLineString, propertyTurnstileToken } from '../schema-utilities';
 
 export const adminPasswordDisplayName = 'パスワード' as const;

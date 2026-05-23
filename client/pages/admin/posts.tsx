@@ -4,11 +4,12 @@ import { Link, useSearchParams } from 'react-router';
 import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { adminNewPostSchema } from '../../../shared/schemas/admin/admin-post-schema';
 import { contentDisplayName, contentMaxLength, siteIdDisplayName, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { PostAdmin } from '../../../shared/types/post';
+import type { PostAdmin } from '../../../shared/types/admin/admin-post';
 
 export default function AdminPosts(): ReactElement {
   const [searchParams] = useSearchParams();
@@ -67,7 +68,7 @@ export default function AdminPosts(): ReactElement {
         user_name: userName,
         content  : content
       };
-      const parsed = newAdminPostSchema.safeParse(payload);  // TODO : ないので作る
+      const parsed = adminNewPostSchema.safeParse(payload);
       
       await adminApi.post('/api/admin/posts', { json: parsed.data });
       setSiteId('');

@@ -5,12 +5,13 @@ import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
+import { adminUpdateSiteSchema } from '../../../shared/schemas/admin/admin-site-schema';
 import { bannerUrlDisplayName, bannerUrlMaxLength, descriptionDisplayName, descriptionMaxLength, ownerNameDisplayName, ownerNameMaxLength, passwordDisplayName, passwordMaxLength, siteNameDisplayName, siteNameMaxLength, tagDisplayName, tagMaxLength, tagsMax, urlDisplayName, urlMaxLength } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { convertBannerSizeToDimensions, type BannerSize } from '../../helpers/convert-banner-size-to-dimensions';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { SiteAdminWithTags } from '../../../shared/types/site';
+import type { SiteAdminWithTags } from '../../../shared/types/admin/admin-site';
 
 export default function AdminSite(): ReactElement {
   const navigate = useNavigate();
@@ -96,19 +97,19 @@ export default function AdminSite(): ReactElement {
     const { bannerWidth, bannerHeight } = convertBannerSizeToDimensions(bannerSize);
     
     const payload = {
-      is_self        : isSelf,
-      site_name      : siteName,
-      url            : url,
-      owner_name     : ownerName,
-      description    : description,
-      tags           : tags,
-      banner_url     : hasBannerUrl ? bannerUrl    : null,
-      banner_width   : hasBannerUrl ? bannerWidth  : null,
-      banner_height  : hasBannerUrl ? bannerHeight : null,
-      password       : password,
-      is_deleted     : isDeleted
+      is_self      : isSelf,
+      site_name    : siteName,
+      url          : url,
+      owner_name   : ownerName,
+      description  : description,
+      tags         : tags,
+      banner_url   : hasBannerUrl ? bannerUrl    : null,
+      banner_width : hasBannerUrl ? bannerWidth  : null,
+      banner_height: hasBannerUrl ? bannerHeight : null,
+      password     : password,
+      is_deleted   : isDeleted
     };
-    const parsed = adminUpdateSiteSchema.safeParse(payload);  // TODO : ないので作る
+    const parsed = adminUpdateSiteSchema.safeParse(payload);
     if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {
