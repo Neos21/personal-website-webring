@@ -23,13 +23,11 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
   
   // エラー表示系
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [clientError , setClientError ] = useState<string>('');
-  const [serverError , setServerError ] = useState<string>('');
+  const [error       , setError       ] = useState<string>('');
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setClientError('');
-    setServerError('');
+    setError('');
     
     if(!window.confirm('本当にこのサイトを削除しますか？\nこの操作は取り消せません。')) return;
     
@@ -38,7 +36,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
       turnstile_token: turnstileToken
     };
     const parsed = deleteSiteSchema.safeParse(payload);
-    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
@@ -46,7 +44,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
       navigate('/list');
     }
     catch(error) {
-      setServerError(extractApiErrorMessage(error, '削除に失敗しました'));
+      setError(extractApiErrorMessage(error, '削除に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -57,7 +55,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     <form onSubmit={onSubmit} className="form-delete">
       <fieldset>
         <legend>サイトの削除</legend>
-        <div className="text-muted">サイトを削除します。実行するには管理パスワードを入力してください。</div>
+        <div className="text-muted">サイトを削除するには管理パスワードを入力してください。</div>
         
         <label>
           <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
@@ -66,8 +64,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(clientError) && <p className="text-error">{clientError}</p>}
-        {!isEmpty(serverError) && <p className="text-error">{serverError}</p>}
+        {!isEmpty(error) && (<p className="text-error">{error}</p>)}
         
         <p className="text-right"><button type="submit" disabled={isSubmitting}>{isSubmitting ? '処理中…' : '削除する'}</button></p>
       </fieldset>

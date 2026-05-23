@@ -3,6 +3,25 @@
 @AGENTS.md を遵守しながら実装すること。
 
 
+## 平仄合わせ
+
+- [ ] `{condition && <p>Text</p>}` のように JSX をカッコで囲んでいない場所を直す
+  - → `{condition && (<p>Text</p>)}` が正
+  - `{condition ? <p>True</p> : <p>False</p>}` の場合も同様に直す
+- [ ] 型定義のセミコロンを付けていない場所を直す
+  - `ky.get('/api').json<{ result: { text: string } }>` は `ky.get('/api').json<{ result: { text: string; }; }>` のように直す
+- [ ] `useState('')` のように型注釈がないところに明示的に型を書く (`useState<string>('')` のように)
+- [ ] 主に Submit イベント周りで非推奨の型定義を使わない
+  - `import { type SubmitEvent } from 'react'` を使う
+- [ ]`== null`・`!= null` で null・undefined の判定をする場所はそのまま。
+  空文字とのチェックがある場合は `isEmpty()` を使う。自前で `text.trim()` などをしない
+- [ ] `useEffect` に不要な依存関係があれば消す
+- [ ] 未使用の CSS クラス名があれば削除する
+- [ ] `style` 属性は削除する
+- [ ] input・button の type 属性がないものは付ける
+- [ ] `if(stringText)` や `{stringText && <p>Text</p>}` のように、`boolean` 型以外の変数について暗黙型変換を利用して条件分岐に使用しない。`isEmpty(stringText)` のように `boolean` で判定すること
+
+
 ## リングマスター用管理画面 (`/admin` 配下) を実装する
 
 - [x] 管理ログイン

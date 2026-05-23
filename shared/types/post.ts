@@ -5,7 +5,7 @@ export type PostAdmin = {
   user_name: string | null;
   content: string;
   ip: string;
-  is_admin: number;
+  is_admin: 0 | 1;
   created_at: string;
 };
 

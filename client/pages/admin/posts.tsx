@@ -1,44 +1,51 @@
-import { isHTTPError } from 'ky';
-import { useEffect, useState, type ReactElement } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { Link, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
+import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
+import { isEmpty } from '../../../shared/helpers/is-empty';
+import { contentDisplayName, contentMaxLength, siteIdDisplayName, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
 import { adminApi } from '../../helpers/admin-api';
-import { removeJwt } from '../../helpers/admin-auth';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { PostAdmin } from '../../../shared/types/post';
 
 export default function AdminPosts(): ReactElement {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   
-  const pageParam = searchParams.get('page');
-  const pageNumber = pageParam == null ? 1 : Number(pageParam);
-  const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  // ページング
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
   
-  const [posts, setPosts] = useState<Array<PostAdmin>>([]);
-  const [hasNext, setHasNext] = useState(false);
-  const [siteId, setSiteId] = useState('');
-  const [content, setContent] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // エラー表示系
+  const [error, setError] = useState<string>('');
+  
+  // 一覧
+  const [posts    , setPosts    ] = useState<Array<PostAdmin>>([]);
+  const [hasNext  , setHasNext  ] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // 投稿フォーム
+  const [siteId      , setSiteId      ] = useState<string>('');
+  const [userName    , setUserName    ] = useState<string>('');
+  const [content     , setContent     ] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  
+  useEffect(() => {
+    fetchPosts();
+  }, [page]);
   
   const fetchPosts = async (): Promise<void> => {
     setError('');
     setIsLoading(true);
+    
     try {
-      const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; } }>();
+      const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; }; }>();
       setPosts(response.result.posts);
       setHasNext(response.result.has_next);
     }
     catch(error) {
-      if(isHTTPError(error) && error.response.status === 401) {
-        removeJwt();
-        navigate('/admin', { replace: true });
-        return;
-      }
       setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
     }
     finally {
@@ -46,31 +53,29 @@ export default function AdminPosts(): ReactElement {
     }
   };
   
-  useEffect(() => {
-    void fetchPosts();
-  }, [navigate, page]);
-  
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     setError('');
     setIsSubmitting(true);
     
     try {
-      const requestBody: { site_id?: number; content: string } = {
-        content
-      };
-      const parsedSiteId = Number(siteId);
-      if(siteId !== '' && Number.isInteger(parsedSiteId) && parsedSiteId > 0) {
-        requestBody.site_id = parsedSiteId;
-      }
+      const submittedSiteId        = isEmpty(siteId) ? null : Number(siteId);
+      const isValidSubmittedSiteId = isEmpty(siteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
       
-      await adminApi.post('/api/admin/posts', { json: requestBody });
+      const payload = {
+        site_id  : isValidSubmittedSiteId ? submittedSiteId : null,
+        user_name: userName,
+        content  : content
+      };
+      const parsed = newAdminPostSchema.safeParse(payload);  // TODO
+      
+      await adminApi.post('/api/admin/posts', { json: parsed.data });
       setSiteId('');
       setContent('');
       await fetchPosts();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
+      setError(extractApiErrorMessage(error, '投稿に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -80,68 +85,61 @@ export default function AdminPosts(): ReactElement {
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>投稿管理</h1>
+      <h1>サポート掲示板</h1>
       
-      <form onSubmit={handleSubmit} className="form-grid">
+      <form onSubmit={onSubmit}>
         <label>
-          サイト ID
-          <input
-            type="text"
-            value={siteId}
-            onChange={event => setSiteId(event.target.value)}
-            placeholder="任意"
-            disabled={isSubmitting}
-          />
+          <div className="form-label">{siteIdDisplayName} <span className="form-label-memo">(任意)</span></div>
+          <input type="text" placeholder={siteIdDisplayName} value={siteId} onChange={event => setSiteId(event.target.value)} />
         </label>
         <label>
-          本文
-          <textarea
-            value={content}
-            onChange={event => setContent(event.target.value)}
-            disabled={isSubmitting}
-          />
+          <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(必須・{userNameMaxLength}文字以内)</span></div>
+          <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
         </label>
-        <button type="submit" disabled={isSubmitting}>管理者投稿</button>
+        <label>
+          <div className="form-label">{contentDisplayName}</div>
+          <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
+        </label>
+        <p><button type="submit" disabled={isSubmitting}>管理者投稿</button></p>
       </form>
       
-      {error !== '' && <p className="text-error">{error}</p>}
+      {!isEmpty(error) && (<p className="text-error">{error}</p>)}
       
       {isLoading ? (
-        <p>読み込み中…</p>
+        <p className="loading">読み込み中…</p>
       ) : posts.length === 0 ? (
-        <p>投稿が見つかりませんでした。</p>
+        <p>投稿はありません。</p>
       ) : (
-        <> 
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>サイト ID</th>
-                <th>投稿者</th>
-                <th>管理者</th>
-                <th>投稿内容</th>
-                <th>作成日時</th>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>{siteIdDisplayName}</th>
+              <th>{userNameDisplayName}</th>
+              <th>{contentDisplayName}</th>
+              <th>投稿日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            {posts.map(post => (
+              <tr key={post.id} className={post.is_admin === 1 ? 'row-admin' : ''}>
+                <td className="nowrap">{post.id}</td>
+                <td className="nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
+                <td>{post.user_name || '-'}</td>
+                <td className="pre-wrap">{post.content}</td>
+                <td className="nowrap">{convertUtcToJst(post.created_at)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {posts.map(post => (
-                <tr key={post.id}>
-                  <td>{post.id}</td>
-                  <td>{post.site_id ?? '-'}</td>
-                  <td>{post.user_name ?? '-'}</td>
-                  <td>{post.is_admin === 1 ? 'はい' : 'いいえ'}</td>
-                  <td>{post.content}</td>
-                  <td>{post.created_at}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          <div>
-            {page > 1 && <Link to={`/admin/posts?page=${page - 1}`}>&laquo; 前のページ</Link>}
-            {hasNext && <Link to={`/admin/posts?page=${page + 1}`}>次のページ &raquo;</Link>}
-          </div>
-        </>
+            ))}
+          </tbody>
+        </table>
+      )}
+      
+      {(page > 1 || hasNext) && (
+        <p className="text-center">
+          {page > 1            && (<Link to={{ pathname: '/admin/posts', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
+          {hasNext             && (<Link to={{ pathname: '/admin/posts', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+        </p>
       )}
     </main>
   );

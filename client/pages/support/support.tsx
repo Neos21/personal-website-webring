@@ -42,8 +42,7 @@ export default function Support(): ReactElement {
   const [lookupSite  , setLookupSite  ] = useState<SiteNameUrl | null>(null);
   const [lookupError , setLookupError ] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [clientError , setClientError ] = useState<string>('');
-  const [serverError , setServerError ] = useState<string>('');
+  const [formError   , setFormError   ] = useState<string>('');
   
   useEffect(() => {
     setIsLoading(true);
@@ -95,8 +94,7 @@ export default function Support(): ReactElement {
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setClientError('');
-    setServerError('');
+    setFormError('');
     
     const submittedSiteId        = isEmpty(formSiteId) ? null : Number(formSiteId);
     const isValidSubmittedSiteId = isEmpty(formSiteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
@@ -108,7 +106,7 @@ export default function Support(): ReactElement {
       turnstile_token: turnstileToken
     };
     const parsed = newPostSchema.safeParse(payload);
-    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
+    if(!parsed.success) return setFormError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
@@ -130,7 +128,7 @@ export default function Support(): ReactElement {
       // TODO : URL のパラメータ、および `initialSiteId` が書き換わらなさそうなので書き換えたい
     }
     catch(error) {
-      setServerError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
+      setFormError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -181,8 +179,7 @@ export default function Support(): ReactElement {
               
               <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
               
-              {clientError && (<p className="text-error">{clientError}</p>)}
-              {serverError && (<p className="text-error">{serverError}</p>)}
+              {!isEmpty(formError) && (<p className="text-error">{formError}</p>)}
               
               <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
             </fieldset>

@@ -43,8 +43,7 @@ export default function Site(): ReactElement {
   
   // コメント入力フォーム エラー表示系
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [clientError , setClientError ] = useState<string>('');
-  const [serverError , setServerError ] = useState<string>('');
+  const [formError   , setFormError   ] = useState<string>('');
   
   useEffect(() => {
     if(siteId == null) {
@@ -82,9 +81,7 @@ export default function Site(): ReactElement {
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setClientError('');
-    setServerError('');
-    if(siteId == null) return;
+    setFormError('');
     
     const payload = {
       user_name      : commentUserName,
@@ -92,7 +89,7 @@ export default function Site(): ReactElement {
       turnstile_token: turnstileToken
     };
     const parsed = newSiteCommentSchema.safeParse(payload);
-    if(!parsed.success) return setClientError(mergeIssues(parsed.error));
+    if(!parsed.success) return setFormError(mergeIssues(parsed.error));
     
     setIsSubmitting(true);
     try {
@@ -109,7 +106,7 @@ export default function Site(): ReactElement {
       // TODO : URL のパラメータが更新されていないので直す
     }
     catch(error) {
-      setServerError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
+      setFormError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -214,13 +211,12 @@ export default function Site(): ReactElement {
               
               <label>
                 <div className="form-label">{commentDisplayName} <span className="form-label-memo">(必須・{commentMaxLength}文字以内)</span></div>
-                <textarea placeholder={commentDisplayName} value={commentContent} maxLength={commentMaxLength} onChange={event => setCommentContent(event.target.value)} required rows={4} />
+                <textarea placeholder={commentDisplayName} value={commentContent} maxLength={commentMaxLength} onChange={event => setCommentContent(event.target.value)} required rows={6} />
               </label>
               
               <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(clientError) && (<p className="text-error">{clientError}</p>)}
-              {!isEmpty(serverError) && (<p className="text-error">{serverError}</p>)}
+              {!isEmpty(formError) && (<p className="text-error">{formError}</p>)}
               
               <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
             </fieldset>

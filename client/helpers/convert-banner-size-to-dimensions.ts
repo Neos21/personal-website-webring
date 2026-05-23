@@ -1,6 +1,6 @@
 export type BannerSize = '200x40' | '88x31';
 
-export const convertBannerSizeToDimensions = (bannerSize: BannerSize): { banner_width: number; banner_height: number; } => {
-  if(bannerSize === '200x40') return { banner_width: 200, banner_height: 40 };
-  return { banner_width: 88, banner_height: 31 };
+export const convertBannerSizeToDimensions = (bannerSize: BannerSize): { bannerWidth: number; bannerHeight: number; } => {
+  if(bannerSize === '200x40') return { bannerWidth: 200, bannerHeight: 40 };
+  return { bannerWidth: 88, bannerHeight: 31 };
 };

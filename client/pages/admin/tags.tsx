@@ -1,62 +1,64 @@
-import { isHTTPError } from 'ky';
-import { useEffect, useState, type ReactElement } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { Link, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
+import { isEmpty } from '../../../shared/helpers/is-empty';
+import { tagDisplayName, tagMaxLength } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
-import { removeJwt } from '../../helpers/admin-auth';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { Tag } from '../../../shared/types/tag';
 
 export default function AdminTags(): ReactElement {
-  const navigate = useNavigate();
-  
-  const [tags, setTags] = useState<Array<Tag>>([]);
-  const [hasNext, setHasNext] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [editingTagId, setEditingTagId] = useState<number | null>(null);
-  const [editingTagName, setEditingTagName] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const [searchParams] = useSearchParams();
-  const pageParam = searchParams.get('page');
-  const pageNumber = pageParam == null ? 1 : Number(pageParam);
-  const page = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  
+  // ページング
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  
+  // 一覧
+  const [tags   , setTags   ] = useState<Array<Tag>>([]);
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  
+  // 登録フォーム
+  const [newTagName, setNewTagName] = useState<string>('');
+  
+  // 編集フォーム
+  const [editingTagId  , setEditingTagId  ] = useState<number | null>(null);
+  const [editingTagName, setEditingTagName] = useState<string>('');
+  
+  // エラー表示系
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error    , setError    ] = useState<string>('');
+  
+  useEffect(() => {
+    fetchTags();
+  }, [page]);
   
   const fetchTags = async (): Promise<void> => {
     setError('');
     setIsLoading(true);
+    
     try {
-      const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; } }>();
+      const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; }; }>();
       setTags(response.result.tags);
       setHasNext(response.result.has_next);
     }
     catch(error) {
-      if(isHTTPError(error) && error.response.status === 401) {
-        removeJwt();
-        navigate('/admin', { replace: true });
-        return;
-      }
-      setError(extractApiErrorMessage(error, 'タグ一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, '覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
     }
   };
   
-  useEffect(() => {
-    void fetchTags();
-  }, [navigate, page]);
-  
-  const handleAdd = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    if(newTagName.trim() === '') return;
-    
     setError('');
-    setIsSubmitting(true);
+    
+    if(isEmpty(newTagName)) return;
+    
     try {
       await adminApi.post('/api/admin/tags', { json: { name: newTagName } }).json();
       setNewTagName('');
@@ -65,101 +67,81 @@ export default function AdminTags(): ReactElement {
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの追加に失敗しました'));
     }
-    finally {
-      setIsSubmitting(false);
-    }
   };
   
-  const handleEdit = (tag: Tag): void => {
+  const onStartEdit = (tag: Tag): void => {
+    setError('');
     setEditingTagId(tag.id);
     setEditingTagName(tag.name);
-    setError('');
   };
   
-  const handleCancelEdit = (): void => {
+  const onCancelEdit = (): void => {
     setEditingTagId(null);
     setEditingTagName('');
   };
   
-  const handleUpdate = async (tagId: number): Promise<void> => {
-    if(editingTagName.trim() === '') return;
-    
+  const onEdit = async (id: number): Promise<void> => {
     setError('');
-    setIsSubmitting(true);
+    
+    if(isEmpty(editingTagName)) return;
+    
     try {
-      await adminApi.put(`/api/admin/tags/${tagId}`, { json: { name: editingTagName } });
-      setEditingTagId(null);
-      setEditingTagName('');
+      await adminApi.put(`/api/admin/tags/${id}`, { json: { name: editingTagName } });
+      onCancelEdit();
       await fetchTags();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'タグの更新に失敗しました'));
-    }
-    finally {
-      setIsSubmitting(false);
+      setError(extractApiErrorMessage(error, 'タグの編集に失敗しました'));
     }
   };
   
-  const handleDelete = async (tagId: number): Promise<void> => {
+  const onDelete = async (id: number): Promise<void> => {
     setError('');
-    setIsSubmitting(true);
+    
     try {
-      await adminApi.delete(`/api/admin/tags/${tagId}`);
+      await adminApi.delete(`/api/admin/tags/${id}`);
       await fetchTags();
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの削除に失敗しました'));
-    }
-    finally {
-      setIsSubmitting(false);
     }
   };
   
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>タグ管理</h1>
+      <h1>タグ</h1>
       
-      <form onSubmit={handleAdd} className="form-grid">
+      <form onSubmit={onSubmit}>
         <label>
-          タグ名
-          <input
-            type="text"
-            value={newTagName}
-            onChange={event => setNewTagName(event.target.value)}
-            disabled={isSubmitting}
-          />
+          <div className="form-label">{tagDisplayName}</div>
+          <input type="text" placeholder={tagDisplayName} value={newTagName} maxLength={tagMaxLength} onChange={event => setNewTagName(event.target.value)} required />
         </label>
-        <button type="submit" disabled={isSubmitting}>追加</button>
+        <p><button type="submit">追加</button></p>
       </form>
       
-      {error !== '' && <p className="text-error">{error}</p>}
+      {!isEmpty(error) && (<p className="text-error">{error}</p>)}
       
       {isLoading ? (
-        <p>読み込み中…</p>
+        <p className="loading">読み込み中…</p>
       ) : tags.length === 0 ? (
-        <p>タグが登録されていません。</p>
+        <p>タグはありません。</p>
       ) : (
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>タグ名</th>
-              <th>操作</th>
+              <th>{tagDisplayName}</th>
+              <th>編集・削除</th>
             </tr>
           </thead>
           <tbody>
             {tags.map(tag => (
               <tr key={tag.id}>
-                <td>{tag.id}</td>
+                <td className="nowrap">{tag.id}</td>
                 <td>
                   {editingTagId === tag.id ? (
-                    <input
-                      type="text"
-                      value={editingTagName}
-                      onChange={event => setEditingTagName(event.target.value)}
-                      disabled={isSubmitting}
-                    />
+                    <input type="text" placeholder={tagDisplayName} value={editingTagName} onChange={event => setEditingTagName(event.target.value)} required />
                   ) : (
                     tag.name
                   )}
@@ -167,13 +149,13 @@ export default function AdminTags(): ReactElement {
                 <td>
                   {editingTagId === tag.id ? (
                     <>
-                      <button type="button" onClick={() => void handleUpdate(tag.id)} disabled={isSubmitting}>保存</button>
-                      <button type="button" onClick={handleCancelEdit} disabled={isSubmitting}>取消</button>
+                      <button type="button" onClick={() => onEdit(tag.id)}>保存</button>
+                      <button type="button" onClick={onCancelEdit}>取消</button>
                     </>
                   ) : (
                     <>
-                      <button type="button" onClick={() => handleEdit(tag)} disabled={isSubmitting}>編集</button>
-                      <button type="button" onClick={() => void handleDelete(tag.id)} disabled={isSubmitting}>削除</button>
+                      <button type="button" onClick={() => onStartEdit(tag)}>編集</button>
+                      <span className="form-delete"><button type="button" onClick={() => onDelete(tag.id)}>削除</button></span>
                     </>
                   )}
                 </td>
@@ -183,10 +165,13 @@ export default function AdminTags(): ReactElement {
         </table>
       )}
       
-      <div className="pagination" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-        {page > 1 && <Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>}
-        {hasNext && <Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>}
-      </div>
+      {(page > 1 || hasNext) && (
+        <p className="text-center">
+          {page > 1            && (<Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
+          {hasNext             && (<Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+        </p>
+      )}
     </main>
   );
 }

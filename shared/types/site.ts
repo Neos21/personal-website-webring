@@ -2,7 +2,7 @@ import type { Tag } from './tag';
 
 export type SiteAdmin = {
   id: number;
-  is_self: number;
+  is_self: 0 | 1;
   url: string;
   site_name: string;
   owner_name: string | null;
@@ -13,8 +13,10 @@ export type SiteAdmin = {
   password_hash: string | null;
   created_at: string;
   updated_at: string;
-  is_deleted: number;
+  is_deleted: 0 | 1;
 };
+
+export type SiteAdminWithTags = SiteAdmin & { tags: Array<Tag>; };
 
 /** サイト削除フォームなど・タグは別テーブル管理で取得にも手間取るため */
 export type SitePublic = Omit<SiteAdmin, 'password_hash' | 'is_deleted'>;
