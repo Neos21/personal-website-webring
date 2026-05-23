@@ -7,7 +7,7 @@ import { siteNameDisplayName } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { SiteAdmin } from '../../../shared/types/site';
+import type { SiteAdmin } from '../../../shared/types/admin/admin-site';
 
 export default function AdminSites(): ReactElement {
   const [searchParams] = useSearchParams();

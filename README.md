@@ -108,7 +108,7 @@ CREATE TABLE posts (  -- サポート掲示板の投稿
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP               -- 登録日時
 );
 
-CREATE TABLE deny_ips (  -- IP 制限 (荒らし対策用)
+CREATE TABLE deny_ips (  -- 禁止 IP アドレス
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
   ip          TEXT     NOT NULL     UNIQUE,                    -- IP アドレス
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
@@ -116,7 +116,7 @@ CREATE TABLE deny_ips (  -- IP 制限 (荒らし対策用)
 
 CREATE TABLE deny_domains (  -- 禁止ドメイン
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,             -- ID
-  domain      TEXT     NOT NULL     UNIQUE,                    -- ドメイン名
+  domain      TEXT     NOT NULL     UNIQUE,                    -- ドメイン
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
 );
 ```
@@ -125,7 +125,7 @@ CREATE TABLE deny_domains (  -- 禁止ドメイン
 ## 将来的にやりたいこと (今はやらない)
 
 - アクセスログ
-    - ページ遷移・フォーム操作ごとに IP や UA を記録し、アクセス数チェックや荒らし行為のログをリングマスターが確認できるようにしたい
+    - ページ遷移・フォーム操作ごとに IP アドレスや UA を記録し、アクセス数チェックや荒らし行為のログをリングマスターが確認できるようにしたい
     - `/prev`・`/next`・`/random` を踏んだ人の情報やリダイレクト先の情報などを控えておき、流量をリングマスターが確認できるようにしたい
 - サイトの所有証明
     - `<meta name="personal-website-webring" content="【ID】">` を HTML 中に書いておく

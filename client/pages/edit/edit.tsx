@@ -29,9 +29,10 @@ export default function Edit(): ReactElement {
       setIsLoading(false);
       return;
     }
-    if(siteId === 0 || Number.isNaN(siteId)) {
+    if(!Number.isInteger(siteId) || siteId <= 0) {
       setError('サイト ID が不正です');
-      return setIsLoading(false);
+      setIsLoading(false);
+      return;
     }
     
     (async () => {

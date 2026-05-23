@@ -3,16 +3,20 @@ import { jwt } from 'hono/jwt';
 
 import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
+import { convertToPositiveInteger } from '../../../../shared/helpers/convert-to-positive-integer';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminUpdateSiteSchema } from '../../../../shared/schemas/admin/admin-site-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
-import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { hashPassword } from '../../../helpers/hash-password';
 import { AdminSitesRepository } from '../../../repositories/admin/admin-sites-repository';
+import { DenyDomainsRepository } from '../../../repositories/deny-domains-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
+import { SitesRepository } from '../../../repositories/sites-repository';
 import { TagsRepository } from '../../../repositories/tags-repository';
+import { DenyDomainService } from '../../../services/deny-domain-service';
 import { SiteTagService } from '../../../services/site-tag-service';
+import { SiteUrlService } from '../../../services/site-url-service';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
 
@@ -52,6 +56,12 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   const parsed = adminUpdateSiteSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
+  const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
+  if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
+  
+  const exactMatch = await new SiteUrlService().findExactMatch(new SitesRepository(context.env.DB), parsed.data.url);
+  if(exactMatch != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMatch.id}]` }, httpStatusCode.badRequest);
+  
   const adminSitesRepository = new AdminSitesRepository(context.env.DB);
   
   const existing = await adminSitesRepository.findById(idParsed.data);
@@ -71,12 +81,10 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
     banner_width  : parsed.data.banner_width ?? null,
     banner_height : parsed.data.banner_height ?? null,
     password_hash : passwordHash,
-    created_at    : '',  // 未使用
-    updated_at    : '',  // 未使用
     is_deleted    : parsed.data.is_deleted
   });
   
-  await new SiteTagService().replaceNames(new SiteTagsRepository(context.env.DB), new TagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
+  await new SiteTagService().attachNames(new SiteTagsRepository(context.env.DB), new TagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
   
   return context.json({ result: true }, httpStatusCode.ok);
 });
@@ -90,6 +98,7 @@ adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint
   const existing = await adminSitesRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
+  // TODO : サイトに紐付くコメントを削除する
   await new SiteTagsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await adminSitesRepository.deleteById(idParsed.data);
   

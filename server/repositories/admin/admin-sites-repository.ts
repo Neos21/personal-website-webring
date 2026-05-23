@@ -19,7 +19,7 @@ export class AdminSitesRepository {
       .first<SiteAdmin>();
   }
   
-  public async update(site: SiteAdmin): Promise<void> {
+  public async update(site: Omit<SiteAdmin, 'created_at' | 'updated_at'>): Promise<void> {
     await this.db
       .prepare('UPDATE sites SET is_self = ?, url = ?, site_name = ?, owner_name = ?, description = ?, banner_url = ?, banner_width = ?, banner_height = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP, is_deleted = ? WHERE id = ?')
       .bind(site.is_self, site.url, site.site_name, site.owner_name, site.description, site.banner_url, site.banner_width, site.banner_height, site.password_hash, site.is_deleted, site.id)

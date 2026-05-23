@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -13,6 +13,7 @@ import type { SitePublicWithTags } from '../../../shared/types/site';
 import type { SiteCommentPublic } from '../../../shared/types/site-comment';
 
 export default function Site(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // サイト ID パラメータ (必須)
@@ -28,8 +29,8 @@ export default function Site(): ReactElement {
   const [site, setSite] = useState<SitePublicWithTags | null>(null);
   
   // コメント一覧
-  const [comments , setComments ] = useState<Array<SiteCommentPublic>>([]);
-  const [hasNext  , setHasNext  ] = useState<boolean>(false);
+  const [comments, setComments] = useState<Array<SiteCommentPublic>>([]);
+  const [hasNext , setHasNext ] = useState<boolean>(false);
   
   // コメント一覧 エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -48,11 +49,21 @@ export default function Site(): ReactElement {
   useEffect(() => {
     if(siteId == null) {
       setError('サイト ID が指定されていません');
-      return setIsLoading(false);
+      setIsLoading(false);
+      return;
     }
-    if(siteId === 0 || Number.isNaN(siteId)) {
+    if(!Number.isInteger(siteId) || siteId <= 0) {
       setError('サイト ID が不正です');
-      return setIsLoading(false);
+      setIsLoading(false);
+      return;
+    }
+    
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate(`/support?id=${siteId}&page=1`, { replace: true });
+      return;
     }
     
     (async () => {
@@ -64,11 +75,9 @@ export default function Site(): ReactElement {
           ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>(),
           ky.get(`/api/sites/${siteId}/comments?page=${page}`).json<{ result: { page: number; comments: Array<SiteCommentPublic>; has_next: boolean; }; }>()
         ]);
-        
         setSite(siteResponse.result);
         setComments(commentsResponse.result.comments);
         setHasNext(commentsResponse.result.has_next);
-        // TODO : URL を `?id=【ID】&page=【ページ番号】` に書き換える
       }
       catch(error) {
         setError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
@@ -77,7 +86,7 @@ export default function Site(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [siteId, page]);
+  }, [siteId, pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -99,11 +108,8 @@ export default function Site(): ReactElement {
       setTurnstileToken('');
       setTurnstileKey(String(Date.now()));
       
-      // 1ページ目に戻って再読込する
-      const response = await ky.get(`/api/sites/${siteId}/comments?page=1`).json<{ result: { page: number; comments: Array<SiteCommentPublic>; has_next: boolean; }; }>();
-      setComments(response.result.comments);
-      setHasNext(response.result.has_next);
-      // TODO : URL のパラメータが更新されていないので直す
+      // 1ページ目の URL に遷移する
+      navigate(`/support?id=${siteId}&page=1`);
     }
     catch(error) {
       setFormError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));

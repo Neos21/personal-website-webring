@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useSearchParams, useNavigate } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -13,12 +13,12 @@ import type { PostPublic } from '../../../shared/types/post';
 import type { SiteNameUrl } from '../../../shared/types/site';
 
 export default function Support(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // サイト ID パラメータ (任意)
-  const siteIdParam          = searchParams.get('id');
-  const initialSiteId        = isEmpty(siteIdParam) ? null : Number(siteIdParam);
-  const isValidInitialSiteId = isEmpty(siteIdParam) || (initialSiteId != null && Number.isInteger(initialSiteId) && initialSiteId > 0);
+  const siteIdParam = searchParams.get('id');
+  const siteId      = isEmpty(siteIdParam) ? null : Number(siteIdParam);  // `NaN` は初期表示処理内で判定する
   
   // ページング
   const pageParam  = searchParams.get('page');
@@ -32,7 +32,7 @@ export default function Support(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   // 投稿フォーム
-  const [formSiteId    , setFormSiteId    ] = useState<string>(initialSiteId != null ? String(initialSiteId) : '');
+  const [formSiteId    , setFormSiteId    ] = useState<string>(siteId != null ? String(siteId) : '');
   const [userName      , setUserName      ] = useState<string>('');
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
@@ -48,21 +48,31 @@ export default function Support(): ReactElement {
     setIsLoading(true);
     setError('');
     
-    if(!isValidInitialSiteId) {
+    if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
       setError('サイト ID が不正です');
       setIsLoading(false);
+      return;
+    }
+    
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      const query = new URLSearchParams();
+      if(siteId != null) query.set('id', String(siteId));
+      query.set('page', '1');
+      navigate(`/support?${query.toString()}`, { replace: true });
       return;
     }
     
     (async () => {
       try {
         const query = new URLSearchParams();
+        if(siteId != null) query.set('id', String(siteId));
         query.set('page', String(page));
-        if(initialSiteId != null) query.set('id', String(initialSiteId));
         const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
         setPosts(response.result.posts);
         setHasNext(response.result.has_next);
-        // TODO : URL に ?id や ?page を反映する
       }
       catch(error) {
         setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
@@ -71,24 +81,29 @@ export default function Support(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [page, siteIdParam, isValidInitialSiteId, initialSiteId]);
+  }, [siteId, pageParam, page]);
   
   const onBlurSiteId = async (): Promise<void> => {
-    // TODO : Blur 時に毎回コレだとチラつくので要調整
-    setLookupError('');
-    setLookupSite(null);
-    
-    if(isEmpty(formSiteId)) return;
+    if(isEmpty(formSiteId)) {
+      setLookupError('');
+      setLookupSite(null);
+      return;
+    }
     
     const inputSiteId = Number(formSiteId);
-    if(!Number.isInteger(inputSiteId) || inputSiteId <= 0) return setLookupError('サイト ID は正の整数で指定してください');
+    if(!Number.isInteger(inputSiteId) || inputSiteId <= 0) {
+      setLookupError('サイト ID は正の整数で指定してください');
+      setLookupSite(null);
+    }
     
     try {
       const response = await ky.get(`/api/sites/${inputSiteId}`).json<{ result: SiteNameUrl; }>();
+      setLookupError('');
       setLookupSite(response.result);
     }
     catch(error) {
       setLookupError(extractApiErrorMessage(error, 'サイト情報の取得に失敗しました'));
+      setLookupSite(null);
     }
   };
   
@@ -117,15 +132,11 @@ export default function Support(): ReactElement {
       setTurnstileToken('');
       setTurnstileKey(String(Date.now()));
       
-      // 投稿したサイト ID に基づいて1ページ目を再読込する
-      const submittedSiteId = isEmpty(formSiteId) ? null : Number(formSiteId);
+      // 投稿したサイト ID に基づいて1ページ目の URL に遷移する
       const query = new URLSearchParams();
-      query.set('page', String(1));
+      query.set('page', '1');
       if(submittedSiteId != null) query.set('id', String(submittedSiteId));
-      const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
-      setPosts(response.result.posts);
-      setHasNext(response.result.has_next);
-      // TODO : URL のパラメータ、および `initialSiteId` が書き換わらなさそうなので書き換えたい
+      navigate(`/support?${query.toString()}`);
     }
     catch(error) {
       setFormError(extractApiErrorMessage(error, '投稿の送信に失敗しました'));
@@ -139,9 +150,9 @@ export default function Support(): ReactElement {
     <main className="page-container">
       <h1>サポート掲示板</h1>
       
-      {initialSiteId != null ? (
+      {siteId != null ? (
         <>
-          <p><Link to={{ pathname: '/site', search: `?id=${initialSiteId}` }}>サイト ID [{initialSiteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
+          <p><Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト ID [{siteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
           <p><Link to="/support">全体のサポート掲示板投稿を見る場合はコチラ</Link></p>
         </>
       ) : (
@@ -193,13 +204,13 @@ export default function Support(): ReactElement {
               {(page > 1 || hasNext) && (
                 <p className="text-center">
                   {page > 1 && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
+                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
                   )}
                   {page > 1 && hasNext && (
                     <span className="text-muted"> | </span>
                   )}
                   {hasNext && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
+                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
                   )}
                 </p>
               )}
@@ -223,21 +234,21 @@ export default function Support(): ReactElement {
               {(page > 1 || hasNext) && (
                 <p className="text-center">
                   {page > 1 && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
+                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
                   )}
                   {page > 1 && hasNext && (
                     <span className="text-muted"> | </span>
                   )}
                   {hasNext && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(initialSiteId != null ? { id: String(initialSiteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
+                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
                   )}
                 </p>
               )}
             </>
           )}
           
-          {initialSiteId != null && (
-            <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${initialSiteId}` }}>このサイトの詳細へ戻る</Link></p>
+          {siteId != null && (
+            <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}` }}>このサイトの詳細へ戻る</Link></p>
           )}
         </>
       )}

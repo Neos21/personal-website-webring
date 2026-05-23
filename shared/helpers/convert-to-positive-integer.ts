@@ -1,4 +1,4 @@
-import { isEmpty } from '../../shared/helpers/is-empty';
+import { isEmpty } from './is-empty';
 
 /** 1以上の整数に変換する・不正な値は `null` で返す */
 export const convertToPositiveInteger = (value: string | null | undefined): number | null => {

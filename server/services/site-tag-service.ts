@@ -24,14 +24,9 @@ export class SiteTagService {
   /** タグを一括追加し指定のサイトに紐付ける */
   public async attachNames(siteTagsRepository: SiteTagsRepository, tagsRepository: TagsRepository, siteId: number, tags: Array<string>): Promise<Array<Tag>> {
     const normalizedTags = await this.normalizeTags(tagsRepository, tags);
-    await siteTagsRepository.attachTagIds(siteId, normalizedTags.map(tag => tag.id));
-    return normalizedTags;
-  }
-  
-  /** タグを一括追加し指定のサイトの紐付けを更新する */
-  public async replaceNames(siteTagsRepository: SiteTagsRepository, tagsRepository: TagsRepository, siteId: number, tags: Array<string>): Promise<Array<Tag>> {
-    const normalizedTags = await this.normalizeTags(tagsRepository, tags);
-    await siteTagsRepository.replaceTagIds(siteId, normalizedTags.map(tag => tag.id));
+    const tagIds = normalizedTags.map(tag => tag.id);
+    await siteTagsRepository.deleteBySiteId(siteId);  // 新規登録時は1件も削除されない・更新時は一旦全ての紐付けを削除する
+    for(const tagId of tagIds) await siteTagsRepository.attach(siteId, tagId);  // 紐付けを登録する
     return normalizedTags;
   }
 }

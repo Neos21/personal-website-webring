@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -9,6 +9,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { SitePublicWithTags } from '../../../shared/types/site';
 
 export default function List(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // ページング
@@ -25,6 +26,14 @@ export default function List(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate('/list?&page=1', { replace: true });
+      return;
+    }
+    
     (async () => {
       setIsLoading(true);
       setError('');
@@ -41,7 +50,7 @@ export default function List(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [page]);
+  }, [pageParam, page]);
   
   return (
     <main className="page-container">

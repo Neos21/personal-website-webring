@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 
 import { httpStatusCode } from '../../../shared/constants/http-status-code';
-import { convertToPositiveInteger } from '../../helpers/convert-to-positive-integer';
+import { convertToPositiveInteger } from '../../../shared/helpers/convert-to-positive-integer';
 import { SitesRepository } from '../../repositories/sites-repository';
 
 import type { HonoBindings } from '../../types/hono-bindings';

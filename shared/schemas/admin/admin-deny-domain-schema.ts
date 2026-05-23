@@ -2,8 +2,8 @@ import z from 'zod';
 
 import { preprocessOneLineString } from '../schema-utilities';
 
-export const domainDisplayName = '禁止ドメイン' as const;
-export const domainMaxLength   = 255            as const;
+export const domainDisplayName = 'ドメイン' as const;
+export const domainMaxLength   = 255        as const;
 
 export const adminNewDenyDomainSchema = z.object({
   domain: z.preprocess(

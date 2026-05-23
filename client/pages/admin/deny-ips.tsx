@@ -3,10 +3,11 @@ import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react'
 import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { ipDisplayName } from '../../../shared/schemas/admin/admin-deny-ip-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
-import type { DenyIp } from '../../../shared/types/deny-ip';
+import type { DenyIpAdmin } from '../../../shared/types/admin/admin-deny-ip';
 
 export default function AdminDenyIps(): ReactElement {
   // 入力フォーム
@@ -17,7 +18,7 @@ export default function AdminDenyIps(): ReactElement {
   
   // 一覧
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [denyIps  , setDenyIps  ] = useState<Array<DenyIp>>([]);
+  const [denyIps  , setDenyIps  ] = useState<Array<DenyIpAdmin>>([]);
   
   useEffect(() => {
     fetchDenyIps();
@@ -28,11 +29,11 @@ export default function AdminDenyIps(): ReactElement {
     setIsLoading(true);
     
     try {
-      const response = await adminApi.get('/api/admin/deny-ips').json<{ result: Array<DenyIp>; }>();
+      const response = await adminApi.get('/api/admin/deny-ips').json<{ result: Array<DenyIpAdmin>; }>();
       setDenyIps(response.result);
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP 一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP アドレス一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -49,7 +50,7 @@ export default function AdminDenyIps(): ReactElement {
       await fetchDenyIps();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP の登録に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP アドレスの登録に失敗しました'));
     }
   };
   
@@ -61,19 +62,19 @@ export default function AdminDenyIps(): ReactElement {
       await fetchDenyIps();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP の削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'IP アドレスの削除に失敗しました'));
     }
   };
   
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>IP 制限</h1>
+      <h1>IP アドレス管理</h1>
       
       <form onSubmit={onSubmit}>
         <label>
-          <div className="form-label">IP</div>
-          <input type="text" placeholder="IP" value={ip} onChange={event => setIp(event.target.value)} required />
+          <div className="form-label">{ipDisplayName}</div>
+          <input type="text" placeholder={ipDisplayName} value={ip} onChange={event => setIp(event.target.value)} required />
         </label>
         <p><button type="submit">追加</button></p>
       </form>
@@ -83,13 +84,13 @@ export default function AdminDenyIps(): ReactElement {
       {isLoading ? (
         <p className="loading">読み込み中…</p>
       ) : denyIps.length === 0 ? (
-        <p>IP は登録されていません。</p>
+        <p>IP アドレスは登録されていません。</p>
       ) : (
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>IP</th>
+              <th>IP アドレス</th>
               <th>登録日時</th>
               <th>削除</th>
             </tr>

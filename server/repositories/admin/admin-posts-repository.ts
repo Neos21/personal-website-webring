@@ -22,7 +22,12 @@ export class AdminPostsRepository {
     }
   }
   
-  // TODO : 管理画面での編集用1件取得
+  public async findById(id: number): Promise<PostAdmin | null> {
+    return await this.db
+      .prepare('SELECT id, site_id, user_name, content, ip, is_admin, created_at FROM posts WHERE site_id = ? LIMIT 1')
+      .bind(id)
+      .first<PostAdmin>();
+  }
   
   /** リングマスター投稿 */
   public async create(post: NewPost): Promise<number> {
@@ -33,7 +38,16 @@ export class AdminPostsRepository {
     return result.meta.last_row_id;
   }
   
-  // TODO : 管理画面での全項目更新用
+  public async update(post: Omit<PostAdmin, 'ip' | 'created_at'>): Promise<void> {
+    await this.db
+      .prepare('UPDATE posts SET site_id = ?, user_name = ?, content = ?, is_admin = ? WHERE id = ?')
+      .bind(post.site_id, post.user_name, post.content, post.is_admin, post.id)
+      .run();
+  }
   
-  // TODO : 管理画面からの物理削除
+  public async deleteById(id: number): Promise<void> {
+    await this.db.prepare('DELETE FROM posts WHERE id = ?')
+      .bind(id)
+      .run();
+  }
 }

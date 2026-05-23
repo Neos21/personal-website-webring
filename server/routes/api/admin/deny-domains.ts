@@ -26,12 +26,13 @@ adminDenyDomains.post('/', async context => {
   const parsed = adminNewDenyDomainSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
+  const lowerDomain = parsed.data.domain.toLowerCase();
   const adminDenyDomainsRepository = new AdminDenyDomainsRepository(context.env.DB);
   
-  const duplicate = await adminDenyDomainsRepository.findByDomain(parsed.data.domain);
+  const duplicate = await adminDenyDomainsRepository.findByDomain(lowerDomain);
   if(duplicate != null) return context.json({ error: 'このドメインは既に登録されています' }, httpStatusCode.badRequest);
   
-  const id = await adminDenyDomainsRepository.create(parsed.data.domain);
+  const id = await adminDenyDomainsRepository.create(lowerDomain);
   return context.json({ result: { id } }, httpStatusCode.created);
 });
 

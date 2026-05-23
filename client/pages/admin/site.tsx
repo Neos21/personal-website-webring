@@ -18,24 +18,25 @@ export default function AdminSite(): ReactElement {
   const [searchParams] = useSearchParams();
   
   // サイト ID パラメータ (必須)
-  const idParam = searchParams.get('id');
-  const siteId  = isEmpty(idParam) ? null : Number(idParam);
+  const idParam       = searchParams.get('id');
+  const siteId        = isEmpty(idParam) ? null : Number(idParam);
+  const isValidSiteId = siteId != null && Number.isInteger(siteId) && siteId > 0;
   
   // サイト詳細 (表示専用)
   const [site, setSite] = useState<SiteAdminWithTags | null>(null);
   
   // 入力フォーム
-  const [isSelf        , setIsSelf        ] = useState<0 | 1>(0);
-  const [siteName      , setSiteName      ] = useState<string>('');
-  const [url           , setUrl           ] = useState<string>('');
-  const [ownerName     , setOwnerName     ] = useState<string>('');
-  const [description   , setDescription   ] = useState<string>('');
-  const [tags          , setTags          ] = useState<Array<string>>([]);
-  const [tagInput      , setTagInput      ] = useState<string>('');
-  const [bannerUrl     , setBannerUrl     ] = useState<string>('');
-  const [bannerSize    , setBannerSize    ] = useState<BannerSize>('200x40');
-  const [password      , setPassword      ] = useState<string>('');
-  const [isDeleted     , setIsDeleted     ] = useState<0 | 1>(0);
+  const [isSelf     , setIsSelf     ] = useState<0 | 1>(0);
+  const [siteName   , setSiteName   ] = useState<string>('');
+  const [url        , setUrl        ] = useState<string>('');
+  const [ownerName  , setOwnerName  ] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [tags       , setTags       ] = useState<Array<string>>([]);
+  const [tagInput   , setTagInput   ] = useState<string>('');
+  const [bannerUrl  , setBannerUrl  ] = useState<string>('');
+  const [bannerSize , setBannerSize ] = useState<BannerSize>('200x40');
+  const [password   , setPassword   ] = useState<string>('');
+  const [isDeleted  , setIsDeleted  ] = useState<0 | 1>(0);
   
   // エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -47,9 +48,10 @@ export default function AdminSite(): ReactElement {
       setIsLoading(false);
       return;
     }
-    if(siteId === 0 || Number.isNaN(siteId)) {
+    if(!isValidSiteId) {
       setError('サイト ID が不正です');
-      return setIsLoading(false);
+      setIsLoading(false);
+      return;
     }
     
     (async () => {
@@ -57,7 +59,7 @@ export default function AdminSite(): ReactElement {
       setError('');
       
       try {
-        const response = await adminApi.get(`/api/admin/sites/${siteId}`).json<{ result: SiteAdminWithTags; }>();  // TODO : サーバサイドがこの型で返せてないのでサーバサイドを直す
+        const response = await adminApi.get(`/api/admin/sites/${siteId}`).json<{ result: SiteAdminWithTags; }>();
         setSite(response.result);
         
         setIsSelf     (response.result.is_self);
@@ -179,7 +181,6 @@ export default function AdminSite(): ReactElement {
             <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => setUrl(event.target.value)} required />
           </label>
-          {/* TODO : 禁止ドメイン・類似サイトチェックを実装する。`edite-site-form.tsx` の表示仕様が固まってから真似する */}
           
           <label>
             <div className="form-label">{ownerNameDisplayName} <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>

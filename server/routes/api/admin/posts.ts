@@ -3,10 +3,10 @@ import { jwt } from 'hono/jwt';
 
 import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
+import { convertToPositiveInteger } from '../../../../shared/helpers/convert-to-positive-integer';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
-import { adminNewOrUpdatePostSchema } from '../../../../shared/schemas/admin/admin-post-schema';
+import { adminNewPostSchema, adminUpdatePostSchema } from '../../../../shared/schemas/admin/admin-post-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
-import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { AdminPostsRepository } from '../../../repositories/admin/admin-posts-repository';
 import { SitesRepository } from '../../../repositories/sites-repository';
@@ -28,13 +28,21 @@ adminPosts.get('/', async context => {
   return context.json({ result: { page, posts, has_next: hasNext } }, httpStatusCode.ok);
 });
 
-// TODO : GET
+adminPosts.get('/ : id', async context => {
+  const idParsed = idParamSchema.safeParse(context.req.param('id'));
+  if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
+  
+  const post = await new AdminPostsRepository(context.env.DB).findById(idParsed.data);
+  if(post == null) return context.json({ error: '対象の投稿が見つかりませんでした' }, httpStatusCode.notFound);
+  
+  return context.json({ result: post }, httpStatusCode.ok);
+});
 
 adminPosts.post('/', async context => {
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsed = adminNewOrUpdatePostSchema.safeParse(body);
+  const parsed = adminNewPostSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   // サイト ID 指定時は存在チェックをする
@@ -59,7 +67,7 @@ adminPosts.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsed = adminNewOrUpdatePostSchema.safeParse(body);
+  const parsed = adminUpdatePostSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const adminPostsRepository = new AdminPostsRepository(context.env.DB);
@@ -74,26 +82,26 @@ adminPosts.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   }
   
   await adminPostsRepository.update({
-    id       : idParsed.data,
-    site_id  : parsed.data.site_id ?? null,
-    user_name: parsed.data.user_name,
-    content  : parsed.data.content
+    id        : idParsed.data,
+    site_id   : parsed.data.site_id ?? null,
+    user_name : parsed.data.user_name,
+    content   : parsed.data.content,
+    is_admin  : parsed.data.is_admin
   });
   
   return context.json({ result: true }, httpStatusCode.ok);
 });
 
-adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
+adminPosts.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
   const idParsed = idParamSchema.safeParse(context.req.param('id'));
   if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const sitesRepository = new AdminSitesRepository(context.env.DB);
+  const adminPostsRepository = new AdminPostsRepository(context.env.DB);
   
-  const existing = await sitesRepository.findById(idParsed.data);
-  if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
+  const existing = await adminPostsRepository.findById(idParsed.data);
+  if(existing == null) return context.json({ error: '対象の投稿が見つかりませんでした' }, httpStatusCode.notFound);
   
-  await new SiteTagsRepository(context.env.DB).deleteBySiteId(idParsed.data);
-  await sitesRepository.deleteById(idParsed.data);
+  await adminPostsRepository.deleteById(idParsed.data);
   
   return context.body(null, httpStatusCode.noContent);
 });

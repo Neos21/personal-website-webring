@@ -22,14 +22,14 @@ export class AdminDenyDomainsRepository {
   public async findByDomain(domain: string): Promise<DenyDomainAdmin | null> {
     return await this.db
       .prepare('SELECT id, domain, created_at FROM deny_domains WHERE domain = ? LIMIT 1')
-      .bind(domain.trim().toLowerCase())  // TODO : 小文字化はココでやりたくない
+      .bind(domain)
       .first<DenyDomainAdmin>();
   }
   
   public async create(domain: string): Promise<number> {
     const result = await this.db
       .prepare('INSERT INTO deny_domains (domain) VALUES (?)')
-      .bind(domain.trim().toLowerCase())  // TODO : 小文字化はココでやりたくない
+      .bind(domain)
       .run();
     return result.meta.last_row_id;
   }

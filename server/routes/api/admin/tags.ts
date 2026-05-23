@@ -3,10 +3,10 @@ import { jwt } from 'hono/jwt';
 
 import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
+import { convertToPositiveInteger } from '../../../../shared/helpers/convert-to-positive-integer';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminNewOrUpdateTagSchema } from '../../../../shared/schemas/admin/admin-tag-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
-import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { AdminSiteTagsRepository } from '../../../repositories/admin/admin-site-tags-repository';
 import { AdminTagsRepository } from '../../../repositories/admin/admin-tags-repository';
 import { TagsRepository } from '../../../repositories/tags-repository';

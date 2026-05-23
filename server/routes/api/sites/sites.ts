@@ -3,11 +3,11 @@ import { Hono } from 'hono';
 import { comments, commentsPath } from './comments/comments';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { sitesConstants } from '../../../../shared/constants/sites';
+import { convertToPositiveInteger } from '../../../../shared/helpers/convert-to-positive-integer';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
 import { deleteSiteSchema, updateSiteSchema, passwordDisplayName, newSiteSchema } from '../../../../shared/schemas/site-schema';
-import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { hashPassword } from '../../../helpers/hash-password';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
@@ -68,13 +68,13 @@ sites.get('/search-url', async context => {
 });
 
 sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
-  const siteIdParsed = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
+  const idParsed = idParamSchema.safeParse(context.req.param('id'));
+  if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
+  const site = await new SitesRepository(context.env.DB).findActiveById(idParsed.data);
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  const tags = await new TagsRepository(context.env.DB).findBySiteId(siteIdParsed.data);
+  const tags = await new TagsRepository(context.env.DB).findBySiteId(idParsed.data);
   return context.json({ result: { ...site, tags } }, httpStatusCode.ok);
 });
 
@@ -133,15 +133,15 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const ip = getIp(context);
   if(ip !== 'Unknown' && await new DenyIpsRepository(context.env.DB).isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, httpStatusCode.forbidden);
   
-  const siteIdParsed = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
+  const idParsed = idParamSchema.safeParse(context.req.param('id'));
+  if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const sitesRepository = new SitesRepository(context.env.DB);
   
-  const beforeSite = await sitesRepository.findAuthById(siteIdParsed.data);
+  const beforeSite = await sitesRepository.findAuthById(idParsed.data);
   if(beforeSite == null || beforeSite.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   const parsed = updateSiteSchema.safeParse(body);
@@ -150,7 +150,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
-  const exactMach = await new SiteUrlService().findExactMatch(sitesRepository, parsed.data.url, siteIdParsed.data);
+  const exactMach = await new SiteUrlService().findExactMatch(sitesRepository, parsed.data.url, idParsed.data);
   if(exactMach != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMach.id}]` }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
@@ -158,7 +158,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   if(beforeSite.is_self === 1 && passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
   await sitesRepository.update({
-    id            : siteIdParsed.data,
+    id            : idParsed.data,
     url           : parsed.data.url,
     site_name     : parsed.data.site_name,
     owner_name    : parsed.data.owner_name,
@@ -169,10 +169,10 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
     password_hash : passwordHash
   });
   
-  await new SiteIpsRepository(context.env.DB).create({ ip, is_created: 0, is_self: 1, site_id: siteIdParsed.data });
+  await new SiteIpsRepository(context.env.DB).create({ ip, is_created: 0, is_self: 1, site_id: idParsed.data });
   
   // 紐付くタグを一度削除して再度登録する
-  await new SiteTagService().replaceNames(new SiteTagsRepository(context.env.DB), new TagsRepository(context.env.DB), siteIdParsed.data, parsed.data.tags);
+  await new SiteTagService().attachNames(new SiteTagsRepository(context.env.DB), new TagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
   
   return context.json({ result: true }, httpStatusCode.ok);
 });
@@ -182,15 +182,15 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   const ip = getIp(context);
   if(ip !== 'Unknown' && await new DenyIpsRepository(context.env.DB).isIpDenied(ip)) return context.json({ error: '操作できませんでした' }, httpStatusCode.forbidden);
   
-  const siteIdParsed = idParamSchema.safeParse(context.req.param('id'));
-  if(!siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
+  const idParsed = idParamSchema.safeParse(context.req.param('id'));
+  if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const sitesRepository = new SitesRepository(context.env.DB);
   
-  const beforeSite = await sitesRepository.findAuthById(siteIdParsed.data);
+  const beforeSite = await sitesRepository.findAuthById(idParsed.data);
   if(beforeSite == null || beforeSite.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   if(isEmpty(beforeSite.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, httpStatusCode.forbidden);
   
@@ -200,9 +200,9 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   const passwordHash = await hashPassword(parsed.data.password);
   if(passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
-  await sitesRepository.markDeleted(siteIdParsed.data);
+  await sitesRepository.markDeleted(idParsed.data);
   
-  await new SiteIpsRepository(context.env.DB).create({ ip, is_created: 0, is_self: 1, site_id: siteIdParsed.data });
+  await new SiteIpsRepository(context.env.DB).create({ ip, is_created: 0, is_self: 1, site_id: idParsed.data });
   
   return context.body(null, httpStatusCode.noContent);
 });

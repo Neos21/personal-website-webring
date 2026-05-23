@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 
 import { httpStatusCode } from '../../../../../shared/constants/http-status-code';
 import { siteCommentsConstants } from '../../../../../shared/constants/site-comments';
+import { convertToPositiveInteger } from '../../../../../shared/helpers/convert-to-positive-integer';
 import { mergeIssues } from '../../../../../shared/helpers/merge-issues';
 import { newSiteCommentSchema } from '../../../../../shared/schemas/comment-schema';
 import { idParamSchema } from '../../../../../shared/schemas/id-param-schema';
-import { convertToPositiveInteger } from '../../../../helpers/convert-to-positive-integer';
 import { getIp } from '../../../../helpers/get-ip';
 import { validateTurnstile } from '../../../../helpers/validate-turnstile';
 import { DenyIpsRepository } from '../../../../repositories/deny-ips-repository';
