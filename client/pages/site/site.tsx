@@ -118,12 +118,12 @@ export default function Site(): ReactElement {
       ) : !isEmpty(loadError) ? (
         <>
           <p className="text-error">{loadError}</p>
-          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
         </>
       ) : site == null ? (
         <>
           <p className="text-error">サイトが見つかりませんでした。</p>
-          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
         </>
       ) : (
         <>
@@ -219,7 +219,7 @@ export default function Site(): ReactElement {
             </fieldset>
           </form>
           
-          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
         </>
       )}
     </main>

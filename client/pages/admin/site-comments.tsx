@@ -1,0 +1,98 @@
+import { useEffect, useState, type ReactElement } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+
+import { AdminNavigation } from './components/admin-navigation';
+import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
+import { isEmpty } from '../../../shared/helpers/is-empty';
+import { adminApi } from '../../helpers/admin-api';
+import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
+
+import type { SiteCommentAdmin } from '../../../shared/types/admin/admin-site-comment';
+
+export default function AdminSiteComments(): ReactElement {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // ページング
+  const pageParam  = searchParams.get('page');
+  const pageNumber = isEmpty(pageParam) ? 1 : Number(pageParam);
+  const page       = Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  
+  // 一覧
+  const [siteComments, setSiteComments] = useState<Array<SiteCommentAdmin>>([]);
+  const [hasNext     , setHasNext     ] = useState<boolean>(false);
+  
+  // エラー表示系
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error    , setError    ] = useState<string>('');
+  
+  useEffect(() => {
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate('/admin/site-comments?page=1', { replace: true });
+      return;
+    }
+    
+    (async () => {
+      try {
+        const response = await adminApi.get(`/api/admin/site-comments?page=${page}`).json<{ result: { page: number; site_comments: Array<SiteCommentAdmin>; has_next: boolean; }; }>();
+        setSiteComments(response.result.site_comments);
+        setHasNext(response.result.has_next);
+      }
+      catch(error) {
+        setError(extractApiErrorMessage(error, 'コメント一覧の取得に失敗しました'));
+      }
+      finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [pageParam, page]);
+  
+  return (
+    <main className="page-container">
+      <AdminNavigation />
+      <h1>サイト別コメント管理</h1>
+      
+      {isLoading ? (
+        <p className="loading">読み込み中…</p>
+      ) : !isEmpty(error) ? (
+        <p className="text-error">{error}</p>
+      ) : siteComments.length === 0 ? (
+        <p>コメントはありません。</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>サイト ID</th>
+              <th>HN</th>
+              <th>本文</th>
+              <th>投稿日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            {siteComments.map(siteComment => (
+              <tr key={siteComment.id}>
+                <td className="nowrap"><Link to={{ pathname: '/admin/site-comment', search: `?id=${siteComment.id}` }}>{siteComment.id}</Link></td>
+                <td className="nowrap"><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></td>
+                <td>{siteComment.user_name || '-'}</td>
+                <td className="pre-wrap">{siteComment.content}</td>
+                <td className="nowrap">{convertUtcToJst(siteComment.created_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      
+      {(page > 1 || hasNext) && (
+        <p className="text-center">
+          {page > 1            && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
+          {hasNext             && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+        </p>
+      )}
+    </main>
+  );
+}

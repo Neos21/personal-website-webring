@@ -61,12 +61,12 @@ export default function Edit(): ReactElement {
       ) : !isEmpty(error) ? (
         <>
           <p className="text-error">{error}</p>
-          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
         </>
       ) : site == null ? (
         <>
           <p className="text-error">サイトが見つかりませんでした。</p>
-          <p className="text-right"><Link to="/list">登録済サイト一覧へ戻る</Link></p>
+          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
         </>
       ) : (
         <>

@@ -150,7 +150,7 @@ export default function Support(): ReactElement {
       {siteId != null ? (
         <>
           <p><Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト ID [{siteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
-          <p><Link to="/support">全体のサポート掲示板投稿を見る場合はコチラ</Link></p>
+          <p><Link to={{ pathname: '/support', search: '?page=1' }}>全体のサポート掲示板投稿を見る場合はコチラ</Link></p>
         </>
       ) : (
         <p>当サイトに関するご意見・お問い合わせなどがありましたらコチラにドウゾ。</p>
@@ -191,7 +191,7 @@ export default function Support(): ReactElement {
               
               {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               
-              <p><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
+              <p><button type="submit" disabled={isSubmitting || !isEmpty(lookupError)}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
             </fieldset>
           </form>
           

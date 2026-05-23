@@ -88,7 +88,7 @@ export default function AdminPosts(): ReactElement {
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>サポート掲示板</h1>
+      <h1>サポート掲示板投稿管理</h1>
       
       <form onSubmit={onSubmit}>
         <label>

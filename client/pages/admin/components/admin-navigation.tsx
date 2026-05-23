@@ -16,9 +16,10 @@ export function AdminNavigation(): ReactElement {
     <nav>
       <ul>
         <li><Link to="/admin/dashboard">ダッシュボード</Link></li>
-        <li><Link to="/admin/sites">サイト管理</Link></li>
-        <li><Link to="/admin/tags">タグ管理</Link></li>
-        <li><Link to="/admin/posts">投稿管理</Link></li>
+        <li><Link to={{ pathname: '/admin/sites', search: '?page=1' }}>サイト管理</Link></li>
+        <li><Link to={{ pathname: '/admin/site-comments', search: '?page=1' }}>サイト別コメント管理</Link></li>
+        <li><Link to={{ pathname: '/admin/posts', search: '?page=1' }}>サポート掲示板投稿管理</Link></li>
+        <li><Link to={{ pathname: '/admin/tags', search: '?page=1' }}>タグ管理</Link></li>
         <li><Link to="/admin/deny-ips">禁止 IP アドレス管理</Link></li>
         <li><Link to="/admin/deny-domains">禁止ドメイン管理</Link></li>
         <li><button type="button" onClick={onLogout}>ログアウト</button></li>

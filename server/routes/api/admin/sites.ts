@@ -9,6 +9,7 @@ import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminUpdateSiteSchema } from '../../../../shared/schemas/admin/admin-site-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
 import { hashPassword } from '../../../helpers/hash-password';
+import { AdminSiteCommentsRepository } from '../../../repositories/admin/admin-site-comments-repository';
 import { AdminSitesRepository } from '../../../repositories/admin/admin-sites-repository';
 import { DenyDomainsRepository } from '../../../repositories/deny-domains-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
@@ -98,7 +99,7 @@ adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint
   const existing = await adminSitesRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  // TODO : サイトに紐付くコメントを削除する
+  await new AdminSiteCommentsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await new SiteTagsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await adminSitesRepository.deleteById(idParsed.data);
   

@@ -6,8 +6,17 @@ export class PostsRepository {
   /** ページング処理付き一覧 */
   public async findPage(pageSize: number, offset: number, siteId: number | null): Promise<Array<PostPublic>> {
     if(siteId == null) {
+      // 論理削除されているサイトに紐付く投稿は除外する
       const result = await this.db
-        .prepare('SELECT id, site_id, user_name, content, is_admin, created_at FROM posts                   ORDER BY id DESC LIMIT ? OFFSET ?')
+        .prepare(`
+          SELECT posts.id, posts.site_id, posts.user_name, posts.content, posts.is_admin, posts.created_at
+          FROM posts LEFT JOIN sites
+            ON posts.site_id = sites.id
+          WHERE posts.site_id IS NULL
+            OR  sites.is_deleted = 0
+          ORDER BY posts.id DESC
+          LIMIT ? OFFSET ?
+        `)
         .bind(pageSize, offset)
         .all<PostPublic>();
       return result.results ?? [];
