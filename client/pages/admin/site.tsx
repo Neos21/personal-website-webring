@@ -48,7 +48,7 @@ export default function AdminSite(): ReactElement {
       return;
     }
     if(siteId === 0 || Number.isNaN(siteId)) {
-      setError('不正なサイト ID です');
+      setError('サイト ID が不正です');
       return setIsLoading(false);
     }
     
@@ -113,7 +113,7 @@ export default function AdminSite(): ReactElement {
     if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {
-      await adminApi.put(`/api/admin/sites/${siteId}`, { json: parsed.data }).text();
+      await adminApi.put(`/api/admin/sites/${siteId}`, { json: parsed.data }).json();
       navigate(`/admin/site?${siteId}`);  // 再読込する
     }
     catch(error) {

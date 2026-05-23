@@ -1,5 +1,3 @@
-import { convertIpV6AddressTo64Bit } from '../../helpers/convert-ip-v6-address-to-64-bit';
-
 import type { DenyIpAdmin } from '../../../shared/types/admin/admin-deny-ip';
 
 export class AdminDenyIpsRepository {
@@ -19,13 +17,17 @@ export class AdminDenyIpsRepository {
       .first<DenyIpAdmin>();
   }
   
+  public async findByIp(ip: string): Promise<DenyIpAdmin | null> {
+    return await this.db
+      .prepare('SELECT id, ip, created_at FROM deny_ips WHERE ip = ? LIMIT 1')
+      .bind(ip)
+      .first<DenyIpAdmin>();
+  }
+  
   public async create(ip: string): Promise<number> {
-    const trimmedIp = ip.trim();
-    const normalizedIp = trimmedIp.includes(':') ? convertIpV6AddressTo64Bit(trimmedIp) : trimmedIp;
-    // TODO : ↑ この処理はココでやりたくない
     const result = await this.db
       .prepare('INSERT INTO deny_ips (ip) VALUES (?)')
-      .bind(normalizedIp)
+      .bind(ip)
       .run();
     return result.meta.last_row_id;
   }

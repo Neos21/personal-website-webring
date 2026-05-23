@@ -5,7 +5,7 @@ import { siteCommentsConstants } from '../../../../../shared/constants/site-comm
 import { mergeIssues } from '../../../../../shared/helpers/merge-issues';
 import { newSiteCommentSchema } from '../../../../../shared/schemas/comment-schema';
 import { idParamSchema } from '../../../../../shared/schemas/id-param-schema';
-import { convertToInteger } from '../../../../helpers/convert-to-integer';
+import { convertToPositiveInteger } from '../../../../helpers/convert-to-positive-integer';
 import { getIp } from '../../../../helpers/get-ip';
 import { validateTurnstile } from '../../../../helpers/validate-turnstile';
 import { DenyIpsRepository } from '../../../../repositories/deny-ips-repository';
@@ -24,7 +24,7 @@ comments.get('/', async context => {
   const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  const page = convertToInteger(context.req.query('page')) ?? 1;
+  const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * siteCommentsConstants.pageSize;
   
   const comments = await new SiteCommentsRepository(context.env.DB).findPage(siteIdParsed.data, siteCommentsConstants.pageSize + 1, offset);
@@ -52,6 +52,11 @@ comments.post('/', async context => {
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
-  const id = await new SiteCommentsRepository(context.env.DB).create({ content: parsed.data.content, ip, site_id: siteIdParsed.data, user_name: parsed.data.user_name });
+  const id = await new SiteCommentsRepository(context.env.DB).create({
+    site_id  : siteIdParsed.data,
+    user_name: parsed.data.user_name,
+    content  : parsed.data.content,
+    ip       : ip
+  });
   return context.json({ result: { id } }, httpStatusCode.created);
 });

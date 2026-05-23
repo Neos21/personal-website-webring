@@ -6,7 +6,7 @@ import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminNewOrUpdateTagSchema } from '../../../../shared/schemas/admin/admin-tag-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
-import { convertToInteger } from '../../../helpers/convert-to-integer';
+import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { AdminSiteTagsRepository } from '../../../repositories/admin/admin-site-tags-repository';
 import { AdminTagsRepository } from '../../../repositories/admin/admin-tags-repository';
 import { TagsRepository } from '../../../repositories/tags-repository';
@@ -19,7 +19,7 @@ export const adminTagsPath = '/tags';
 adminTags.use((context, next) => jwt({ secret: context.env.ADMIN_JWT_SECRET, alg: 'HS256' })(context, next));
 
 adminTags.get('/', async context => {
-  const page = convertToInteger(context.req.query('page')) ?? 1;
+  const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * adminConstants.tagsPageSize;
   
   const tags = await new AdminTagsRepository(context.env.DB).findPage(adminConstants.tagsPageSize + 1, offset);
@@ -54,6 +54,7 @@ adminTags.put('/:id', async context => {  // eslint-disable-line neos-eslint-plu
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const adminTagsRepository = new AdminTagsRepository(context.env.DB);
+  
   const existing = await adminTagsRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のタグが見つかりませんでした' }, httpStatusCode.notFound);
   
@@ -69,6 +70,7 @@ adminTags.delete('/:id', async context => {  // eslint-disable-line neos-eslint-
   if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
   const adminTagsRepository = new AdminTagsRepository(context.env.DB);
+  
   const existing = await adminTagsRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のタグが見つかりませんでした' }, httpStatusCode.notFound);
   

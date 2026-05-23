@@ -19,7 +19,12 @@ export class AdminSitesRepository {
       .first<SiteAdmin>();
   }
   
-  // TODO : 管理画面での全項目更新
+  public async update(site: SiteAdmin): Promise<void> {
+    await this.db
+      .prepare('UPDATE sites SET is_self = ?, url = ?, site_name = ?, owner_name = ?, description = ?, banner_url = ?, banner_width = ?, banner_height = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP, is_deleted = ? WHERE id = ?')
+      .bind(site.is_self, site.url, site.site_name, site.owner_name, site.description, site.banner_url, site.banner_width, site.banner_height, site.password_hash, site.is_deleted, site.id)
+      .run();
+  }
   
   public async deleteById(id: number): Promise<void> {
     await this.db.prepare('DELETE FROM sites WHERE id = ?')

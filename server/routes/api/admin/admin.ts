@@ -14,6 +14,7 @@ export const adminPath = '/admin';
 
 admin.route(adminLoginPath      , adminLogin);
 admin.route(adminSitesPath      , adminSites);
+// TODO : コメント API
 admin.route(adminTagsPath       , adminTags);
 admin.route(adminPostsPath      , adminPosts);
 admin.route(adminDenyIpsPath    , adminDenyIps);

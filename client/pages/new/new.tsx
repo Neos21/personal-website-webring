@@ -69,7 +69,7 @@ export default function New(): ReactElement {
     
     // 禁止ドメインのチェック
     try {
-      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; domain: string | null; }; }>();
+      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; }; }>();
       if(response.result.is_denied) {
         setIsDenyDomain(true);
         setExactMatch(null);

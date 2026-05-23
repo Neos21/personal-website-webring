@@ -6,7 +6,7 @@ import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
 import { newPostSchema } from '../../../../shared/schemas/post-schema';
-import { convertToInteger } from '../../../helpers/convert-to-integer';
+import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
 import { getIp } from '../../../helpers/get-ip';
 import { validateTurnstile } from '../../../helpers/validate-turnstile';
 import { DenyIpsRepository } from '../../../repositories/deny-ips-repository';
@@ -24,10 +24,14 @@ posts.get('/', async context => {
   const siteIdParsed = idParamSchema.safeParse(siteIdParam);
   if(!isEmpty(siteIdParam) && !siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const page = convertToInteger(context.req.query('page')) ?? 1;
+  const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * postsConstants.pageSize;
   
-  // TODO : ID がある場合、そのサイトが生きていることを確認する・生きてなければ 400 あたりを返しておく
+  // ID が指定された場合、そのサイトが有効でなければ投稿を返さない
+  if(siteIdParsed.data != null) {
+    const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
+    if(site == null) return context.json({ error: 'サイト ID が不正です' }, httpStatusCode.badRequest);
+  }
   
   const posts = await new PostsRepository(context.env.DB).findPage(postsConstants.pageSize + 1, offset, siteIdParsed.success ? siteIdParsed.data : null);
   const hasNext = posts.length > postsConstants.pageSize;
@@ -58,8 +62,7 @@ posts.post('/', async context => {
     site_id  : parsed.data.site_id ?? null,
     user_name: parsed.data.user_name,
     content  : parsed.data.content,
-    ip       : ip,
-    is_admin : 0
+    ip       : ip
   });
   return context.json({ result: { id } }, httpStatusCode.created);
 });

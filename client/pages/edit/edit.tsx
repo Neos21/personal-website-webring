@@ -30,7 +30,7 @@ export default function Edit(): ReactElement {
       return;
     }
     if(siteId === 0 || Number.isNaN(siteId)) {
-      setError('不正なサイト ID です');
+      setError('サイト ID が不正です');
       return setIsLoading(false);
     }
     

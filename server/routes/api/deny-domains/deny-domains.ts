@@ -15,5 +15,5 @@ denyDomains.get('/search', async context => {
   if(isEmpty(url)) return context.json({ error: 'URL パラメータが不正です' }, httpStatusCode.badRequest);
   
   const domain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), url);
-  return context.json({ result: { is_denied: domain != null, domain } }, httpStatusCode.ok);
+  return context.json({ result: { is_denied: domain != null } }, httpStatusCode.ok);
 });

@@ -21,10 +21,11 @@ export class PostsRepository {
     }
   }
   
+  /** 一般ユーザ投稿 */
   public async create(post: NewPost): Promise<number> {
     const result = await this.db
-      .prepare('INSERT INTO posts (site_id, user_name, content, ip, is_admin, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)')
-      .bind(post.site_id, post.user_name, post.content, post.ip, post.is_admin)
+      .prepare('INSERT INTO posts (site_id, user_name, content, ip, is_admin, created_at) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP)')
+      .bind(post.site_id, post.user_name, post.content, post.ip)
       .run();
     return result.meta.last_row_id;
   }

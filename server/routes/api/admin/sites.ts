@@ -3,13 +3,13 @@ import { jwt } from 'hono/jwt';
 
 import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
+import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminUpdateSiteSchema } from '../../../../shared/schemas/admin/admin-site-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
-import { convertToInteger } from '../../../helpers/convert-to-integer';
-import { AdminSiteTagsRepository } from '../../../repositories/admin/admin-site-tags-repository';
+import { convertToPositiveInteger } from '../../../helpers/convert-to-positive-integer';
+import { hashPassword } from '../../../helpers/hash-password';
 import { AdminSitesRepository } from '../../../repositories/admin/admin-sites-repository';
-import { AdminTagsRepository } from '../../../repositories/admin/admin-tags-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
 import { TagsRepository } from '../../../repositories/tags-repository';
 import { SiteTagService } from '../../../services/site-tag-service';
@@ -22,7 +22,7 @@ export const adminSitesPath = '/sites';
 adminSites.use((context, next) => jwt({ secret: context.env.ADMIN_JWT_SECRET, alg: 'HS256' })(context, next));
 
 adminSites.get('/', async context => {
-  const page = convertToInteger(context.req.query('page')) ?? 1;
+  const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
   const offset = (page - 1) * adminConstants.sitesPageSize;
   
   const sites = await new AdminSitesRepository(context.env.DB).findPage(adminConstants.sitesPageSize + 1, offset);
@@ -39,9 +39,7 @@ adminSites.get('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   const tags = await new TagsRepository(context.env.DB).findBySiteId(idParsed.data);
-  
-  // TODO : SiteAdminWithTags 型で返す
-  return context.json({ result: { site, tags } }, httpStatusCode.ok);
+  return context.json({ result: { ...site, tags } }, httpStatusCode.ok);
 });
 
 adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
@@ -55,23 +53,30 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const adminSitesRepository = new AdminSitesRepository(context.env.DB);
+  
   const existing = await adminSitesRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  // TODO
-  await sitesRepository.update({
-    id: idParsed.data,
-    url: parsed.data.url,
-    site_name: parsed.data.site_name,
-    owner_name: parsed.data.owner_name,
-    description: parsed.data.description,
-    banner_url: parsed.data.banner_url,
-    banner_width: parsed.data.banner_width ?? null,
-    banner_height: parsed.data.banner_height ?? null,
-    password_hash: parsed.data.password ?? null
+  // 入力値があればパスワードを変更する
+  const passwordHash = !isEmpty(parsed.data.password) ? await hashPassword(parsed.data.password) : existing.password_hash;
+  
+  await adminSitesRepository.update({
+    id            : idParsed.data,
+    is_self       : parsed.data.is_self,
+    url           : parsed.data.url,
+    site_name     : parsed.data.site_name,
+    owner_name    : parsed.data.owner_name,
+    description   : parsed.data.description,
+    banner_url    : parsed.data.banner_url,
+    banner_width  : parsed.data.banner_width ?? null,
+    banner_height : parsed.data.banner_height ?? null,
+    password_hash : passwordHash,
+    created_at    : '',  // 未使用
+    updated_at    : '',  // 未使用
+    is_deleted    : parsed.data.is_deleted
   });
   
-  await new SiteTagService().replaceNames(new AdminSiteTagsRepository(context.env.DB), new AdminTagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
+  await new SiteTagService().replaceNames(new SiteTagsRepository(context.env.DB), new TagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
   
   return context.json({ result: true }, httpStatusCode.ok);
 });
@@ -80,12 +85,13 @@ adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint
   const idParsed = idParamSchema.safeParse(context.req.param('id'));
   if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const sitesRepository = new AdminSitesRepository(context.env.DB);
-  const existing = await sitesRepository.findById(idParsed.data);
+  const adminSitesRepository = new AdminSitesRepository(context.env.DB);
+  
+  const existing = await adminSitesRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   await new SiteTagsRepository(context.env.DB).deleteBySiteId(idParsed.data);
-  await sitesRepository.deleteById(idParsed.data);
+  await adminSitesRepository.deleteById(idParsed.data);
   
   return context.body(null, httpStatusCode.noContent);
 });

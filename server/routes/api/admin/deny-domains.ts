@@ -27,8 +27,9 @@ adminDenyDomains.post('/', async context => {
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const adminDenyDomainsRepository = new AdminDenyDomainsRepository(context.env.DB);
-  const existingDomain = await adminDenyDomainsRepository.findByDomain(parsed.data.domain);
-  if(existingDomain != null) return context.json({ error: 'このドメインは既に登録されています' }, httpStatusCode.badRequest);
+  
+  const duplicate = await adminDenyDomainsRepository.findByDomain(parsed.data.domain);
+  if(duplicate != null) return context.json({ error: 'このドメインは既に登録されています' }, httpStatusCode.badRequest);
   
   const id = await adminDenyDomainsRepository.create(parsed.data.domain);
   return context.json({ result: { id } }, httpStatusCode.created);
@@ -39,6 +40,7 @@ adminDenyDomains.delete('/:id', async context => {  // eslint-disable-line neos-
   if(!idParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
   const adminDenyDomainsRepository = new AdminDenyDomainsRepository(context.env.DB);
+  
   const existing = await adminDenyDomainsRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のドメインが見つかりませんでした' }, httpStatusCode.notFound);
   
