@@ -67,7 +67,7 @@ export default function AdminPosts(): ReactElement {
         user_name: userName,
         content  : content
       };
-      const parsed = newAdminPostSchema.safeParse(payload);  // TODO
+      const parsed = newAdminPostSchema.safeParse(payload);  // TODO : ないので作る
       
       await adminApi.post('/api/admin/posts', { json: parsed.data });
       setSiteId('');

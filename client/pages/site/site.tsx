@@ -174,12 +174,13 @@ export default function Site(): ReactElement {
             ) : (
               <>
                 {comments.map(comment => (
-                  <article key={comment.id} className="comment" style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                    <div className="comment-meta" style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                      <span className="comment-author" style={{ fontWeight: 'bold' }}>{comment.user_name || '名無し'}</span>
-                      <span className="comment-date" style={{ marginLeft: '1rem' }}>{convertUtcToJst(comment.created_at)}</span>
+                  <article key={comment.id} className="comment-card">
+                    <div className="comment-header">
+                      <span>[{comment.id}]</span>
+                      <span>{convertUtcToJst(comment.created_at)}</span>
+                      <span>{comment.user_name || '名無し'}</span>
                     </div>
-                    <div className="comment-content pre-wrap">{comment.content}</div>
+                    <p className="pre-wrap">{comment.content}</p>
                   </article>
                 ))}
               </>

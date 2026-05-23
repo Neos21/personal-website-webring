@@ -56,7 +56,7 @@ export default function AdminSite(): ReactElement {
       setError('');
       
       try {
-        const response = await adminApi.get(`/api/admin/sites/${siteId}`).json<{ result: SiteAdminWithTags; }>();
+        const response = await adminApi.get(`/api/admin/sites/${siteId}`).json<{ result: SiteAdminWithTags; }>();  // TODO : サーバサイドがこの型で返せてないのでサーバサイドを直す
         setSite(response.result);
         
         setIsSelf     (response.result.is_self);
@@ -108,7 +108,7 @@ export default function AdminSite(): ReactElement {
       password       : password,
       is_deleted     : isDeleted
     };
-    const parsed = adminUpdateSiteSchema.safeParse(payload);  // TODO
+    const parsed = adminUpdateSiteSchema.safeParse(payload);  // TODO : ないので作る
     if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {

@@ -52,7 +52,7 @@ input[type="text"], input[type="url"], input[type="password"], textarea, button 
   font-family: var(--font-family-monospace);
   background: #ecf9ff;
   
-  &::placeholder {
+  &:not(:disabled)::placeholder {
     color: rgba(0, 128, 255, .5);
   }
   
@@ -219,14 +219,11 @@ table {
   border-radius: 8px;
   padding: 1rem;
   
-  & > * {
-    margin: 1rem 0;
+  & > :not(:first-child) {
+    margin-bottom: 1rem;
   }
-  & > :first-child {
-    margin-top: 0;
-  }
-  & > :last-child {
-    margin-bottom: 0;
+  & > :not(:first-child) {
+    margin-top: 1rem;
   }
   
   & > ul {
@@ -240,11 +237,11 @@ table {
   }
 }
 
-.post-card {
+:is(.comment-card, .post-card) {
   margin: 1.5rem 0;
   border-bottom: 1px solid #ccc;
   
-  & .post-header {
+  & :is(.comment-header, .post-header) {
     display: flex;
     flex-wrap: wrap;
     column-gap: .5rem;
@@ -273,11 +270,9 @@ table {
 /* Utilities */
 
 .text-muted   { color: #666; }
-.text-success { color: #063; }
 .text-error   { color: #d00; }
 .text-warning { color: #f90; }
 
-.text-left   { text-align: left  ; }  /* 現状未使用 */
 .text-center { text-align: center; }
 .text-right  { text-align: right ; }
 
