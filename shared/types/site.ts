@@ -1,22 +1,5 @@
+import type { SiteAdmin } from './admin/site';
 import type { Tag } from './tag';
-
-export type SiteAdmin = {
-  id: number;
-  is_self: 0 | 1;
-  url: string;
-  site_name: string;
-  owner_name: string | null;
-  description: string | null;
-  banner_url: string | null;
-  banner_width: number | null;
-  banner_height: number | null;
-  password_hash: string | null;
-  created_at: string;
-  updated_at: string;
-  is_deleted: 0 | 1;
-};
-
-export type SiteAdminWithTags = SiteAdmin & { tags: Array<Tag>; };
 
 /** サイト削除フォームなど・タグは別テーブル管理で取得にも手間取るため */
 export type SitePublic = Omit<SiteAdmin, 'password_hash' | 'is_deleted'>;
