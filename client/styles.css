@@ -237,11 +237,11 @@ table {
   }
 }
 
-:is(.comment-card, .post-card) {
+:is(.site-comment-card, .post-card) {
   margin: 1.5rem 0;
   border-bottom: 1px solid #ccc;
   
-  & :is(.comment-header, .post-header) {
+  & :is(.site-comment-header, .post-header) {
     display: flex;
     flex-wrap: wrap;
     column-gap: .5rem;

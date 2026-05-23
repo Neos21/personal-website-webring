@@ -5,7 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { newSiteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/comment-schema';
+import { newSiteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/site-comment-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
@@ -29,18 +29,17 @@ export default function Site(): ReactElement {
   const [site, setSite] = useState<SitePublicWithTags | null>(null);
   
   // コメント一覧
-  const [comments, setComments] = useState<Array<SiteCommentPublic>>([]);
-  const [hasNext , setHasNext ] = useState<boolean>(false);
+  const [siteComments, setSiteComments] = useState<Array<SiteCommentPublic>>([]);
+  const [hasNext     , setHasNext     ] = useState<boolean>(false);
   
   // コメント一覧 エラー表示系
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string>('');
   
   // コメント入力フォーム
-  const [commentUserName, setCommentUserName] = useState<string>('');
-  const [commentContent , setCommentContent ] = useState<string>('');
-  const [turnstileToken , setTurnstileToken ] = useState<string>('');
-  const [turnstileKey   , setTurnstileKey   ] = useState<string>(String(Date.now()));
+  const [userName      , setUserName      ] = useState<string>('');
+  const [content       , setContent       ] = useState<string>('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   
   // コメント入力フォーム エラー表示系
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -68,16 +67,16 @@ export default function Site(): ReactElement {
     
     (async () => {
       try {
-        const [siteResponse, commentsResponse] = await Promise.all([
+        const [siteResponse, siteCommentsResponse] = await Promise.all([
           ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>(),
           ky.get(`/api/sites/${siteId}/comments?page=${page}`).json<{ result: { page: number; comments: Array<SiteCommentPublic>; has_next: boolean; }; }>()
         ]);
         setSite(siteResponse.result);
-        setComments(commentsResponse.result.comments);
-        setHasNext(commentsResponse.result.has_next);
+        setSiteComments(siteCommentsResponse.result.comments);
+        setHasNext(siteCommentsResponse.result.has_next);
       }
       catch(error) {
-        setLoadError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
+        setLoadError(extractApiErrorMessage(error, 'サイトの取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
@@ -90,8 +89,8 @@ export default function Site(): ReactElement {
     setError('');
     
     const payload = {
-      user_name      : commentUserName,
-      content        : commentContent,
+      user_name      : userName,
+      content        : content,
       turnstile_token: turnstileToken
     };
     const parsed = newSiteCommentSchema.safeParse(payload);
@@ -100,12 +99,6 @@ export default function Site(): ReactElement {
     setIsSubmitting(true);
     try {
       await ky.post(`/api/sites/${siteId}/comments`, { json: parsed.data }).json();
-      
-      setCommentContent('');
-      setTurnstileToken('');
-      setTurnstileKey(String(Date.now()));
-      
-      // 1ページ目の URL に遷移する
       navigate(`/support?id=${siteId}&page=1`);
     }
     catch(error) {
@@ -172,18 +165,18 @@ export default function Site(): ReactElement {
           <section>
             <h2>サイトへのコメント</h2>
             
-            {comments.length === 0 ? (
+            {siteComments.length === 0 ? (
               <p>まだコメントはありません。</p>
             ) : (
               <>
-                {comments.map(comment => (
-                  <article key={comment.id} className="comment-card">
-                    <div className="comment-header">
-                      <span>[{comment.id}]</span>
-                      <span>{convertUtcToJst(comment.created_at)}</span>
-                      <span>{comment.user_name || '名無し'}</span>
+                {siteComments.map(siteComment => (
+                  <article key={siteComment.id} className="site-comment-card">
+                    <div className="site-comment-header">
+                      <span>[{siteComment.id}]</span>
+                      <span>{convertUtcToJst(siteComment.created_at)}</span>
+                      <span>{siteComment.user_name || '名無し'}</span>
                     </div>
-                    <p className="pre-wrap">{comment.content}</p>
+                    <p className="pre-wrap">{siteComment.content}</p>
                   </article>
                 ))}
               </>
@@ -210,15 +203,15 @@ export default function Site(): ReactElement {
               
               <label>
                 <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
-                <input type="text" placeholder={userNameDisplayName} value={commentUserName} maxLength={userNameMaxLength} onChange={event => setCommentUserName(event.target.value)} />
+                <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
               </label>
               
               <label>
                 <div className="form-label">{commentDisplayName} <span className="form-label-memo">(必須・{commentMaxLength}文字以内)</span></div>
-                <textarea placeholder={commentDisplayName} value={commentContent} maxLength={commentMaxLength} onChange={event => setCommentContent(event.target.value)} required rows={6} />
+                <textarea placeholder={commentDisplayName} value={content} maxLength={commentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
               </label>
               
-              <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
+              <TurnstileField onTokenChange={setTurnstileToken} />
               
               {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               
