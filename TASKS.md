@@ -5,7 +5,6 @@
 
 ## リングマスター用管理画面 (`/admin` 配下) を実装する
 
-- [x] 管理ログイン
 - サイト管理
   - [x] 一覧表示ページ : 500件でページング可能にする (`shared/constants/admin.ts` に `export const adminConstants = { sitesPageSize: 500 }` を作る)
   - [x] 1件の詳細表示ページ : 全項目の編集 (論理削除フラグの ON・OFF 込み) を可能にする。物理削除を可能にする。(`site_tags` テーブルの連動削除も行う)
@@ -22,8 +21,6 @@
   - [x] これに伴い、既存の `new DenyIpsRepository(context.env.DB).isIpDenied(ip)` で判定している部分を IPv6 の64ビットでチェックするよう対応する
 - 登録禁止ドメイン管理
   - [x] 一覧ページ : 新規追加と、登録済みのものの削除を可能にする
-- [ ] 管理用の Services・Repositories を別クラスに分離する
-  - `server/services/admin/`・`server/repositories/admin/` を用意し、`admin-example-repository.ts` などのように `admin-` をファイル名の Prefix にする。Class 名も `AdminExampleRepository` のように `Admin` を Prefix にする
 
 
 ## 機能改善
@@ -31,8 +28,7 @@
 コード中に TODO コメントで入れてあるモノもあり。
 
 - [ ] `?id=` や `?page=` パラメータを扱うページで、アドレスバーの URL に正しい値を反映したい
-- [ ] `support.tsx` の `lookupSite` の要領で、サイト新規登録・サイト編集フォームにて `exactMatchId`・`nearMatchId` ヒット時にサイト名を表示したい
-- [ ] 論理削除されたサイト ID が指定されたら `support.tsx` の表示をエラー扱いにしたい
+- [ ] `support.tsx` の入力フォームで、論理削除されたサイト ID が指定されたら見つからない扱いで表示したい
 - [ ] `support.tsx` で、論理削除されたサイト ID が紐付いている `posts` は何があっても非表示にしたい
   - [ ] 必要そうであれば、`posts.is_deleted` カラムを用意して、サイトの論理削除時にフラグを立てるようにする (リングマスター管理画面で復旧させた場合はフラグを戻す)
 

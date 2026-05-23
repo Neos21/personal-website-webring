@@ -5,12 +5,12 @@ export type SiteAdmin = {
   is_self: 0 | 1;
   url: string;
   site_name: string;
-  owner_name: string | null;
-  description: string | null;
-  banner_url: string | null;
-  banner_width: number | null;
-  banner_height: number | null;
-  password_hash: string | null;
+  owner_name: string | null | undefined;
+  description: string | null | undefined;
+  banner_url: string | null | undefined;
+  banner_width: number | null | undefined;
+  banner_height: number | null | undefined;
+  password_hash: string | null | undefined;
   created_at: string;
   updated_at: string;
   is_deleted: 0 | 1;

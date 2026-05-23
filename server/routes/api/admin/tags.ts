@@ -4,7 +4,7 @@ import { jwt } from 'hono/jwt';
 import { adminConstants } from '../../../../shared/constants/admin';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
-import { adminNewTagSchema } from '../../../../shared/schemas/admin/admin-tag-schema';
+import { adminNewOrUpdateTagSchema } from '../../../../shared/schemas/admin/admin-tag-schema';
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
 import { AdminSiteTagsRepository } from '../../../repositories/admin/admin-site-tags-repository';
@@ -32,7 +32,7 @@ adminTags.post('/', async context => {
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsed = adminNewTagSchema.safeParse(body);
+  const parsed = adminNewOrUpdateTagSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const tagsRepository = new TagsRepository(context.env.DB);
@@ -50,7 +50,7 @@ adminTags.put('/:id', async context => {  // eslint-disable-line neos-eslint-plu
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
-  const parsed = adminNewTagSchema.safeParse(body);
+  const parsed = adminNewOrUpdateTagSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const adminTagsRepository = new AdminTagsRepository(context.env.DB);

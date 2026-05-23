@@ -38,7 +38,7 @@ adminSites.get('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   const site = await new AdminSitesRepository(context.env.DB).findById(idParsed.data);
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  const tags = await new TagsRepository(context.env.DB).findTagsBySiteId(idParsed.data);
+  const tags = await new TagsRepository(context.env.DB).findBySiteId(idParsed.data);
   
   // TODO : SiteAdminWithTags 型で返す
   return context.json({ result: { site, tags } }, httpStatusCode.ok);
@@ -73,7 +73,7 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   
   await new SiteTagService().replaceNames(new AdminSiteTagsRepository(context.env.DB), new AdminTagsRepository(context.env.DB), idParsed.data, parsed.data.tags);
   
-  return context.body(null, httpStatusCode.noContent);
+  return context.json({ result: true }, httpStatusCode.ok);
 });
 
 adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing

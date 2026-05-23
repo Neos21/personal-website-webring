@@ -38,10 +38,10 @@ sites.get('/', async context => {
   const hasNext = sites.length > sitesConstants.pageSize;
   if(hasNext) sites.length = sitesConstants.pageSize;
   
-  const siteTagsRepository = new SiteTagsRepository(context.env.DB);
+  const tagsRepository = new TagsRepository(context.env.DB);
   const sitesWithTags: Array<SitePublicWithTags> = await Promise.all(sites.map(async site => ({
     ...site,
-    tags: await siteTagsRepository.findBySiteId(site.id)
+    tags: await tagsRepository.findBySiteId(site.id)
   })));
   
   return context.json({ result: { page, sites: sitesWithTags, has_next: hasNext } }, httpStatusCode.ok);
@@ -55,8 +55,16 @@ sites.get('/search-url', async context => {
   // ID 指定時はその ID を除外する
   const ignoreSiteId = convertToInteger(context.req.query('id'));
   
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(new SitesRepository(context.env.DB), url, ignoreSiteId);
-  return context.json({ result: { exact_match_id: urlMatch.exactMatchId, near_match_id: urlMatch.nearMatchId } }, httpStatusCode.ok);
+  const sitesRepository = new SitesRepository(context.env.DB);
+  
+  const exactMatch = await new SiteUrlService().findExactMatch(sitesRepository, url, ignoreSiteId);
+  if(exactMatch != null) return context.json({ result: { exact_match: exactMatch } }, httpStatusCode.ok);
+  
+  const nearMatch = await new SiteUrlService().findNearMatch(sitesRepository, url, ignoreSiteId);
+  if(nearMatch != null) return context.json({ result: { near_match: nearMatch } }, httpStatusCode.ok);
+  
+  // 完全一致・類似サイトがない場合は空オブジェクトを返す
+  return context.json({ result: { } }, httpStatusCode.ok);
 });
 
 sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/comment-colon-spacing
@@ -66,7 +74,7 @@ sites.get('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
-  const tags = await new SiteTagsRepository(context.env.DB).findBySiteId(siteIdParsed.data);
+  const tags = await new TagsRepository(context.env.DB).findBySiteId(siteIdParsed.data);
   return context.json({ result: { ...site, tags } }, httpStatusCode.ok);
 });
 
@@ -88,8 +96,8 @@ sites.post('/', async context => {
   
   const sitesRepository = new SitesRepository(context.env.DB);
   
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url);
-  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
+  const exactMatch = await new SiteUrlService().findExactMatch(sitesRepository, parsed.data.url);
+  if(exactMatch != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMatch.id}]` }, httpStatusCode.badRequest);
   
   // 自薦の場合は管理パスワードをハッシュ化する (自薦・他薦の選択とパスワードの組合せ入力はスキーマでチェック済)
   const passwordHash = parsed.data.is_self === 1 ? await hashPassword(parsed.data.password!) : null;
@@ -142,8 +150,8 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
-  const urlMatch = await new SiteUrlService().findSiteUrlMatch(sitesRepository, parsed.data.url, siteIdParsed.data);
-  if(urlMatch.exactMatchId != null) return context.json({ error: `この URL は既に登録されています : ID [${urlMatch.exactMatchId}]` }, httpStatusCode.badRequest);
+  const exactMach = await new SiteUrlService().findExactMatch(sitesRepository, parsed.data.url, siteIdParsed.data);
+  if(exactMach != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMach.id}]` }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
   // 自薦状態での編集時はパスワードチェックを行う (他薦から自薦に切り替える最初はパスワードチェックをしない)

@@ -1,4 +1,4 @@
-import type { SiteAdmin } from './admin/site';
+import type { SiteAdmin } from './admin/admin-site';
 import type { Tag } from './tag';
 
 /** サイト削除フォームなど・タグは別テーブル管理で取得にも手間取るため */

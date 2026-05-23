@@ -1,4 +1,4 @@
-import type { SiteCommentAdmin } from './admin/site-comment';
+import type { SiteCommentAdmin } from './admin/admin-site-comment';
 
 export type SiteCommentPublic = Omit<SiteCommentAdmin, 'ip'>;
 

@@ -1,3 +1,3 @@
-import type { DenyDomainAdmin } from './admin/deny-domain';
+import type { DenyDomainAdmin } from './admin/admin-deny-domain';
 
 export type DenyDomainPublic = DenyDomainAdmin;

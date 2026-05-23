@@ -163,7 +163,9 @@ export default function Support(): ReactElement {
                 <input type="text" placeholder="サイト ID" value={formSiteId} onChange={event => setFormSiteId(event.target.value)} onBlur={onBlurSiteId} />
               </label>
               {lookupSite != null && (
-                <div className="lookup-site"><strong>サイト名</strong> : <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}` }}>{lookupSite.site_name}</Link></div>
+                <div className="alert-success">
+                  [${lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}` }}>{lookupSite.site_name}</Link>
+                </div>
               )}
               {!isEmpty(lookupError) && (<p className="text-error">{lookupError}</p>)}
               

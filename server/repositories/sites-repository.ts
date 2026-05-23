@@ -1,4 +1,4 @@
-import type { NewSite, SiteForAuth, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
+import type { NewSite, SiteForAuth, SiteNameUrl, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
 
 export class SitesRepository {
   constructor(private readonly db: D1Database) { }
@@ -43,6 +43,22 @@ export class SitesRepository {
     }
   }
   
+  /** 完全一致 URL の検索用・サイト情報を含む */
+  public async findActiveNameUrlByExactUrl(url: string, ignoreSiteId?: number | null): Promise<SiteNameUrl | null> {
+    if(ignoreSiteId == null) {
+      return await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
+        .bind(url)
+        .first<SiteNameUrl>();
+    }
+    else {
+      return await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE lower(url) = lower(?) AND id != ? AND is_deleted = 0 LIMIT 1')
+        .bind(url, ignoreSiteId)
+        .first<SiteNameUrl>();
+    }
+  }
+  
   /** 類似 URL チェック用 */
   public async findActiveUrls(ignoreSiteId?: number | null): Promise<Array<SiteUrl>> {
     if(ignoreSiteId == null) {
@@ -56,6 +72,23 @@ export class SitesRepository {
         .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0')
         .bind(ignoreSiteId)
         .all<SiteUrl>();
+      return result.results ?? [];
+    }
+  }
+  
+  /** 類似 URL チェック用・サイト情報を含む */
+  public async findActiveNameUrls(ignoreSiteId?: number | null): Promise<Array<SiteNameUrl>> {
+    if(ignoreSiteId == null) {
+      const result = await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE             is_deleted = 0')
+        .all<SiteNameUrl>();
+      return result.results ?? [];
+    }
+    else {
+      const result = await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0')
+        .bind(ignoreSiteId)
+        .all<SiteNameUrl>();
       return result.results ?? [];
     }
   }

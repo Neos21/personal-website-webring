@@ -2,7 +2,7 @@ import z from 'zod';
 
 import { preprocessBooleanNumber, preprocessMultiLinesString, preprocessOneLineString, propertyTurnstileToken } from './schema-utilities';
 import { isEmpty } from '../helpers/is-empty';
-import { tagNameSchema } from './admin/tag-schema';
+import { tagNameSchema } from './admin/admin-tag-schema';
 
 export const siteNameDisplayName           = 'サイト名'             as const;
 export const siteNameMaxLength             = 100                    as const;
@@ -130,6 +130,13 @@ export const updateSiteSchema = newSiteSchema.omit({
   is_self            : true,
   recommender_name   : true,
   recommender_comment: true
+}).extend({
+  password: z.preprocess(
+            preprocessOneLineString,
+            z.string({ error: `${passwordDisplayName}に文字列でないデータが入力されています` })
+              .min(1, { error: `${passwordDisplayName}を入力してください` })
+              .max(passwordMaxLength, { error: `${passwordDisplayName}は${passwordMaxLength}文字以内で入力してください` })
+          ),
 }).superRefine((data, context) => {
   refineBanneSize(data, context);
 });

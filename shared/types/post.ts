@@ -1,4 +1,4 @@
-import type { PostAdmin } from './admin/post';
+import type { PostAdmin } from './admin/admin-post';
 
 export type PostPublic = Omit<PostAdmin, 'ip'>;
 

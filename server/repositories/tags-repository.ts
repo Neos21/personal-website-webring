@@ -4,7 +4,7 @@ export class TagsRepository {
   constructor(private readonly db: D1Database) { }
   
   /** 指定のサイト ID に紐付くタグ一覧を取得する */
-  public async findTagsBySiteId(siteId: number): Promise<Array<Tag>> {
+  public async findBySiteId(siteId: number): Promise<Array<Tag>> {
     const result = await this.db
       .prepare('SELECT tags.id, tags.name FROM tags INNER JOIN site_tags ON tags.id = site_tags.tag_id WHERE site_tags.site_id = ? ORDER BY tags.id ASC')
       .bind(siteId)

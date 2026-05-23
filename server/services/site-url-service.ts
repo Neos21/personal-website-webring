@@ -1,25 +1,24 @@
+import type { SiteNameUrl } from '../../shared/types/site';
 import type { SitesRepository } from '../repositories/sites-repository';
-import type { SiteUrlMatch } from '../types/site-url-match';
 
 export class SiteUrlService {
-  public async findSiteUrlMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number | null): Promise<SiteUrlMatch> {
-    // 大文字小文字を区別せず完全一致する URL を探す
-    const exactMatch = await sitesRepository.findActiveUrlByExactUrl(url, ignoreSiteId);
-    if(exactMatch != null && exactMatch.id != null) return { exactMatchId: exactMatch.id, nearMatchId: null };
-    
-    // URL を全件取得して正規化して類似 URL を探す
-    const allSites = await sitesRepository.findActiveUrls(ignoreSiteId);
-    const normalizedInput = this.normalizeUrlNearby(url);
-    const nearMatch = allSites.find(site => this.normalizeUrlNearby(site.url) === normalizedInput);
-    
-    return { exactMatchId: null, nearMatchId: nearMatch?.id ?? null };
+  /** 大文字小文字を区別せず完全一致する URL を探す */
+  public async findExactMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number | null): Promise<SiteNameUrl | null> {
+    return await sitesRepository.findActiveNameUrlByExactUrl(url, ignoreSiteId);
+  }
+  
+  /** URL を正規化して類似 URL を探す */
+  public async findNearMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number | null): Promise<SiteNameUrl | null> {
+    const sites = await sitesRepository.findActiveNameUrls(ignoreSiteId);
+    const normalizedUrl = this.normalizeUrl(url);
+    return sites.find(site => this.normalizeUrl(site.url) === normalizedUrl) ?? null;
   }
   
   /** URL 文字列の `www`・`index.html`・末尾スラッシュ等を除去して小文字に統一し正規化する */
-  private normalizeUrlNearby(value: string): string {
-    const trimmed = value.trim();
+  private normalizeUrl(url: string): string {
+    const trimmedUrl = url.trim();
     try {
-      const url = new URL(trimmed);
+      const url = new URL(trimmedUrl);
       let hostname = url.hostname.toLowerCase();
       if(hostname.startsWith('www.')) hostname = hostname.slice(4);
       
@@ -29,7 +28,7 @@ export class SiteUrlService {
     }
     catch {
       // URL 文字列のハッシュ・末尾スラッシュを除去し、小文字に統一する
-      return trimmed.trim().toLowerCase().replace((/#.*$/), '').replace((/\/?$/), '');
+      return trimmedUrl.trim().toLowerCase().replace((/#.*$/), '').replace((/\/?$/), '');
     }
   }
 }

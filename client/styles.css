@@ -250,14 +250,6 @@ table {
   }
 }
 
-.lookup-site {
-  margin: .5rem 0 1.5rem;
-  border: 1px solid #81c784;
-  border-radius: 8px;
-  padding: 1rem;
-  background: #e8f5e9;
-}
-
 .row-deleted {  /* `tr` 要素に指定する */
   background: #ffecf9;
 }
@@ -278,3 +270,11 @@ table {
 
 .nowrap   { white-space: nowrap;   }
 .pre-wrap { white-space: pre-wrap; }
+
+:is(.alert-success, .alert-warning, .alert-error) {
+  border-radius: 8px;
+  padding: 1rem;
+}
+  .alert-success { background: #e8f5e9; }
+  .alert-warning { background: #ffc; }
+  .alert-error   { background: #ffecf9; }

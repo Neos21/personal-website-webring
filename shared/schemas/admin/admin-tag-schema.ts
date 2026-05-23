@@ -10,6 +10,6 @@ export const tagNameSchema = z.preprocess(
     .max(tagMaxLength, { error: `${tagDisplayName}は文字以内で入力してください` })
 );
 
-export const adminNewTagSchema = z.object({
+export const adminNewOrUpdateTagSchema = z.object({
   name: tagNameSchema
 });

@@ -6,6 +6,7 @@ import { httpStatusCode } from '../../../../shared/constants/http-status-code';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { adminNewPostSchema } from '../../../../shared/schemas/admin/admin-post-schema';
 import { convertToInteger } from '../../../helpers/convert-to-integer';
+import { getIp } from '../../../helpers/get-ip';
 import { AdminPostsRepository } from '../../../repositories/admin/admin-posts-repository';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
@@ -37,9 +38,9 @@ adminPosts.post('/', async context => {
     site_id  : parsed.data.site_id ?? null,
     user_name: parsed.data.user_name,
     content  : parsed.data.content,
-    ip       : // TODO : IP 取得して入れておく
+    ip       : getIp(context),
     is_admin : 1
   });
   
-  return context.body(null, httpStatusCode.created);
+  return context.json({ result: true }, httpStatusCode.created);  // TODO : ID 返す
 });

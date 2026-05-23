@@ -9,7 +9,7 @@ import { TurnstileField } from '../../../components/turnstile-field';
 import { convertBannerSizeToDimensions, type BannerSize } from '../../../helpers/convert-banner-size-to-dimensions';
 import { extractApiErrorMessage } from '../../../helpers/extract-api-error-message';
 
-import type { SitePublicWithTags } from '../../../../shared/types/site';
+import type { SiteNameUrl, SitePublicWithTags } from '../../../../shared/types/site';
 
 type Props = {
   site: SitePublicWithTags;
@@ -36,16 +36,16 @@ export function EditSiteForm({ site }: Props): ReactElement {
   
   // エラー表示系
   const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
-  const [exactMatchId, setExactMatchId] = useState<number | null>(null);
-  const [nearMatchId , setNearMatchId ] = useState<number | null>(null);
+  const [exactMatch  , setExactMatch  ] = useState<SiteNameUrl | null>(null);
+  const [nearMatch   , setNearMatch   ] = useState<SiteNameUrl | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error       , setError       ] = useState<string>('');
   
   const onBlurUrl = async (inputUrl: string): Promise<void> => {
     if(isEmpty(inputUrl)) {
       setIsDenyDomain(false);
-      setExactMatchId(null);
-      setNearMatchId(null);
+      setExactMatch(null);
+      setNearMatch(null);
       return;
     }
     
@@ -55,8 +55,8 @@ export function EditSiteForm({ site }: Props): ReactElement {
     }
     catch {
       setIsDenyDomain(false);
-      setExactMatchId(null);
-      setNearMatchId(null);
+      setExactMatch(null);
+      setNearMatch(null);
       return;
     }
     
@@ -65,8 +65,8 @@ export function EditSiteForm({ site }: Props): ReactElement {
       const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; domain: string | null; }; }>();
       if(response.result.is_denied) {
         setIsDenyDomain(true);
-        setExactMatchId(null);
-        setNearMatchId(null);
+        setExactMatch(null);
+        setNearMatch(null);
         return;  // 重複・類似 URL チェックは行わない
       }
     }
@@ -75,13 +75,13 @@ export function EditSiteForm({ site }: Props): ReactElement {
     
     // 重複・類似 URL のチェック
     try {
-      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site.id } }).json<{ result: { exact_match_id: number | null; near_match_id: number | null; }; }>();
-      setExactMatchId(response.result.exact_match_id);
-      setNearMatchId(response.result.near_match_id);
+      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site.id } }).json<{ result: { exact_match: SiteNameUrl | null; near_match: SiteNameUrl | null; }; }>();
+      setExactMatch(response.result.exact_match);
+      setNearMatch(response.result.near_match);
     }
     catch {
-      setExactMatchId(null);
-      setNearMatchId(null);
+      setExactMatch(null);
+      setNearMatch(null);
     }
   };
   
@@ -143,15 +143,26 @@ export function EditSiteForm({ site }: Props): ReactElement {
         <label>
           <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
           <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength}
-            onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatchId(null); setNearMatchId(null); }}
+            onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatch(null); setNearMatch(null); }}
             onBlur={() => onBlurUrl(url)}
             required
           />
         </label>
         {isDenyDomain && (<p className="text-error">このドメインは登録できません</p>)}
-        {/* TODO : 類似サイトの情報をもう少し細かく表示したいかも。せめてサイトタイトルくらいは */}
-        {exactMatchId != null && (<p className="text-error">この URL は登録済みです : <Link to={{ pathname: '/site', search: `?id=${exactMatchId}` }}>ID [{exactMatchId}]</Link></p>)}
-        {nearMatchId  != null && (<p className="text-warning">類似する URL が登録済みです : <Link to={{ pathname: '/site', search: `?id=${nearMatchId}` }}>ID [{nearMatchId}]</Link></p>)}
+        {exactMatch != null && (
+          <div className="alert-error">
+            <div className="text-error">この URL は登録済みです</div>
+            <div>ID <Link to={{ pathname: '/show', search: `?id=${exactMatch.id}` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
+            <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
+          </div>
+        )}
+        {nearMatch != null && (
+          <div className="alert-warning">
+            <div className="text-warning">類似する URL が登録されています</div>
+            <div>ID <Link to={{ pathname: '/show', search: `?id=${nearMatch.id}` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
+            <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
+          </div>
+        )}
         
         <label>
           <div className="form-label">{ownerNameDisplayName} <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>
@@ -214,7 +225,7 @@ export function EditSiteForm({ site }: Props): ReactElement {
       
       {!isEmpty(error) && (<p className="text-error">{error}</p>)}
       
-      <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatchId != null}>{isSubmitting ? '送信中…' : '編集する'}</button></p>
+      <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatch != null}>{isSubmitting ? '送信中…' : '編集する'}</button></p>
     </form>
   );
 }
