@@ -18,9 +18,8 @@ export default function AdminSite(): ReactElement {
   const [searchParams] = useSearchParams();
   
   // サイト ID パラメータ (必須)
-  const idParam       = searchParams.get('id');
-  const siteId        = isEmpty(idParam) ? null : Number(idParam);
-  const isValidSiteId = siteId != null && Number.isInteger(siteId) && siteId > 0;
+  const idParam = searchParams.get('id');
+  const id      = isEmpty(idParam) ? null : Number(idParam);
   
   // サイト詳細 (表示専用)
   const [site, setSite] = useState<SiteAdminWithTags | null>(null);
@@ -43,12 +42,12 @@ export default function AdminSite(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    if(siteId == null) {
+    if(id == null) {
       setError('サイト ID が指定されていません');
       setIsLoading(false);
       return;
     }
-    if(!isValidSiteId) {
+    if(!Number.isInteger(id) || id <= 0) {
       setError('サイト ID が不正です');
       setIsLoading(false);
       return;
@@ -59,7 +58,7 @@ export default function AdminSite(): ReactElement {
       setError('');
       
       try {
-        const response = await adminApi.get(`/api/admin/sites/${siteId}`).json<{ result: SiteAdminWithTags; }>();
+        const response = await adminApi.get(`/api/admin/sites/${id}`).json<{ result: SiteAdminWithTags; }>();
         setSite(response.result);
         
         setIsSelf     (response.result.is_self);
@@ -73,13 +72,13 @@ export default function AdminSite(): ReactElement {
         setIsDeleted  (response.result.is_deleted);
       }
       catch(error) {
-        setError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
+        setError(extractApiErrorMessage(error, 'サイトの取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
       }
     })();
-  }, [siteId]);
+  }, [id]);
   
   const onAddTag = (tagInput: string): void => {
     const tag = tagInput.trim();
@@ -115,11 +114,11 @@ export default function AdminSite(): ReactElement {
     if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {
-      await adminApi.put(`/api/admin/sites/${siteId}`, { json: parsed.data }).json();
-      navigate(`/admin/site?${siteId}`);  // 再読込する
+      await adminApi.put(`/api/admin/sites/${id}`, { json: parsed.data }).json();
+      navigate(`/admin/site?id=${id}`);
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '編集に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの編集に失敗しました'));
     }
   };
   
@@ -128,11 +127,11 @@ export default function AdminSite(): ReactElement {
     
     setError('');
     try {
-      await adminApi.delete(`/api/admin/sites/${siteId}`);
+      await adminApi.delete(`/api/admin/sites/${id}`);
       navigate('/admin/sites');
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '物理削除に失敗しました'));
+      setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
     }
   };
   
@@ -230,7 +229,7 @@ export default function AdminSite(): ReactElement {
           </div>
           
           <label>
-            <div className="form-label">{passwordDisplayName} <span className="form-label-memo">({passwordMaxLength}文字以内・{passwordDisplayName}を変更したい場合のみ入力する)</span></div>
+            <div className="form-label">{passwordDisplayName} <span className="form-label-memo">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>
             <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} />
           </label>
           <div className="text-muted">現在の{passwordDisplayName} : {site.password_hash}</div>

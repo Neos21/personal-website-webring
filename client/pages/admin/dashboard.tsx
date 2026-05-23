@@ -6,7 +6,7 @@ export default function AdminDashboard(): ReactElement {
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>ダッシュボード</h1>
+      <h1>リングマスター管理ダッシュボード</h1>
     </main>
   );
 }

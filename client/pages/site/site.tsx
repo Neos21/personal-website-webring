@@ -67,9 +67,6 @@ export default function Site(): ReactElement {
     }
     
     (async () => {
-      setIsLoading(true);
-      setError('');
-      
       try {
         const [siteResponse, commentsResponse] = await Promise.all([
           ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>(),

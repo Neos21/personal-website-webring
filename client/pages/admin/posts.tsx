@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
@@ -12,6 +12,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { PostAdmin } from '../../../shared/types/admin/admin-post';
 
 export default function AdminPosts(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // ページング
@@ -34,25 +35,28 @@ export default function AdminPosts(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   useEffect(() => {
-    fetchPosts();
-  }, [page]);
-  
-  const fetchPosts = async (): Promise<void> => {
-    setError('');
-    setIsLoading(true);
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate('/admin/posts?page=1', { replace: true });
+      return;
+    }
     
-    try {
-      const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; }; }>();
-      setPosts(response.result.posts);
-      setHasNext(response.result.has_next);
-    }
-    catch(error) {
-      setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
-    }
-    finally {
-      setIsLoading(false);
-    }
-  };
+    (async () => {
+      try {
+        const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; }; }>();
+        setPosts(response.result.posts);
+        setHasNext(response.result.has_next);
+      }
+      catch(error) {
+        setError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
+      }
+      finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -71,12 +75,10 @@ export default function AdminPosts(): ReactElement {
       const parsed = adminNewPostSchema.safeParse(payload);
       
       await adminApi.post('/api/admin/posts', { json: parsed.data });
-      setSiteId('');
-      setContent('');
-      await fetchPosts();
+      navigate('/api/admin/posts?page=1');
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, '投稿に失敗しました'));
+      setError(extractApiErrorMessage(error, 'リングマスター投稿に失敗しました'));
     }
     finally {
       setIsSubmitting(false);
@@ -95,10 +97,10 @@ export default function AdminPosts(): ReactElement {
         </label>
         <label>
           <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(必須・{userNameMaxLength}文字以内)</span></div>
-          <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
+          <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} required />
         </label>
         <label>
-          <div className="form-label">{contentDisplayName}</div>
+          <div className="form-label">{contentDisplayName} <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
           <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
         </label>
         <p><button type="submit" disabled={isSubmitting}>管理者投稿</button></p>
@@ -115,9 +117,9 @@ export default function AdminPosts(): ReactElement {
           <thead>
             <tr>
               <th>ID</th>
-              <th>{siteIdDisplayName}</th>
-              <th>{userNameDisplayName}</th>
-              <th>{contentDisplayName}</th>
+              <th>サイト ID</th>
+              <th>HN</th>
+              <th>本文</th>
               <th>投稿日時</th>
             </tr>
           </thead>

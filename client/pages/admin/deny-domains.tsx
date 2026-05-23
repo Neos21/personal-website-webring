@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react'
 import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { domainDisplayName, domainMaxLength } from '../../../shared/schemas/admin/admin-deny-domain-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
@@ -72,8 +73,8 @@ export default function AdminDenyDomains(): ReactElement {
       
       <form onSubmit={onSubmit}>
         <label>
-          <div className="form-label">ドメイン</div>
-          <input type="text" placeholder="ドメイン" value={domain} onChange={event => setDomain(event.target.value)} required />
+          <div className="form-label">{domainDisplayName}</div>
+          <input type="text" placeholder={domainDisplayName} value={domain} maxLength={domainMaxLength} onChange={event => setDomain(event.target.value)} required />
         </label>
         <p><button type="submit">追加</button></p>
       </form>
@@ -97,9 +98,9 @@ export default function AdminDenyDomains(): ReactElement {
           <tbody>
             {domains.map(domain => (
               <tr key={domain.id}>
-                <td>{domain.id}</td>
+                <td className="nowrap">{domain.id}</td>
                 <td>{domain.domain}</td>
-                <td>{convertUtcToJst(domain.created_at)}</td>
+                <td className="nowrap">{convertUtcToJst(domain.created_at)}</td>
                 <td className="form-delete"><button type="button" onClick={() => onDelete(domain.id)}>削除</button></td>
               </tr>
             ))}

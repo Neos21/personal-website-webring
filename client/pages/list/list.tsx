@@ -35,9 +35,6 @@ export default function List(): ReactElement {
     }
     
     (async () => {
-      setIsLoading(true);
-      setError('');
-      
       try {
         const response = await ky.get(`/api/sites?page=${page}`).json<{ result: { page: number; sites: Array<SitePublicWithTags>; has_next: boolean; }; }>();
         setSites(response.result.sites);

@@ -33,7 +33,7 @@ export default function AdminDenyIps(): ReactElement {
       setDenyIps(response.result);
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP アドレス一覧の取得に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止 IP アドレス一覧の取得に失敗しました'));
     }
     finally {
       setIsLoading(false);
@@ -50,7 +50,7 @@ export default function AdminDenyIps(): ReactElement {
       await fetchDenyIps();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP アドレスの登録に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止 IP アドレスの登録に失敗しました'));
     }
   };
   
@@ -62,14 +62,14 @@ export default function AdminDenyIps(): ReactElement {
       await fetchDenyIps();
     }
     catch(error) {
-      setError(extractApiErrorMessage(error, 'IP アドレスの削除に失敗しました'));
+      setError(extractApiErrorMessage(error, '禁止 IP アドレスの削除に失敗しました'));
     }
   };
   
   return (
     <main className="page-container">
       <AdminNavigation />
-      <h1>IP アドレス管理</h1>
+      <h1>禁止 IP アドレス管理</h1>
       
       <form onSubmit={onSubmit}>
         <label>
@@ -84,7 +84,7 @@ export default function AdminDenyIps(): ReactElement {
       {isLoading ? (
         <p className="loading">読み込み中…</p>
       ) : denyIps.length === 0 ? (
-        <p>IP アドレスは登録されていません。</p>
+        <p>禁止 IP アドレスは登録されていません。</p>
       ) : (
         <table>
           <thead>
@@ -98,9 +98,9 @@ export default function AdminDenyIps(): ReactElement {
           <tbody>
             {denyIps.map(denyIp => (
               <tr key={denyIp.id}>
-                <td>{denyIp.id}</td>
+                <td className="nowrap">{denyIp.id}</td>
                 <td>{denyIp.ip}</td>
-                <td>{convertUtcToJst(denyIp.created_at)}</td>
+                <td className="nowrap">{convertUtcToJst(denyIp.created_at)}</td>
                 <td className="form-delete"><button type="button" onClick={() => onDelete(denyIp.id)}>削除</button></td>
               </tr>
             ))}

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -10,6 +10,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { Tag } from '../../../shared/types/tag';
 
 export default function AdminTags(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // ページング
@@ -33,25 +34,28 @@ export default function AdminTags(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    fetchTags();
-  }, [page]);
-  
-  const fetchTags = async (): Promise<void> => {
-    setError('');
-    setIsLoading(true);
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate('/admin/tags?&page=1', { replace: true });
+      return;
+    }
     
-    try {
-      const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; }; }>();
-      setTags(response.result.tags);
-      setHasNext(response.result.has_next);
-    }
-    catch(error) {
-      setError(extractApiErrorMessage(error, '覧の取得に失敗しました'));
-    }
-    finally {
-      setIsLoading(false);
-    }
-  };
+    (async () => {
+      try {
+        const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; }; }>();
+        setTags(response.result.tags);
+        setHasNext(response.result.has_next);
+      }
+      catch(error) {
+        setError(extractApiErrorMessage(error, 'タグ一覧の取得に失敗しました'));
+      }
+      finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -61,8 +65,7 @@ export default function AdminTags(): ReactElement {
     
     try {
       await adminApi.post('/api/admin/tags', { json: { name: newTagName } }).json();
-      setNewTagName('');
-      await fetchTags();
+      navigate('/api/admin/tags?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの追加に失敗しました'));
@@ -76,6 +79,7 @@ export default function AdminTags(): ReactElement {
   };
   
   const onCancelEdit = (): void => {
+    setError('');
     setEditingTagId(null);
     setEditingTagName('');
   };
@@ -88,7 +92,6 @@ export default function AdminTags(): ReactElement {
     try {
       await adminApi.put(`/api/admin/tags/${id}`, { json: { name: editingTagName } });
       onCancelEdit();
-      await fetchTags();
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの編集に失敗しました'));
@@ -100,7 +103,7 @@ export default function AdminTags(): ReactElement {
     
     try {
       await adminApi.delete(`/api/admin/tags/${id}`);
-      await fetchTags();
+      navigate('/api/admin/tags?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの削除に失敗しました'));
@@ -131,7 +134,7 @@ export default function AdminTags(): ReactElement {
           <thead>
             <tr>
               <th>ID</th>
-              <th>{tagDisplayName}</th>
+              <th>タグ名</th>
               <th>編集・削除</th>
             </tr>
           </thead>

@@ -51,7 +51,7 @@ export default function Admin(): ReactElement {
   
   return (
     <main className="page-container">
-      <h1>リングマスター管理画面</h1>
+      <h1>リングマスター管理ログイン</h1>
       
       <form onSubmit={onSubmit}>
         <label>

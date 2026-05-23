@@ -1,15 +1,15 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { AdminNavigation } from './components/admin-navigation';
 import { isEmpty } from '../../../shared/helpers/is-empty';
-import { siteNameDisplayName } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { SiteAdmin } from '../../../shared/types/admin/admin-site';
 
 export default function AdminSites(): ReactElement {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // ページング
@@ -26,23 +26,28 @@ export default function AdminSites(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    // URL に `page=1` がなければ再読込する
+    const currentPageNumber = Number(pageParam);
+    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+    if(needsPageFix) {
+      navigate('/admin/sites?&page=1', { replace: true });
+      return;
+    }
+    
     (async () => {
-      setIsLoading(true);
-      setError('');
-      
       try {
         const response = await adminApi.get(`/api/admin/sites?page=${page}`).json<{ result: { page: number; sites: Array<SiteAdmin>; has_next: boolean; }; }>();
         setSites(response.result.sites);
         setHasNext(response.result.has_next);
       }
       catch(error) {
-        setError(extractApiErrorMessage(error, '一覧の取得に失敗しました'));
+        setError(extractApiErrorMessage(error, '登録サイト一覧の取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
       }
     })();
-  }, [page]);
+  }, [pageParam, page]);
   
   return (
     <main className="page-container">
@@ -60,7 +65,7 @@ export default function AdminSites(): ReactElement {
           <thead>
             <tr>
               <th>ID</th>
-              <th>{siteNameDisplayName}</th>
+              <th>サイト名</th>
             </tr>
           </thead>
           <tbody>

@@ -45,9 +45,6 @@ export default function Support(): ReactElement {
   const [formError   , setFormError   ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setError('');
-    
     if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
       setError('サイト ID が不正です');
       setIsLoading(false);

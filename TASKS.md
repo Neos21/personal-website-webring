@@ -6,10 +6,10 @@
 ## リングマスター用管理画面 (`/admin` 配下) を実装する
 
 - [ ] サイト別コメント管理 (`site_comments` テーブル)
-  - [ ] 一覧ページ : 500件でページング可能にする (`adminConstants.siteCommentsPageSize: 500` を用意する)
-  - [ ] コメント1件の詳細表示ページ : そのコメントの全項目を編集可能にする。物理削除を可能にする
+  - [ ] 一覧ページ  `client/pages/admin/site-comments.tsx` : 500件でページング可能にする (`adminConstants.siteCommentsPageSize: 500` を用意する)
+  - [ ] コメント1件の詳細表示ページ `client/pages/admin/site-comment.tsx` : そのコメントの全項目を編集可能にする。物理削除を可能にする
 - サポート投稿管理
-  - [ ] 投稿1件の詳細表示ページ : その投稿の全項目の編集を可能にする。物理削除を可能にする
+  - [ ] 投稿1件の詳細表示ページ `client/pages/admin/post.tsx` : その投稿の全項目の編集を可能にする。物理削除を可能にする
 
 
 ## 機能改善
