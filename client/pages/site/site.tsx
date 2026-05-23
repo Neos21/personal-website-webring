@@ -8,6 +8,7 @@ import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { newSiteCommentSchema, userNameDisplayName, userNameMaxLength, commentDisplayName, commentMaxLength } from '../../../shared/schemas/site-comment-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
+import { useUserStore } from '../../stores/user-store';
 
 import type { SitePublicWithTags } from '../../../shared/types/site';
 import type { SiteCommentPublic } from '../../../shared/types/site-comment';
@@ -38,7 +39,7 @@ export default function Site(): ReactElement {
   const [loadError, setLoadError] = useState<string>('');
   
   // コメント入力フォーム
-  const [userName      , setUserName      ] = useState<string>('');  // TODO : support.tsx と同じ、userName の Zustand ストアがあればそれを初期表示時に復元する
+  const [userName      , setUserName      ] = useState<string>(useUserStore.getState().name || '');
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   
@@ -100,15 +101,15 @@ export default function Site(): ReactElement {
     setIsSubmitting(true);
     try {
       await ky.post(`/api/sites/${siteId}/comments`, { json: parsed.data }).json();
-      // TODO : 名前は localStorage 保存 (Zustand 使う)
+      
+      useUserStore.getState().setName(parsed.data.user_name || '');
       setContent('');
       setTurnstileToken('');
+      
       navigate(`/site?id=${siteId}&page=1`);
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'コメントの投稿に失敗しました'));
-    }
-    finally {
       setIsSubmitting(false);
     }
   };

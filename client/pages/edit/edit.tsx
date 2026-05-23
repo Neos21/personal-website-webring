@@ -83,7 +83,7 @@ export default function Edit(): ReactElement {
           )}
           
           <p className="text-right">
-            <Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト詳細へ戻る</Link>
+            <Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト詳細へ戻る</Link>
           </p>
         </>
       )}

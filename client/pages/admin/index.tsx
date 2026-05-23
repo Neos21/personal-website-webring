@@ -6,8 +6,8 @@ import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { adminLoginSchema, adminPasswordDisplayName } from '../../../shared/schemas/admin/admin-login-schema';
 import { TurnstileField } from '../../components/turnstile-field';
-import { isAuthenticated, saveJwt } from '../../helpers/admin-auth';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
+import { useAdminStore } from '../../stores/admin-store';
 
 export default function Admin(): ReactElement {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function Admin(): ReactElement {
   const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
-    if(isAuthenticated()) navigate('/admin/dashboard');
+    if(!isEmpty(useAdminStore.getState().token)) navigate('/admin/dashboard');
   }, [navigate]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
@@ -38,7 +38,7 @@ export default function Admin(): ReactElement {
     setIsSubmitting(true);
     try {
       const response = await ky.post('/api/admin/login', { json: parsed.data }).json<{ result: { token: string; }; }>();
-      saveJwt(response.result.token);
+      useAdminStore.getState().setToken(response.result.token);
       navigate('/admin/dashboard');
     }
     catch(error) {

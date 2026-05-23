@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router';
 
-import { removeJwt } from '../../../helpers/admin-auth';
+import { useAdminStore } from '../../../stores/admin-store';
 
 import type { ReactElement } from 'react';
 
@@ -8,7 +8,7 @@ export function AdminNavigation(): ReactElement {
   const navigate = useNavigate();
   
   const onLogout = (): void => {
-    removeJwt();
+    useAdminStore.getState().logout();
     navigate('/admin');
   };
   

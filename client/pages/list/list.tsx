@@ -109,7 +109,7 @@ export default function List(): ReactElement {
                 ))}
               </div>
               
-              <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${site.id}` }}>詳細・コメントを見る</Link></p>
+              <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${site.id}&page=1` }}>詳細・コメントを見る</Link></p>
             </article>
           ))}
           

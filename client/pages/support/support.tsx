@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
@@ -8,12 +8,13 @@ import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { newPostSchema, contentDisplayName, contentMaxLength, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
+import { useUserStore } from '../../stores/user-store';
 
 import type { PostPublic } from '../../../shared/types/post';
 import type { SiteNameUrl } from '../../../shared/types/site';
 
 export default function Support(): ReactElement {
-  // TODO : useLocation 追加 (site.tsx 参照)
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -34,10 +35,9 @@ export default function Support(): ReactElement {
   
   // 投稿フォーム
   const [formSiteId    , setFormSiteId    ] = useState<string>(siteId != null ? String(siteId) : '');
-  const [userName      , setUserName      ] = useState<string>('');  // TODO : site.tsx と同じ、userName の Zustand ストアがあればそれを初期表示時に復元する
+  const [userName      , setUserName      ] = useState<string>(useUserStore.getState().name || '');
   const [content       , setContent       ] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
-  const [turnstileKey  , setTurnstileKey  ] = useState<string>(String(Date.now()));  // `key` を変更すると Turnstile ウィジェットを再読み込みできる
   
   // エラー表示系
   const [lookupSite  , setLookupSite  ] = useState<SiteNameUrl | null>(null);
@@ -79,7 +79,7 @@ export default function Support(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [siteId, pageParam, page]);
+  }, [location.key, siteId, pageParam, page]);
   
   const onBlurSiteId = async (): Promise<void> => {
     if(isEmpty(formSiteId)) {
@@ -125,10 +125,10 @@ export default function Support(): ReactElement {
     try {
       await ky.post('/api/posts', { json: parsed.data }).json();
       
+      useUserStore.getState().setName(parsed.data.user_name || '');
       setContent('');
       setLookupSite(null);
       setTurnstileToken('');
-      setTurnstileKey(String(Date.now()));
       
       // 投稿したサイト ID に基づいて1ページ目の URL に遷移する
       const query = new URLSearchParams();
@@ -148,7 +148,7 @@ export default function Support(): ReactElement {
       
       {siteId != null ? (
         <>
-          <p><Link to={{ pathname: '/site', search: `?id=${siteId}` }}>サイト ID [{siteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
+          <p><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト ID [{siteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
           <p><Link to={{ pathname: '/support', search: '?page=1' }}>全体のサポート掲示板投稿を見る場合はコチラ</Link></p>
         </>
       ) : (
@@ -171,7 +171,7 @@ export default function Support(): ReactElement {
               </label>
               {lookupSite != null && (
                 <div className="alert-success">
-                  [{lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}` }}>{lookupSite.site_name}</Link>
+                  [{lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}&page=1` }}>{lookupSite.site_name}</Link>
                 </div>
               )}
               {!isEmpty(lookupError) && (<p className="text-error">{lookupError}</p>)}
@@ -186,7 +186,7 @@ export default function Support(): ReactElement {
                 <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
               </label>
               
-              <TurnstileField key={turnstileKey} onTokenChange={setTurnstileToken} />
+              <TurnstileField key={location.key} onTokenChange={setTurnstileToken} />
               
               {!isEmpty(error) && (<p className="text-error">{error}</p>)}
               
@@ -220,7 +220,7 @@ export default function Support(): ReactElement {
                     <span>{convertUtcToJst(post.created_at)}</span>
                     <span>{post.user_name || '名無し'} さん</span>
                     {post.site_id != null && (
-                      <Link to={{ pathname: '/site', search: `?id=${post.site_id}` }}>サイト ID [{post.site_id}]</Link>
+                      <Link to={{ pathname: '/site', search: `?id=${post.site_id}&page=1` }}>サイト ID [{post.site_id}]</Link>
                     )}
                   </div>
                   <p className="pre-wrap">{post.content}</p>
@@ -244,7 +244,7 @@ export default function Support(): ReactElement {
           )}
           
           {siteId != null && (
-            <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}` }}>このサイトの詳細へ戻る</Link></p>
+            <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>このサイトの詳細へ戻る</Link></p>
           )}
         </>
       )}

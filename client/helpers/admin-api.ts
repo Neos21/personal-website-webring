@@ -1,15 +1,15 @@
 import ky from 'ky';
 
-import { getJwt, removeJwt } from './admin-auth';
 import { httpStatusCode } from '../../shared/constants/http-status-code';
 import { isEmpty } from '../../shared/helpers/is-empty';
+import { useAdminStore } from '../stores/admin-store';
 
 export const adminApi = ky.extend({
   hooks: {
     beforeRequest: [({ request }): void => {
-      const token = getJwt();
+      const token = useAdminStore.getState().token;
       if(isEmpty(token)) {
-        removeJwt();
+        useAdminStore.getState().logout();
         window.location.href = '/admin';
         return;
       }
@@ -17,7 +17,7 @@ export const adminApi = ky.extend({
     }],
     afterResponse: [({ response }): void => {
       if(response.status === httpStatusCode.unauthorized) {
-        removeJwt();
+        useAdminStore.getState().logout();
         window.location.href = '/admin';
         return;
       }
