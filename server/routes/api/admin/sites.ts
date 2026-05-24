@@ -20,6 +20,7 @@ import { SiteTagService } from '../../../services/site-tag-service';
 import { SiteUrlService } from '../../../services/site-url-service';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
+import { AdminSiteIpsRepository } from '../../../repositories/admin/admin-site-ips-repository';
 
 export const adminSites = new Hono<{ Bindings: HonoBindings; }>();
 export const adminSitesPath = '/sites';
@@ -60,7 +61,7 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
-  const exactMatch = await new SiteUrlService().findExactMatch(new SitesRepository(context.env.DB), parsed.data.url);
+  const exactMatch = await new SiteUrlService().findExactMatch(new SitesRepository(context.env.DB), parsed.data.url, idParsed.data);
   if(exactMatch != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMatch.id}]` }, httpStatusCode.badRequest);
   
   const adminSitesRepository = new AdminSitesRepository(context.env.DB);
@@ -69,7 +70,7 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   // 入力値があればパスワードを変更する
-  const passwordHash = !isEmpty(parsed.data.password) ? await hashPassword(parsed.data.password) : existing.password_hash;
+  const passwordHash = !isEmpty(parsed.data.password) ? await hashPassword(parsed.data.password!) : existing.password_hash;
   
   await adminSitesRepository.update({
     id            : idParsed.data,
@@ -99,6 +100,7 @@ adminSites.delete('/:id', async context => {  // eslint-disable-line neos-eslint
   const existing = await adminSitesRepository.findById(idParsed.data);
   if(existing == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
+  await new AdminSiteIpsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await new AdminSiteCommentsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await new SiteTagsRepository(context.env.DB).deleteBySiteId(idParsed.data);
   await adminSitesRepository.deleteById(idParsed.data);

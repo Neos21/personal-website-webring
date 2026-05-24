@@ -44,7 +44,7 @@ export default function Edit(): ReactElement {
         setSite(response.result);
       }
       catch(error) {
-        setError(extractApiErrorMessage(error, '情報の取得に失敗しました'));
+        setError(extractApiErrorMessage(error, 'サイトの取得に失敗しました'));
       }
       finally {
         setIsLoading(false);
@@ -53,40 +53,39 @@ export default function Edit(): ReactElement {
   }, [siteId]);
   
   return (
-    <main className="page-container">
-      <h1>{site?.is_self === 0 ? 'このサイトの管理人ですか？' : '編集・削除'}</h1>
+    <main>
+      <title>サイト編集・削除 - 個人サイトウェブリング</title>
+      <h1>サイト編集・削除</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <>
-          <p className="text-error">{error}</p>
-          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
-        </>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
       ) : site == null ? (
-        <>
-          <p className="text-error">サイトが見つかりませんでした。</p>
-          <p className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録済サイト一覧へ戻る</Link></p>
-        </>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
       ) : (
         <>
           {site.is_self === 0 ? (
-            <p>このサイトは他薦で登録されています。<br />このサイトの管理人でしたら、新しく管理パスワードを設定してサイトの情報を編集できます。</p>
+            <>
+              <div>このサイトは他薦で登録されています。</div>
+              <div className="mb-8">あなたがこのサイトの管理人でしたら、新しく管理パスワードを設定してサイトの情報を編集できます。</div>
+            </>
           ) : (
-            <p>サイト情報を編集・削除できます。<br />いずれの操作も実行時に管理パスワードが必要です。</p>
+            <>
+              <div>サイト情報を編集・削除できます。</div>
+              <div className="mb-8">いずれの操作も実行時に管理パスワードが必要です。</div>
+            </>
           )}
           
           <EditSiteForm site={site} />
           
-          {site.is_self === 1 && (
-            <DeleteSiteForm site={site} />
-          )}
+          {site.is_self === 1 && (<DeleteSiteForm site={site} />)}
           
-          <p className="text-right">
-            <Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト詳細へ戻る</Link>
-          </p>
+          <div className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト詳細へ戻る</Link></div>
         </>
       )}
+      
+      <div className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧へ戻る</Link></div>
     </main>
   );
 }

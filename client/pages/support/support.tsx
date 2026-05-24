@@ -5,7 +5,7 @@ import { Link, useSearchParams, useNavigate, useLocation } from 'react-router';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { newPostSchema, contentDisplayName, contentMaxLength, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
+import { newPostSchema, contentDisplayName, contentMaxLength, userNameDisplayName, userNameMaxLength, siteIdDisplayName } from '../../../shared/schemas/post-schema';
 import { TurnstileField } from '../../components/turnstile-field';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 import { useUserStore } from '../../stores/user-store';
@@ -46,6 +46,18 @@ export default function Support(): ReactElement {
   const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
+    // 投稿後の再読込のためココで初期化する
+    setIsLoading(true);
+    setLoadError('');
+    setPosts([]);
+    setFormSiteId(siteId != null ? String(siteId) : '');
+    setContent('');
+    setTurnstileToken('');
+    setLookupSite(null);
+    setLookupError('');
+    setIsSubmitting(false);
+    setError('');
+    
     if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
       setLoadError('サイト ID が不正です');
       setIsLoading(false);
@@ -64,6 +76,8 @@ export default function Support(): ReactElement {
     }
     
     (async () => {
+      if(siteId != null) onBlurSiteId();  // サイト ID に基づく情報表示・裏で非同期実行する
+      
       try {
         const query = new URLSearchParams();
         if(siteId != null) query.set('id', String(siteId));
@@ -143,113 +157,114 @@ export default function Support(): ReactElement {
   };
   
   return (
-    <main className="page-container">
+    <main>
+      <title>サポート掲示板 - 個人サイトウェブリング</title>
       <h1>サポート掲示板</h1>
       
-      {siteId != null ? (
+      {isLoading ? (
+        <div className="loading mb-8">読み込み中…</div>
+      ) : !isEmpty(loadError) ? (
         <>
-          <p><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト ID [{siteId}]</Link> に関する投稿のみ絞り込み表示しています。</p>
-          <p><Link to={{ pathname: '/support', search: '?page=1' }}>全体のサポート掲示板投稿を見る場合はコチラ</Link></p>
+          <div className="mb-4 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
+          <div className="mb-8"><Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板の全体の投稿を見る場合はコチラ</Link></div>
         </>
       ) : (
-        <p>当サイトに関するご意見・お問い合わせなどがありましたらコチラにドウゾ。</p>
-      )}
-      
-      {isLoading ? (
-        <p className="loading">読み込み中…</p>
-      ) : !isEmpty(loadError) ? (
-        <p className="text-error">{loadError}</p>
-      ) : (
         <>
-          <form onSubmit={onSubmit}>
-            <fieldset>
-              <legend>投稿する</legend>
+          {siteId != null ? (
+            <>
+              <div className="mb-4"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト ID [{siteId}]</Link> に関するサポート掲示板の投稿のみ絞り込み表示しています。</div>
+              <div className="mb-8"><Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板の全体の投稿を見る場合はコチラ</Link></div>
+            </>
+          ) : (
+            <div className="mb-8">当サイトに関するご意見・お問い合わせなどがありましたらコチラにドウゾ。</div>
+          )}
+          
+          <form className="mb-10" onSubmit={onSubmit}>
+            <fieldset className="space-y-4">
+              <legend className="mb-0">投稿する</legend>
               
-              <label>
-                <div className="form-label">サイト ID <span className="form-label-memo">(特定サイトに関するお問合せの場合は入力)</span></div>
-                <input type="text" placeholder="サイト ID" value={formSiteId} onChange={event => setFormSiteId(event.target.value)} onBlur={onBlurSiteId} />
+              <label className="space-y-1">
+                <div><span className="font-bold">{siteIdDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(特定サイトに関するお問合せの場合は入力してください)</span></div>
+                <input type="text" placeholder={siteIdDisplayName} value={formSiteId} onChange={event => setFormSiteId(event.target.value)} onBlur={onBlurSiteId} />
               </label>
+              
               {lookupSite != null && (
-                <div className="alert-success">
-                  [{lookupSite.id}] <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}&page=1` }}>{lookupSite.site_name}</Link>
+                <div className="p-4 text-emerald-600 bg-emerald-50">
+                  <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}&page=1` }}>{lookupSite.site_name}</Link>
                 </div>
               )}
-              {!isEmpty(lookupError) && (<p className="text-error">{lookupError}</p>)}
+              {!isEmpty(lookupError) && (
+                <div className="p-4 font-bold text-red-600 bg-red-50">{lookupError}</div>
+              )}
               
-              <label>
-                <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
+              <label className="space-y-1">
+                <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
                 <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
               </label>
               
-              <label>
-                <div className="form-label">{contentDisplayName} <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
-                <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
+              <label className="space-y-1">
+                <div><span className="font-bold">{contentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{contentMaxLength}文字以内)</span></div>
+                <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
               </label>
               
               <TurnstileField key={location.key} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+              {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
               
-              <p><button type="submit" disabled={isSubmitting || !isEmpty(lookupError)}>{isSubmitting ? '送信中…' : '投稿する'}</button></p>
+              <div><button type="submit" disabled={isSubmitting || !isEmpty(lookupError)}>{isSubmitting ? '送信中…' : '投稿する'}</button></div>
             </fieldset>
           </form>
           
           {posts.length === 0 ? (
             <>
-              <p>投稿はまだありません。</p>
+              <div className="mb-8 text-slate-500 text-sm">まだ投稿はありません。</div>
               {(page > 1 || hasNext) && (
-                <p className="text-center">
-                  {page > 1 && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
-                  )}
-                  {page > 1 && hasNext && (
-                    <span className="text-muted"> | </span>
-                  )}
-                  {hasNext && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
-                  )}
-                </p>
+                <div className="mb-8 space-x-2 text-sm text-center">
+                  {page > 1            && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>)}
+                  {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+                  {hasNext             && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>)}
+                </div>
               )}
             </>
           ) : (
             <>
               {posts.map(post => (
-                <article key={post.id} className="post-card">
-                  <div className="post-header">
-                    <span>投稿 ID [{post.id}]</span>
+                <section className="mb-4 border-b border-slate-300 pb-4" key={post.id}>
+                  <div className="mb-1 text-slate-500 text-sm">
                     <span>{convertUtcToJst(post.created_at)}</span>
-                    <span>{post.user_name || '名無し'} さん</span>
+                    {post.is_admin ? (
+                      <>
+                        <span className="ml-3">{post.user_name || '名無し'}</span>
+                        <span className="ml-3 p-1 font-bold text-emerald-600 text-xs bg-emerald-50">リングマスター</span>
+                      </>
+                    ) : (
+                      <span className="ml-3">{post.user_name || '名無し'} さん</span>
+                    )}
                     {post.site_id != null && (
-                      <Link to={{ pathname: '/site', search: `?id=${post.site_id}&page=1` }}>サイト ID [{post.site_id}]</Link>
+                      <Link className="ml-3" to={{ pathname: '/site', search: `?id=${post.site_id}&page=1` }}>サイト ID [{post.site_id}]</Link>
                     )}
                   </div>
-                  <p className="pre-wrap">{post.content}</p>
-                </article>
+                  <div className="whitespace-pre-wrap">{post.content}</div>
+                </section>
               ))}
               
               {(page > 1 || hasNext) && (
-                <p className="text-center">
-                  {page > 1 && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>
-                  )}
-                  {page > 1 && hasNext && (
-                    <span className="text-muted"> | </span>
-                  )}
-                  {hasNext && (
-                    <Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>
-                  )}
-                </p>
+                <div className="mt-6 mb-8 space-x-2 text-sm text-center">
+                  {page > 1            && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>)}
+                  {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+                  {hasNext             && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>)}
+                </div>
               )}
             </>
           )}
           
           {siteId != null && (
-            <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>このサイトの詳細へ戻る</Link></p>
+            <div className="mb-8 text-sm text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>このサイトの詳細へ戻る</Link></div>
           )}
         </>
       )}
       
-      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
+      <div className="mt-8 text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

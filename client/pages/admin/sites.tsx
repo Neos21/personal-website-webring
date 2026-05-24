@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
@@ -26,6 +25,10 @@ export default function AdminSites(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
+    setSites([]);
+    setError('');
+    
     // URL に `page=1` がなければ再読込する
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
@@ -50,42 +53,57 @@ export default function AdminSites(): ReactElement {
   }, [pageParam, page]);
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
-      <h1>登録サイト</h1>
+    <main>
+      <title>サイト管理 - 個人サイトウェブリング</title>
+      <h1>サイト管理</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
       ) : sites.length === 0 ? (
-        <p>登録サイトはありません。</p>
+        <>
+          <div className="mb-8 text-slate-500 text-sm">登録サイトはありません。</div>
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/sites', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/sites', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>サイト名</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sites.map(site => (
-              <tr key={site.id} className={site.is_deleted === 1 ? 'row-deleted' : ''}>
-                <td className="nowrap">{site.id}</td>
-                <td><Link to={{ pathname: '/admin/site', search: `?id=${site.id}` }}>{site.site_name}</Link></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <div className="mb-8 overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>サイト名</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sites.map(site => (
+                  <tr key={site.id} className={site.is_deleted === 1 ? 'row-deleted' : ''}>
+                    <td className="text-right whitespace-nowrap">{site.id}</td>
+                    <td className="w-full"><Link to={{ pathname: '/admin/site', search: `?id=${site.id}` }}>{site.site_name}</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/sites', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/sites', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       )}
       
-      {(page > 1 || hasNext) && (
-        <p className="text-center">
-          {page > 1            && (<Link to={{ pathname: '/admin/sites', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
-          {hasNext             && (<Link to={{ pathname: '/admin/sites', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
-        </p>
-      )}
+      <div className="text-right"><Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

@@ -26,6 +26,11 @@ export default function List(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    // ページ遷移時の再読込のためココで初期化する
+    setIsLoading(true);
+    setSites([]);
+    setError('');
+    
     // URL に `page=1` がなければ再読込する
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
@@ -50,86 +55,66 @@ export default function List(): ReactElement {
   }, [pageParam, page]);
   
   return (
-    <main className="page-container">
-      <h1>登録済サイト一覧</h1>
+    <main>
+      <title>登録サイト一覧 - 個人サイトウェブリング</title>
+      <h1>登録サイト一覧</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
       ) : sites.length === 0 ? (
         <>
-          <p>登録されているサイトはありません。</p>
+          <div className="mb-8 text-slate-500 text-sm">まだ登録されているサイトはありません。</div>
           {(page > 1 || hasNext) && (
-            <p className="text-center">
-              {page > 1 && (
-                <Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>
-              )}
-              {page > 1 && hasNext && (
-                <span className="text-muted"> | </span>
-              )}
-              {hasNext && (
-                <Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>
-              )}
-            </p>
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
           )}
         </>
       ) : (
         <>
           {sites.map(site => (
-            <article key={site.id} className="site-card">
-              <h2><a href={site.url} target="_blank">{site.site_name}</a></h2>
+            <section key={site.id} className="mb-8 border border-slate-500 p-3 pb-2">
+              <h2 className="mb-4 font-bold text-lg"><a href={site.url} target="_blank">{site.site_name}</a></h2>
               
               {!isEmpty(site.banner_url) && (
-                <p>
-                  <a href={site.url} target="_blank">
-                    <img
-                      src={site.banner_url!}
-                      width={site.banner_width ?? undefined}
-                      height={site.banner_height ?? undefined}
-                      alt={site.site_name}
-                      title={site.site_name}
-                    />
-                  </a>
-                </p>
+                <div className="mb-4 overflow-hidden" style={{ width: `${site.banner_width!}px`, height: `${site.banner_height!}px` }}>
+                  <a href={site.url} target="_blank"><img src={site.banner_url!} width={site.banner_width!} height={site.banner_height!} alt={site.site_name} title={site.site_name} /></a>
+                </div>
               )}
               
-              <p className="pre-wrap">{site.description || '説明はありません'}</p>
+              <div className="mb-4 text-sm whitespace-pre-wrap">{site.description || '説明はありません'}</div>
               
-              <ul>
+              <ul className="mb-4 text-slate-500 text-xs">
                 <li>管理人 : {site.owner_name || '-'}</li>
-                <li>登録日 : {convertUtcToJst(site.created_at, true)}</li>
                 <li>更新日 : {convertUtcToJst(site.updated_at, true)}</li>
-                <li>{site.is_self === 1 ? '自薦' : '他薦'}</li>
+                <li className="mt-1">{site.is_self === 1 ? (<span className="p-1 font-bold text-emerald-600 bg-emerald-50">自薦</span>) : (<span className="p-1 font-bold text-indigo-600 bg-indigo-50">他薦</span>)}</li>
               </ul>
               
-              <div className="tags">
+              <div>
                 {site.tags.map(tag => (
-                  <span key={tag.id} className="tag">{tag.name}</span>
+                  <span className="inline-block mr-2 mb-2 p-1 text-sky-600 text-sm bg-sky-50" key={tag.id}>{tag.name}</span>
                 ))}
               </div>
               
-              <p className="text-right"><Link to={{ pathname: '/site', search: `?id=${site.id}&page=1` }}>詳細・コメントを見る</Link></p>
-            </article>
+              <div className="text-sm text-right"><Link to={{ pathname: '/site', search: `?id=${site.id}&page=1` }}>詳細・コメントを見る</Link></div>
+            </section>
           ))}
           
           {(page > 1 || hasNext) && (
-            <p className="text-center">
-              {page > 1 && (
-                <Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>
-              )}
-              {page > 1 && hasNext && (
-                <span className="text-muted"> | </span>
-              )}
-              {hasNext && (
-                <Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>
-              )}
-            </p>
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
           )}
         </>
       )}
       
-      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
+      <div className="text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

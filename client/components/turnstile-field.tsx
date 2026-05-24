@@ -10,7 +10,7 @@ export function TurnstileField({ onTokenChange }: Props): ReactElement {
   const onExpireOrError = ()             : void => onTokenChange('');
   
   return (
-    <div className="turnstile-wrapper">
+    <div className="h-[65px]">
       <Turnstile options={{ language: 'ja' }} onSuccess={onSuccess} onExpire={onExpireOrError} onError={onExpireOrError} siteKey="0x4AAAAAADTe5cN4tNIECyYT" />
     </div>
   );

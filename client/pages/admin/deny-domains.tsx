@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { domainDisplayName, domainMaxLength } from '../../../shared/schemas/admin/admin-deny-domain-schema';
@@ -8,6 +7,7 @@ import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { DenyDomainAdmin } from '../../../shared/types/admin/admin-deny-domain';
+import { Link } from 'react-router';
 
 export default function AdminDenyDomains(): ReactElement {
   // 入力フォーム
@@ -67,26 +67,23 @@ export default function AdminDenyDomains(): ReactElement {
   };
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
-      <h1>禁止ドメイン</h1>
+    <main>
+      <title>禁止ドメイン管理 - 個人サイトウェブリング</title>
+      <h1>禁止ドメイン管理</h1>
       
-      <form onSubmit={onSubmit}>
-        <label>
-          <div className="form-label">{domainDisplayName}</div>
-          <input type="text" placeholder={domainDisplayName} value={domain} maxLength={domainMaxLength} onChange={event => setDomain(event.target.value)} required />
-        </label>
-        <p><button type="submit">追加</button></p>
+      <form className="mb-8 flex gap-x-3" onSubmit={onSubmit}>
+        <input className="flex-1" type="text" placeholder={domainDisplayName} value={domain} maxLength={domainMaxLength} onChange={event => setDomain(event.target.value)} required />
+        <button className="flex-none" type="submit">追加</button>
       </form>
       
-      {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+      {!isEmpty(error) && (<div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : domains.length === 0 ? (
-        <p>禁止ドメインは登録されていません。</p>
+        <div className="mb-8 text-slate-500 text-sm">禁止ドメインは登録されていません。</div>
       ) : (
-        <table>
+        <table className="mb-8">
           <thead>
             <tr>
               <th>ID</th>
@@ -98,15 +95,17 @@ export default function AdminDenyDomains(): ReactElement {
           <tbody>
             {domains.map(domain => (
               <tr key={domain.id}>
-                <td className="nowrap">{domain.id}</td>
-                <td>{domain.domain}</td>
-                <td className="nowrap">{convertUtcToJst(domain.created_at)}</td>
-                <td className="form-delete"><button type="button" onClick={() => onDelete(domain.id)}>削除</button></td>
+                <td className="text-right whitespace-nowrap">{domain.id}</td>
+                <td className="w-full">{domain.domain}</td>
+                <td className="whitespace-nowrap">{convertUtcToJst(domain.created_at)}</td>
+                <td className="form-danger whitespace-nowrap"><button type="button" onClick={() => onDelete(domain.id)}>削除</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+      
+      <div className="text-right"><Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

@@ -1,305 +1,153 @@
-/* Globals */
+@import "tailwindcss";
 
 :root {
-  --colour-base      :   0,   0,   0;
-  --colour-background: 255, 255, 255;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", Meiryo, sans-serif, "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-mono: "Noto Sans Mono CJK JP", Osaka-mono, "MS Gothic", Menlo, Consolas, Courier, "Courier New"                                                                      , monospace , "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   
   --colour-link-base :   0, 0, 255;
   --colour-link-hover: 255, 0,   0;
-  
-  --colour-primary           :   0, 128, 255;
-  --colour-primary-background: 236, 249, 255;
-  --colour-primary-border    :  42, 187, 244;
-  
-  --colour-grey           : 128, 128, 128;
-  --colour-grey-background: 244, 244, 244;
-  --colour-grey-border    : 150, 150, 150;
-  
-  --colour-error           : 255,   0, 100;
-  --colour-error-background: 255, 236, 249;
-  --colour-error-border    : 244,  42,  42;
-  
-  --radius-box         : 8px;
-  --radius-form-control: 6px;
-  
-  --font-size-small: .9rem;
-  
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", Meiryo, sans-serif, "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  --font-family-monospace : "Noto Sans Mono CJK JP", Osaka-mono, "MS Gothic", Menlo, Consolas, Courier, "Courier New"                                                                      , monospace , "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-*, ::before, ::after {
-  box-sizing: border-box;
-}
-
-html {
-  min-height: 100%;
-  color: rgb(var(--colour-base));
-  font-family: rgb(var(--font-family-sans-serif));
-  text-decoration-skip-ink: none;
-  word-break: break-all;
-  line-height: 1.7;
-  background: rgb(var(--colour-background));
-  cursor: default;
-  scrollbar-gutter: stable;
-}
-
-body {
-  min-height: 100%;
-  margin: 0;
-}
-
-a {
-  color: rgb(var(--colour-link-base));
-  text-decoration: none;
-  
-  &:hover {
-    color: rgb(var(--colour-link-hover));
-    text-decoration: underline;
-  }
-}
-
-h1, h2, p, ul, form, fieldset, article, section {
-  margin: 1.5rem 0;
-}
-
-h1 { font-size: 1.5rem; }
-h2 { font-size: 1.3rem; }
-
-input[type="text"], input[type="url"], input[type="password"], textarea, button {
-  border: 2px dashed rgb(var(--colour-primary-border));
-  border-radius: var(--radius-form-control);
-  padding: .3rem .5rem;
-  color: rgb(var(--colour-primary));
-  font-size: 1rem;
-  font-family: var(--font-family-monospace);
-  background: rgb(var(--colour-primary-background));
-  
-  &:not(:disabled)::placeholder {
-    color: rgba(var(--colour-primary), .6);
-  }
-  
-  &:disabled {
-    border-color: rgb(var(--colour-grey-border));
-    color: rgb(var(--colour-grey));
-    background: rgb(var(--colour-grey-background));
-    cursor: not-allowed;
+@layer base {
+  html {
+    @apply h-full text-gray-800 break-all cursor-default scrollbar-gutter-stable;
     
-    &::placeholder {
-      color: rgba(var(--colour-grey), .6);
+    text-decoration-skip-ink: none;
+    background: color-mix(in srgb, var(--color-amber-50) 20%, transparent);
+  }
+  
+  body {
+    @apply h-full;
+  }
+  
+  a {
+    color: rgb(var(--colour-link-base));
+    
+    &:hover {
+      @apply underline;
+      
+      color: rgb(var(--colour-link-hover));
     }
   }
-}
-
-input[type="text"], input[type="url"], input[type="password"], textarea {
-  display: block;
-  width: 100%;
-}
-
-textarea {
-  min-height: 6rem;
-  resize: vertical;
-}
-
-button {
-  font: inherit;
-  cursor: pointer;
   
-  &:hover:not(:disabled) {
-    background: oklch(from rgb(var(--colour-primary-background)) calc(l - .02) c h);
-  }
-  &:focus:not(:disabled) {
-    background: oklch(from rgb(var(--colour-primary-background)) calc(l - .04) c h);
-  }
-}
-
-fieldset {
-  border: 1px solid oklch(from rgb(var(--colour-grey-border)) calc(l + .2) c h);
-  border-radius: var(--radius-box);
-  padding: .25rem 1rem .75rem;
-  
-  & > legend {
-    margin-left: -.4rem;
-    padding: 0 .4rem;
-    font-weight: bold;
-  }
-  
-  & > label {
-    display: block;
-    margin: 1rem 0;
-  }
-  & > legend + label {
-    margin-top: .5rem;
-  }
-}
-
-table {
-  & thead :is(th, td) {
-    white-space: nowrap;
-  }
-}
-
-
-/* Page Layouts */
-
-.page-container {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-
-/* Components */
-
-.turnstile-wrapper {
-  height: 65px;
-}
-
-.loading {
-  animation: fade-first-view-animation .3s 1s ease forwards;  /* duration delay の順 */
-  opacity: 0;
-}
-  @keyframes fade-first-view-animation {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-.form-label {  /* 主に `label` 要素内の `div` 要素に当てて使用する */
-  margin-bottom: .25rem;
-  font-weight: bold;
-  
-  & .form-label-memo {  /* `span` 要素に当てて使用する */
-    display: inline-block;
-    margin-left: .5rem;
-    color: rgb(var(--colour-grey));
-    font-size: var(--font-size-small);
-    font-weight: normal;
-  }
-}
-
-.form-radio-2columns {  /* ラジオボタン2つを横並びにする用 */
-  display: inline-grid;
-  grid-template-columns: auto auto;
-  column-gap: 1rem;
-}
-
-.tag-input {  /* タグ追加用テキストボックスと「追加」ボタンを横並びにする用 */
-  display: grid;
-  grid-template-columns: 1fr auto;
-  column-gap: .5rem;
-}
-
-.form-delete {
-  & fieldset {
-    border-color: rgb(var(--colour-error-border));
-    background: oklch(from rgb(var(--colour-error-background)) calc(l + .3) c h);
-  }
-  & legend {
-    color: oklch(from rgb(var(--colour-error)) calc(l - .1) c h);
-  }
-  & input[type="password"], & button {
-    border-color: rgb(var(--colour-error-border));
-    color: rgb(var(--colour-error));
-    background: rgb(var(--colour-error-background));
+  input[type="text"], input[type="url"], input[type="password"], textarea, button {
+    @apply border-[2px] border-dashed border-sky-500 py-1 px-2 text-sky-500 font-mono;
     
-    &::placeholder {
-      color: rgba(var(--colour-error), .6);
+    &:not(:disabled)::placeholder {
+      color: color-mix(in srgb, var(--color-sky-400) 50%, transparent);
+    }
+    
+    &:disabled {
+      @apply border-slate-500 text-slate-400 cursor-not-allowed;
+      
+      background: color-mix(in srgb, var(--color-slate-100) 50%, transparent);
+      
+      &::placeholder {
+        color: color-mix(in srgb, var(--color-slate-400) 50%, transparent);
+      }
     }
   }
-  & button {
+  
+  input[type="text"], input[type="url"], input[type="password"], textarea {
+    @apply block w-full bg-white;
+  }
+  
+  input[type="radio"], input[type="checkbox"] {
+    @apply cursor-pointer;
+  }
+  
+  textarea {
+    @apply min-h-20;
+  }
+  
+  button {
+    @apply cursor-pointer;
+    
+    background: color-mix(in srgb, var(--color-sky-100) 50%, transparent);
+    
     &:hover:not(:disabled) {
-      background: oklch(from rgb(var(--colour-error-background)) calc(l - .02) c h);
+      background: color-mix(in srgb, var(--color-sky-200) 35%, transparent);
     }
     &:focus:not(:disabled) {
-      background: oklch(from rgb(var(--colour-error-background)) calc(l - .04) c h);
+      background: color-mix(in srgb, var(--color-sky-200) 60%, transparent);
+    }
+  }
+  
+  fieldset {
+    @apply border border-slate-500 pt-2 px-4 pb-4;
+    
+    & > legend {
+      @apply pl-1 pr-2 font-bold;
+    }
+  }
+  
+  label {
+    @apply block;
+  }
+  
+  main {
+    @apply max-w-4xl mx-auto py-10 px-4;
+  }
+  
+  h1 {
+    @apply mb-8 font-bold text-2xl text-center;
+  }
+  
+  table {
+    @apply w-full border border-slate-500;
+    
+    & :is(th, td) {
+      @apply border border-slate-500 py-1 px-2;
+    }
+    
+    thead :is(th, td), tbody th {
+      @apply text-center whitespace-nowrap bg-slate-100;
+    }
+    
+    thead :is(th, td) {
+      @apply align-middle;
+    }
+    
+    tbody :is(th, td) {
+      @apply align-top;
+    }
+    
+    tbody td {
+      @apply bg-white;
     }
   }
 }
 
-.tags {  /* 登録済タグのリスト */
-  margin: .5rem 0;
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-  
-  & .tag {
-    display: inline-block;
-    padding: .25rem .5rem;
-    border-radius: var(--radius-form-control);
-    color: rgb(var(--colour-primary));
-    font-size: var(--font-size-small);
-    background: rgb(var(--colour-primary-background));
-  }
-}
-
-.site-card {
-  margin: 1.5rem 0;
-  border: 1px solid rgb(var(--colour-grey-border));
-  border-radius: var(--radius-box);
-  padding: 1rem;
-  
-  & > :first-child {
-    margin-top: 0;
-  }
-  & > :not(:first-child) {
-    margin-top: 1rem;
-  }
-  & > :not(:last-child) {
-    margin-bottom: 1rem;
-  }
-  & > :last-child {
-    margin-bottom: 0;
+@layer components {
+  .form-danger {
+    & :is(input[type="text"], input[type="url"], input[type="password"], textarea, button) {
+      @apply border-rose-500 text-rose-600;
+      
+      &:not(:disabled)::placeholder {
+        color: color-mix(in srgb, var(--color-rose-400) 50%, transparent);
+      }
+    }
+    
+    & button {
+      background: color-mix(in srgb, var(--color-rose-100) 50%, transparent);
+      
+      &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--color-rose-200) 35%, transparent);
+      }
+      &:focus:not(:disabled) {
+        background: color-mix(in srgb, var(--color-rose-200) 60%, transparent);
+      }
+    }
   }
   
-  & > ul {
-    padding-left: 0;
-    color: rgb(var(--colour-grey));
-    font-size: var(--font-size-small);
-    list-style: none;
+  .loading {
+    @apply font-bold text-amber-600;
+    
+    animation: fade-first-view-animation .2s .5s ease forwards;  /* duration delay の順 */
+    opacity: 0;
   }
-  & > .tags {
-    margin: 0;
-  }
+    @keyframes fade-first-view-animation {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
 }
-
-:is(.site-comment-card, .post-card) {
-  margin: 1.5rem 0;
-  border-bottom: 1px solid oklch(from rgb(var(--colour-grey-border)) calc(l + .2) c h);
-  
-  & :is(.site-comment-header, .post-header) {
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: .5rem;
-    color: rgb(var(--colour-grey));
-    font-size: var(--font-size-small);
-  }
-}
-
-.row-deleted {  /* `tr` 要素に指定する */
-  background: #ffecf9;
-}
-
-.row-admin {  /* `tr` 要素に指定する */
-  background: #ffc;
-}
-
-
-/* Utilities */
-
-.text-muted   { color: #666; }  /* TODO : 変数化 */
-.text-error   { color: rgb(var(--colour-error)); }
-.text-warning { color: #f90; }
-
-.text-center { text-align: center; }
-.text-right  { text-align: right ; }
-
-.nowrap   { white-space: nowrap;   }
-.pre-wrap { white-space: pre-wrap; }
-
-:is(.alert-success, .alert-warning, .alert-error) {
-  border-radius: var(--radius-box);
-  padding: 1rem;
-}
-  .alert-success { background: #e8f5e9; }
-  .alert-warning { background: #ffc; }
-  .alert-error   { background: #ffecf9; }

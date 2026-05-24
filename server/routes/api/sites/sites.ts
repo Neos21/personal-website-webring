@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import { comments, commentsPath } from './comments/comments';
 import { httpStatusCode } from '../../../../shared/constants/http-status-code';
-import { sitesConstants } from '../../../../shared/constants/sites';
+import { appConstants } from '../../../../shared/constants/app-constants';
 import { convertToPositiveInteger } from '../../../../shared/helpers/convert-to-positive-integer';
 import { isEmpty } from '../../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
@@ -32,11 +32,11 @@ sites.route(`/:id${commentsPath}`, comments);  // eslint-disable-line neos-eslin
 
 sites.get('/', async context => {
   const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
-  const offset = (page - 1) * sitesConstants.pageSize;
+  const offset = (page - 1) * appConstants.sitesPageSize;
   
-  const sites = await new SitesRepository(context.env.DB).findActivePage(sitesConstants.pageSize + 1, offset);
-  const hasNext = sites.length > sitesConstants.pageSize;
-  if(hasNext) sites.length = sitesConstants.pageSize;
+  const sites = await new SitesRepository(context.env.DB).findActivePage(appConstants.sitesPageSize + 1, offset);
+  const hasNext = sites.length > appConstants.sitesPageSize;
+  if(hasNext) sites.length = appConstants.sitesPageSize;
   
   const tagsRepository = new TagsRepository(context.env.DB);
   const sitesWithTags: Array<SitePublicWithTags> = await Promise.all(sites.map(async site => ({
@@ -88,9 +88,6 @@ sites.post('/', async context => {
   const parsed = newSiteSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
-  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
-  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
-  
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
   
@@ -98,6 +95,9 @@ sites.post('/', async context => {
   
   const exactMatch = await new SiteUrlService().findExactMatch(sitesRepository, parsed.data.url);
   if(exactMatch != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMatch.id}]` }, httpStatusCode.badRequest);
+  
+  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
+  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
   // 自薦の場合は管理パスワードをハッシュ化する (自薦・他薦の選択とパスワードの組合せ入力はスキーマでチェック済)
   const passwordHash = parsed.data.is_self === 1 ? await hashPassword(parsed.data.password!) : null;
@@ -157,6 +157,9 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   // 自薦状態での編集時はパスワードチェックを行う (他薦から自薦に切り替える最初はパスワードチェックをしない)
   if(beforeSite.is_self === 1 && passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
+  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
+  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
+  
   await sitesRepository.update({
     id            : idParsed.data,
     url           : parsed.data.url,
@@ -199,6 +202,9 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   
   const passwordHash = await hashPassword(parsed.data.password);
   if(passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
+  
+  const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
+  if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
   
   await sitesRepository.markDeleted(idParsed.data);
   

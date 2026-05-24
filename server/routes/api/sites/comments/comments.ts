@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 
 import { httpStatusCode } from '../../../../../shared/constants/http-status-code';
-import { siteCommentsConstants } from '../../../../../shared/constants/site-comments';
+import { appConstants } from '../../../../../shared/constants/app-constants';
 import { convertToPositiveInteger } from '../../../../../shared/helpers/convert-to-positive-integer';
 import { mergeIssues } from '../../../../../shared/helpers/merge-issues';
 import { idParamSchema } from '../../../../../shared/schemas/id-param-schema';
@@ -25,11 +25,11 @@ comments.get('/', async context => {
   if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   const page = convertToPositiveInteger(context.req.query('page')) ?? 1;
-  const offset = (page - 1) * siteCommentsConstants.pageSize;
+  const offset = (page - 1) * appConstants.siteCommentsPageSize;
   
-  const comments = await new SiteCommentsRepository(context.env.DB).findPage(siteIdParsed.data, siteCommentsConstants.pageSize + 1, offset);
-  const hasNext = comments.length > siteCommentsConstants.pageSize;
-  if(hasNext) comments.length = siteCommentsConstants.pageSize;
+  const comments = await new SiteCommentsRepository(context.env.DB).findPage(siteIdParsed.data, appConstants.siteCommentsPageSize + 1, offset);
+  const hasNext = comments.length > appConstants.siteCommentsPageSize;
+  if(hasNext) comments.length = appConstants.siteCommentsPageSize;
   return context.json({ result: { page, comments, has_next: hasNext } }, httpStatusCode.ok);
 });
 

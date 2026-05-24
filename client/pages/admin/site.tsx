@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
@@ -12,8 +11,11 @@ import { convertBannerSizeToDimensions, type BannerSize } from '../../helpers/co
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { SiteAdminWithTags } from '../../../shared/types/admin/admin-site';
+import ky from 'ky';
+import type { SiteNameUrl } from '../../../shared/types/site';
 
 export default function AdminSite(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -38,11 +40,18 @@ export default function AdminSite(): ReactElement {
   const [isDeleted  , setIsDeleted  ] = useState<0 | 1>(0);
   
   // エラー表示系
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [loadError, setLoadError] = useState<string>('');
-  const [error    , setError    ] = useState<string>('');
+  const [isLoading   , setIsLoading   ] = useState<boolean>(true);
+  const [loadError   , setLoadError   ] = useState<string>('');
+  const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
+  const [exactMatch  , setExactMatch  ] = useState<SiteNameUrl | null>(null);
+  const [nearMatch   , setNearMatch   ] = useState<SiteNameUrl | null>(null);
+  const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
+    // 再読込時のための最低限の初期化
+    setIsLoading(true);
+    setPassword('');
+    
     if(id == null) {
       setLoadError('サイト ID が指定されていません');
       setIsLoading(false);
@@ -76,7 +85,51 @@ export default function AdminSite(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [id]);
+  }, [location.key, id]);
+  
+  const onBlurUrl = async (inputUrl: string): Promise<void> => {
+    if(isEmpty(inputUrl)) {
+      setIsDenyDomain(false);
+      setExactMatch(null);
+      setNearMatch(null);
+      return;
+    }
+    
+    // `new URL()` で解釈できない文字列はチェックしない
+    try {
+      new URL(inputUrl);
+    }
+    catch {
+      setIsDenyDomain(false);
+      setExactMatch(null);
+      setNearMatch(null);
+      return;
+    }
+    
+    // 禁止ドメインのチェック
+    try {
+      const response = await ky.get('/api/deny-domains/search', { searchParams: { url: inputUrl } }).json<{ result: { is_denied: boolean; }; }>();
+      if(response.result.is_denied) {
+        setIsDenyDomain(true);
+        setExactMatch(null);
+        setNearMatch(null);
+        return;  // 重複・類似 URL チェックは行わない
+      }
+    }
+    catch { /* Do Nothing */ }
+    setIsDenyDomain(false);
+    
+    // 重複・類似 URL のチェック
+    try {
+      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site.id } }).json<{ result: { exact_match: SiteNameUrl | null; near_match: SiteNameUrl | null; }; }>();
+      setExactMatch(response.result.exact_match);
+      setNearMatch(response.result.near_match);
+    }
+    catch {
+      setExactMatch(null);
+      setNearMatch(null);
+    }
+  };
   
   const onAddTag = (tagInput: string): void => {
     const tag = tagInput.trim();
@@ -121,9 +174,10 @@ export default function AdminSite(): ReactElement {
   };
   
   const onDelete = async (): Promise<void> => {
-    if(!window.confirm('本当にこのサイトを削除しますか？\nこの操作は取り消せません。')) return;
-    
     setError('');
+    
+    if(!window.confirm('本当にサイト情報を削除しますか？\nこの操作は取り消せません。')) return;
+    
     try {
       await adminApi.delete(`/api/admin/sites/${id}`);
       navigate('/admin/sites?page=1');
@@ -134,65 +188,93 @@ export default function AdminSite(): ReactElement {
   };
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
+    <main>
+      <title>サイト編集・削除 - 個人サイトウェブリング</title>
       <h1>サイト編集・削除</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <p className="text-error">{loadError}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
       ) : site == null ? (
-        <p className="text-error">サイトが見つかりませんでした。</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
       ) : (
-        <form onSubmit={onSubmit}>
-          <label>
-            <div className="form-label">ID</div>
-            <div>{site.id}</div>
-          </label>
-          <label>
-            <div className="form-label">登録日時</div>
-            <div>{convertUtcToJst(site.created_at)}</div>
-          </label>
-          <label>
-            <div className="form-label">更新日時</div>
-            <div>{convertUtcToJst(site.updated_at)}</div>
-          </label>
+        <form className="mb-8 space-y-4" onSubmit={onSubmit}>
+          <table>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td className="w-full">{site.id}</td>
+              </tr>
+              <tr>
+                <th>登録日時</th>
+                <td className="w-full">{convertUtcToJst(site.created_at)}</td>
+              </tr>
+              <tr>
+                <th>更新日時</th>
+                <td className="w-full">{convertUtcToJst(site.updated_at)}</td>
+              </tr>
+            </tbody>
+          </table>
           
-          <div className="form-label">登録種別</div>
-          <div className="form-radio-2columns">
-            <label>
-              <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => setIsSelf(0)} /> 他薦
-            </label>
-            <label>
-              <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => setIsSelf(1)} /> 自薦
-            </label>
+          <div className="space-y-1">
+            <div className="font-bold">登録種別</div>
+            <div className="space-x-4">
+              <label className="inline cursor-pointer">
+                <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => setIsSelf(0)} /> 他薦
+              </label>
+              <label className="inline cursor-pointer">
+                <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => setIsSelf(1)} /> 自薦
+              </label>
+            </div>
           </div>
           
-          <label>
-            <div className="form-label">{siteNameDisplayName} <span className="form-label-memo">(必須・{siteNameMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{siteNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{siteNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={siteNameDisplayName} value={siteName} maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required />
           </label>
           
-          <label>
-            <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
-            <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength} onChange={event => setUrl(event.target.value)} required />
+          <label className="space-y-1">
+            <div><span className="font-bold">{urlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{urlMaxLength}文字以内)</span></div>
+            <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength}
+              onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatch(null); setNearMatch(null); }}
+              onBlur={() => onBlurUrl(url)}
+              required
+            />
           </label>
           
-          <label>
-            <div className="form-label">{ownerNameDisplayName} <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>
+          {isDenyDomain && (
+            <div className="p-4 font-bold text-red-600 bg-red-50">このドメインは登録できません</div>
+          )}
+          {exactMatch != null && (
+            <div className="p-4 bg-red-50">
+              <div className="font-bold text-red-600">この URL は登録済みです</div>
+              <div>ID <Link to={{ pathname: '/site', search: `?id=${exactMatch.id}&page=1` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
+              <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
+            </div>
+          )}
+          {nearMatch != null && (
+            <div className="p-4 bg-amber-50">
+              <div className="font-bold text-amber-600">類似する URL が登録されています</div>
+              <div>ID <Link to={{ pathname: '/site', search: `?id=${nearMatch.id}&page=1` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
+              <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
+            </div>
+          )}
+          
+          <label className="space-y-1">
+            <div><span className="font-bold">{ownerNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{ownerNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={ownerNameDisplayName} value={ownerName} maxLength={ownerNameMaxLength} onChange={event => setOwnerName(event.target.value)} />
           </label>
           
-          <label>
-            <div className="form-label">{descriptionDisplayName} <span className="form-label-memo">(任意・{descriptionMaxLength}文字以内)</span></div>
-            <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={6} />
+          <label className="space-y-1">
+            <div><span className="font-bold">{descriptionDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{descriptionMaxLength}文字以内)</span></div>
+            <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={4} />
           </label>
           
-          <label>
-            <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
-            <div className="tag-input">
-              <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
+          <label className="space-y-1">
+            <div><span className="font-bold">{tagDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
+            <div className="flex gap-x-3">
+              <input className="flex-1" type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
                 onKeyDown={event => {
                   if(event.key !== 'Enter') return;
                   event.preventDefault();
@@ -200,45 +282,57 @@ export default function AdminSite(): ReactElement {
                 }}
                 disabled={tags.length >= tagsMax}
               />
-              <button type="button" onClick={() => onAddTag(tagInput)} disabled={tags.length >= tagsMax}>追加</button>
+              <button className="flex-none" type="button" onClick={() => onAddTag(tagInput)} disabled={tags.length >= tagsMax}>追加</button>
             </div>
           </label>
+          
           {tags.length > 0 && (
-            <p className="tags">
+            <p className="space-x-2 space-y-2">
               {tags.map((tag, index) => (
                 <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prevTags => prevTags.filter((_, i) => i !== index))}>{tag} ×</button>
               ))}
             </p>
           )}
           
-          <label>
-            <div className="form-label">{bannerUrlDisplayName} <span className="form-label-memo">(任意・{bannerUrlMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{bannerUrlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} />
           </label>
           
-          <div className="form-label">バナーサイズ <span className="form-label-memo">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
-          <div className="form-radio-2columns">
-            <label>
-              <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
-            </label>
-            <label>
-              <input type="radio" name="banner_size" value="88x31" checked={bannerSize === '88x31'} onChange={() => setBannerSize('88x31')} /> 88x31
-            </label>
+          <div className="space-y-1">
+            <div><span className="font-bold">バナーサイズ</span> <span className="ml-2 text-slate-500 text-sm">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
+            <div className="space-x-4">
+              <label className="inline cursor-pointer">
+                <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
+              </label>
+              <label className="inline cursor-pointer">
+                <input type="radio" name="banner_size" value="88x31"  checked={bannerSize === '88x31' } onChange={() => setBannerSize('88x31' )} /> 88x31
+              </label>
+            </div>
           </div>
           
-          <label>
-            <div className="form-label">{passwordDisplayName} <span className="form-label-memo">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>
+          {/* TODO : 初期表示時および Blur 時に、`https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+          
+          <label className="space-y-1">
+            <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>
             <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} />
           </label>
-          <div className="text-muted">現在の{passwordDisplayName} : {site.password_hash}</div>
           
-          {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+          <div>現在のパスワードハッシュ : {site.password_hash}</div>
           
-          <p><button type="submit">編集</button></p>
+          <label className={`font-bold cursor-pointer ${isDeleted === 1 ? 'text-red-600' : ''}`}>
+            <input type="checkbox" checked={isDeleted === 1} onChange={() => setIsDeleted(prevIsDeleted => prevIsDeleted === 1 ? 0 : 1)} /> 論理削除
+          </label>
           
-          <p className="form-delete text-right"><button type="button" onClick={onDelete}>削除</button></p>
+          {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+          
+          <div><button type="submit">編集</button></div>
+          
+          <div className="form-danger text-right"><button type="button" onClick={onDelete}>物理削除する</button></div>
         </form>
       )}
+      
+      <div className="text-right"><Link to={{ pathname: '/admin/sites', search: '?page=1' }}>サイト管理</Link> | <Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

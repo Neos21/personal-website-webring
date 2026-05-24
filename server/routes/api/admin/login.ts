@@ -22,11 +22,11 @@ adminLogin.post('/', async context => {
   const parsed = adminLoginSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
+  if(parsed.data.password !== context.env.ADMIN_PASSWORD) return context.json({ error: `${adminPasswordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
+  
   const ip = getIp(context);
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);
-  
-  if(parsed.data.password !== context.env.ADMIN_PASSWORD) return context.json({ error: `${adminPasswordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
   const now = Math.floor(Date.now() / 1000);
   const tokenExpiresInSeconds = 60 * 60 * 24 * 30;  // 30日間

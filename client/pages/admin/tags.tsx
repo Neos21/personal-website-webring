@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { tagDisplayName, tagMaxLength } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
@@ -10,6 +9,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { Tag } from '../../../shared/types/tag';
 
 export default function AdminTags(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -34,6 +34,8 @@ export default function AdminTags(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setError('');
+    
     // URL に `page=1` がなければ再読込する
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
@@ -55,7 +57,7 @@ export default function AdminTags(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [pageParam, page]);
+  }, [location.key, pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -65,7 +67,7 @@ export default function AdminTags(): ReactElement {
     
     try {
       await adminApi.post('/api/admin/tags', { json: { name: newTagName } }).json();
-      navigate('/api/admin/tags?page=1');
+      navigate('/admin/tags?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの追加に失敗しました'));
@@ -92,6 +94,7 @@ export default function AdminTags(): ReactElement {
     try {
       await adminApi.put(`/api/admin/tags/${id}`, { json: { name: editingTagName } });
       onCancelEdit();
+      navigate(`/admin/tags?page=${page}`);
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの編集に失敗しました'));
@@ -103,7 +106,7 @@ export default function AdminTags(): ReactElement {
     
     try {
       await adminApi.delete(`/api/admin/tags/${id}`);
-      navigate('/api/admin/tags?page=1');
+      navigate('/admin/tags?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'タグの削除に失敗しました'));
@@ -111,8 +114,8 @@ export default function AdminTags(): ReactElement {
   };
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
+    <main>
+      
       <h1>タグ</h1>
       
       <form onSubmit={onSubmit}>

@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { adminApi } from '../../helpers/admin-api';
@@ -27,6 +26,10 @@ export default function AdminSiteComments(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
+    setSiteComments([]);
+    setError('');
+    
     // URL に `page=1` がなければ再読込する
     const currentPageNumber = Number(pageParam);
     const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
@@ -51,48 +54,63 @@ export default function AdminSiteComments(): ReactElement {
   }, [pageParam, page]);
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
+    <main>
+      <title>サイト別コメント管理 - 個人サイトウェブリング</title>
       <h1>サイト別コメント管理</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <p className="text-error">{error}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
       ) : siteComments.length === 0 ? (
-        <p>コメントはありません。</p>
+        <>
+          <div className="mb-8 text-slate-500 text-sm">コメントはありません。</div>
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>サイト ID</th>
-              <th>HN</th>
-              <th>本文</th>
-              <th>投稿日時</th>
-            </tr>
-          </thead>
-          <tbody>
-            {siteComments.map(siteComment => (
-              <tr key={siteComment.id}>
-                <td className="nowrap"><Link to={{ pathname: '/admin/site-comment', search: `?id=${siteComment.id}` }}>{siteComment.id}</Link></td>
-                <td className="nowrap"><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></td>
-                <td>{siteComment.user_name || '-'}</td>
-                <td className="pre-wrap">{siteComment.content}</td>
-                <td className="nowrap">{convertUtcToJst(siteComment.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <div className="mb-8 overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th className="text-sm">サイト ID</th>
+                  <th>HN</th>
+                  <th>本文</th>
+                  <th>投稿日時</th>
+                </tr>
+              </thead>
+              <tbody>
+                {siteComments.map(siteComment => (
+                  <tr key={siteComment.id}>
+                    <td className="font-bold text-right whitespace-nowrap"><Link to={{ pathname: '/admin/site-comment', search: `?id=${siteComment.id}` }}>{siteComment.id}</Link></td>
+                    <td className="          text-right whitespace-nowrap"><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></td>
+                    <td className="min-w-25        text-sm">{siteComment.user_name || '-'}</td>
+                    <td className="min-w-40 w-full text-sm whitespace-pre-wrap">{siteComment.content}</td>
+                    <td className="                text-sm whitespace-nowrap">{convertUtcToJst(siteComment.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       )}
       
-      {(page > 1 || hasNext) && (
-        <p className="text-center">
-          {page > 1            && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
-          {hasNext             && (<Link to={{ pathname: '/admin/site-comments', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
-        </p>
-      )}
+      <div className="text-right"><Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

@@ -75,7 +75,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactElement
   }
   
   return (
-    <main className="page-container">
+    <main>
       <h1>個人サイトウェブリング</h1>
       <h2 className="text-error">{title}</h2>
       <p className="text-error">{text}</p>

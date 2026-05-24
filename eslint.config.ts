@@ -3,6 +3,7 @@ import neosEslintPlugin from '@neos21/neos-eslint-plugin';
 import { defineConfig } from 'eslint/config';
 import importPlugin from 'eslint-plugin-import';
 import pluginReact from 'eslint-plugin-react';
+import tailwindcss from 'eslint-plugin-tailwindcss';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -37,6 +38,7 @@ export default defineConfig([
       ]
     }
   },
+  
   tseslint.configs.recommended,
   {
     rules: {
@@ -45,7 +47,9 @@ export default defineConfig([
       }]
     }
   },
+  
   neosEslintPlugin.configs.recommended,
+  
   {
     ...pluginReact.configs.flat.recommended,
     rules: {
@@ -57,6 +61,20 @@ export default defineConfig([
       }
     }
   },
+  
+  ...tailwindcss.configs['flat/recommended'],  // Tailwind CSS のクラス名を検証する
+  {
+    settings: {
+      tailwindcss: {
+        config: false
+      }
+    },
+    rules: {
+      'tailwindcss/classnames-order': 'off',
+      'tailwindcss/no-custom-classname': 'off'
+    }
+  },
+  
   {
     ignores: [
       'node_modules/**',

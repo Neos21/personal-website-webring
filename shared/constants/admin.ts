@@ -1,6 +1,6 @@
 export const adminConstants = {
-  sitesPageSize       : 500,
-  siteCommentsPageSize: 500,
-  postsPageSize       : 500,
-  tagsPageSize        : 500
+  sitesPageSize       : 3,
+  siteCommentsPageSize: 3,
+  postsPageSize       : 3,
+  tagsPageSize        : 3
 } as const;

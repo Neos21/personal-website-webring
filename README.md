@@ -80,7 +80,7 @@ CREATE TABLE site_tags (  -- サイトに付与されたタグ
   PRIMARY KEY (site_id, tag_id)
 );
 
-CREATE TABLE site_ips (  -- サイト登録・編集・削除時の IP アドレス (荒らし対策用)
+CREATE TABLE site_ips (  -- サイト登録・編集・削除時の IP アドレス履歴 (荒らし対策用)
   id          INTEGER  PRIMARY KEY  AUTOINCREMENT,                 -- ID
   site_id     INTEGER  NOT NULL     REFERENCES sites(id),          -- サイト ID (`sites.id`)
   is_created  INTEGER  NOT NULL     CHECK (is_created IN (0, 1)),  -- 新規登録時は `1`・編集と削除時は `0`

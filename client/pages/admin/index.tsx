@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
@@ -22,7 +22,7 @@ export default function Admin(): ReactElement {
   
   useEffect(() => {
     if(!isEmpty(useAdminStore.getState().token)) navigate('/admin/dashboard');
-  }, [navigate]);
+  }, []);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -50,21 +50,21 @@ export default function Admin(): ReactElement {
   };
   
   return (
-    <main className="page-container">
+    <main>
+      <title>リングマスター管理ログイン - 個人サイトウェブリング</title>
       <h1>リングマスター管理ログイン</h1>
       
-      <form onSubmit={onSubmit}>
-        <label>
-          <div className="form-label">{adminPasswordDisplayName}</div>
-          <input type="password" placeholder={adminPasswordDisplayName} value={password} onChange={event => setPassword(event.target.value)} required />
-        </label>
+      <form className="mb-8 space-y-4" onSubmit={onSubmit}>
+        <input type="password" placeholder={adminPasswordDisplayName} value={password} onChange={event => setPassword(event.target.value)} required />
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+        {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
         
-        <p><button type="submit" disabled={isSubmitting}>ログイン</button></p>
+        <div><button type="submit" disabled={isSubmitting}>ログイン</button></div>
       </form>
+      
+      <div className="text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

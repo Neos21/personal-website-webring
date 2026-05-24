@@ -29,7 +29,7 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     event.preventDefault();
     setError('');
     
-    if(!window.confirm('本当にこのサイトを削除しますか？\nこの操作は取り消せません。')) return;
+    if(!window.confirm('本当にサイト情報を削除しますか？\nこの操作は取り消せません。')) return;
     
     const payload = {
       password       : password,
@@ -40,8 +40,8 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
     
     setIsSubmitting(true);
     try {
-      await ky.delete(`/api/sites/${site.id}`, { json: parsed.data }).text();  // 204 No Content が返るため `.json()` でコールするとエラーになる
-      navigate('/list&page=1');
+      await ky.delete(`/api/sites/${site.id}`, { json: parsed.data });  // 204 No Content が返るため `.json()` でコールするとエラーになる
+      navigate('/list?page=1');
     }
     catch(error) {
       setError(extractApiErrorMessage(error, 'サイトの削除に失敗しました'));
@@ -50,21 +50,22 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
   };
   
   return (
-    <form onSubmit={onSubmit} className="form-delete">
-      <fieldset>
-        <legend>サイトの削除</legend>
-        <div className="text-muted">サイトを削除するには管理パスワードを入力してください。</div>
+    <form className="form-danger mb-8" onSubmit={onSubmit}>
+      <fieldset className="space-y-4 border-rose-500 bg-rose-50">
+        <legend className="mb-0 text-rose-600">サイトの削除</legend>
         
-        <label>
-          <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
+        <div className="text-sm">サイトを削除するには管理パスワードを入力してください。</div>
+        
+        <label className="space-y-1">
+          <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{passwordMaxLength}文字以内)</span></div>
           <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
         </label>
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+        {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
         
-        <p className="text-right"><button type="submit" disabled={isSubmitting}>{isSubmitting ? '処理中…' : '削除する'}</button></p>
+        <div className="text-right"><button type="submit" disabled={isSubmitting}>{isSubmitting ? '処理中…' : '削除する'}</button></div>
       </fieldset>
     </form>
   );

@@ -139,70 +139,74 @@ export default function New(): ReactElement {
   };
   
   return (
-    <main className="page-container">
+    <main>
+      <title>サイト新規登録 - 個人サイトウェブリング</title>
       <h1>サイト新規登録</h1>
-      <p>個人サイトをウェブリングに登録します。他薦・自薦を選んでフォームに入力してください。</p>
+      <div className="mb-8">個人サイトをウェブリングに登録します。他薦・自薦を選んでフォームに入力してください。</div>
       
-      <form onSubmit={onSubmit}>
+      <form className="mb-8 space-y-6" onSubmit={onSubmit}>
         <fieldset>
           <legend>登録種別</legend>
           
-          <div className="form-radio-2columns">
-            <label>
+          <div className="space-x-4">
+            <label className="inline cursor-pointer">
               <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => onChangeIsSelf(0)} /> 他薦
             </label>
-            <label>
+            <label className="inline cursor-pointer">
               <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => onChangeIsSelf(1)} /> 自薦
             </label>
           </div>
         </fieldset>
         
-        <fieldset>
-          <legend>サイト情報</legend>
+        <fieldset className="space-y-4">
+          <legend className="mb-0">サイト情報</legend>
           
-          <label>
-            <div className="form-label">{siteNameDisplayName} <span className="form-label-memo">(必須・{siteNameMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{siteNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{siteNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={siteNameDisplayName} value={siteName} maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required />
           </label>
           
-          <label>
-            <div className="form-label">{urlDisplayName} <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{urlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{urlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength}
               onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatch(null); setNearMatch(null); }}
               onBlur={() => onBlurUrl(url)}
               required
             />
           </label>
-          {isDenyDomain && (<p className="text-error">このドメインは登録できません</p>)}
+          
+          {isDenyDomain && (
+            <div className="p-4 font-bold text-red-600 bg-red-50">このドメインは登録できません</div>
+          )}
           {exactMatch != null && (
-            <div className="alert-error">
-              <div className="text-error">この URL は登録済みです</div>
+            <div className="p-4 bg-red-50">
+              <div className="font-bold text-red-600">この URL は登録済みです</div>
               <div>ID <Link to={{ pathname: '/site', search: `?id=${exactMatch.id}&page=1` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
               <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
             </div>
           )}
           {nearMatch != null && (
-            <div className="alert-warning">
-              <div className="text-warning">類似する URL が登録されています</div>
+            <div className="p-4 bg-amber-50">
+              <div className="font-bold text-amber-600">類似する URL が登録されています</div>
               <div>ID <Link to={{ pathname: '/site', search: `?id=${nearMatch.id}&page=1` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
               <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
             </div>
           )}
           
-          <label>
-            <div className="form-label">{ownerNameDisplayName} <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{ownerNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{ownerNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={ownerNameDisplayName} value={ownerName} maxLength={ownerNameMaxLength} onChange={event => setOwnerName(event.target.value)} />
           </label>
           
-          <label>
-            <div className="form-label">{descriptionDisplayName} <span className="form-label-memo">(任意・{descriptionMaxLength}文字以内)</span></div>
-            <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={6} />
+          <label className="space-y-1">
+            <div><span className="font-bold">{descriptionDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{descriptionMaxLength}文字以内)</span></div>
+            <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={4} />
           </label>
           
-          <label>
-            <div className="form-label">{tagDisplayName} <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
-            <div className="tag-input">
-              <input type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
+          <label className="space-y-1">
+            <div><span className="font-bold">{tagDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
+            <div className="flex gap-x-3">
+              <input className="flex-1" type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
                 onKeyDown={event => {
                   if(event.key !== 'Enter') return;
                   event.preventDefault();
@@ -210,55 +214,60 @@ export default function New(): ReactElement {
                 }}
                 disabled={tags.length >= tagsMax}
               />
-              <button type="button" onClick={() => onAddTag(tagInput)} disabled={tags.length >= tagsMax}>追加</button>
+              <button className="flex-none" type="button" onClick={() => onAddTag(tagInput)} disabled={tags.length >= tagsMax}>追加</button>
             </div>
           </label>
+          
           {tags.length > 0 && (
-            <div className="tags">
+            <div className="space-x-2 space-y-2">
               {tags.map((tag, index) => (
                 <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prevTags => prevTags.filter((_, i) => i !== index))}>{tag} ×</button>
               ))}
             </div>
           )}
           
-          <label>
-            <div className="form-label">{bannerUrlDisplayName} <span className="form-label-memo">(任意・{bannerUrlMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{bannerUrlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} />
           </label>
           
-          <div className="form-label">バナーサイズ <span className="form-label-memo">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
-          <div className="form-radio-2columns">
-            <label>
-              <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
-            </label>
-            <label>
-              <input type="radio" name="banner_size" value="88x31"  checked={bannerSize === '88x31' } onChange={() => setBannerSize('88x31') } /> 88x31
-            </label>
+          <div className="space-y-1">
+            <div><span className="font-bold">バナーサイズ</span> <span className="ml-2 text-slate-500 text-sm">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
+            <div className="space-x-4">
+              <label className="inline cursor-pointer">
+                <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
+              </label>
+              <label className="inline cursor-pointer">
+                <input type="radio" name="banner_size" value="88x31"  checked={bannerSize === '88x31' } onChange={() => setBannerSize('88x31' )} /> 88x31
+              </label>
+            </div>
           </div>
+          
+          {/* TODO : Blur 時に、`https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
         </fieldset>
         
         {isSelf === 0 && (
-          <fieldset>
-            <legend>{recommenderCommentDisplayName}</legend>
+          <fieldset className="space-y-4">
+            <legend className="mb-0">{recommenderCommentDisplayName}</legend>
             
-            <label>
-              <div className="form-label">{recommenderNameDisplayName} <span className="form-label-memo">(任意・{recommenderNameMaxLength}文字以内)</span></div>
+            <label className="space-y-1">
+              <div><span className="font-bold">{recommenderNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{recommenderNameMaxLength}文字以内)</span></div>
               <input type="text" placeholder={recommenderNameDisplayName} value={recommenderName} maxLength={recommenderNameMaxLength} onChange={event => setRecommenderName(event.target.value)} />
             </label>
             
-            <label>
-              <div className="form-label">{recommenderCommentDisplayName} <span className="form-label-memo">(必須・{recommenderCommentMaxLength}文字以内)</span></div>
-              <textarea placeholder={recommenderCommentDisplayName} value={recommenderComment} maxLength={recommenderCommentMaxLength} onChange={event => setRecommenderComment(event.target.value)} required rows={6} />
+            <label className="space-y-1">
+              <div><span className="font-bold">{recommenderCommentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{recommenderCommentMaxLength}文字以内)</span></div>
+              <textarea placeholder={recommenderCommentDisplayName} value={recommenderComment} maxLength={recommenderCommentMaxLength} onChange={event => setRecommenderComment(event.target.value)} required rows={4} />
             </label>
           </fieldset>
         )}
         
         {isSelf === 1 && (
-          <fieldset>
-            <legend>{passwordDisplayName}</legend>
+          <fieldset className="space-y-4">
+            <legend className="mb-0">{passwordDisplayName}</legend>
             
-            <label>
-              <div className="form-label">{passwordDisplayName} <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
+            <label className="space-y-1">
+              <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{passwordMaxLength}文字以内)</span></div>
               <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
             </label>
           </fieldset>
@@ -266,12 +275,12 @@ export default function New(): ReactElement {
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+        {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
         
-        <p><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatch != null}>{isSubmitting ? '送信中…' : '登録する'}</button></p>
+        <div><button type="submit" disabled={isSubmitting || isDenyDomain || exactMatch != null}>{isSubmitting ? '送信中…' : '登録する'}</button></div>
       </form>
       
-      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
+      <div className="text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

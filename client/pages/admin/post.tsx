@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
@@ -13,6 +12,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { PostAdmin } from '../../../shared/types/admin/admin-post';
 
 export default function AdminPost(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -35,6 +35,8 @@ export default function AdminPost(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
+    
     if(id == null) {
       setLoadError('サイト ID が指定されていません');
       setIsLoading(false);
@@ -63,25 +65,25 @@ export default function AdminPost(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [id]);
+  }, [location.key, id]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     setError('');
     
+    const submittedSiteId        = isEmpty(siteId) ? null : Number(siteId);
+    const isValidSubmittedSiteId = isEmpty(siteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
+    
+    const payload = {
+      site_id  : isValidSubmittedSiteId ? submittedSiteId : null,
+      user_name: userName,
+      content  : content,
+      is_admin : isAdmin
+    };
+    const parsed = adminUpdatePostSchema.safeParse(payload);
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
+    
     try {
-      const submittedSiteId        = isEmpty(siteId) ? null : Number(siteId);
-      const isValidSubmittedSiteId = isEmpty(siteId) || (submittedSiteId != null && Number.isInteger(submittedSiteId) && submittedSiteId > 0);
-      
-      const payload = {
-        site_id  : isValidSubmittedSiteId ? submittedSiteId : null,
-        user_name: userName,
-        content  : content,
-        is_admin : isAdmin
-      };
-      const parsed = adminUpdatePostSchema.safeParse(payload);
-      if(!parsed.success) return setError(mergeIssues(parsed.error));
-      
       await adminApi.put(`/api/admin/posts/${id}`, { json: parsed.data });
       navigate(`/admin/post?id=${id}`);
     }
@@ -104,57 +106,63 @@ export default function AdminPost(): ReactElement {
   };
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
+    <main>
+      <title>投稿編集・削除 - 個人サイトウェブリング</title>
       <h1>投稿編集・削除</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <p className="text-error">{loadError}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
       ) : post == null ? (
-        <p className="text-error">投稿が見つかりませんでした。</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">投稿が見つかりませんでした</div>
       ) : (
-        <form onSubmit={onSubmit}>
-          <label>
-            <div className="form-label">ID</div>
-            <div>{post.id}</div>
-          </label>
-          <label>
-            <div className="form-label">IP アドレス</div>
-            <div>{post.ip}</div>
-          </label>
-          <label>
-            <div className="form-label">登録日時</div>
-            <div>{convertUtcToJst(post.created_at)}</div>
-          </label>
+        <form className="mb-8 space-y-4" onSubmit={onSubmit}>
+          <table>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td className="w-full">{post.id}</td>
+              </tr>
+              <tr>
+                <th>IP アドレス</th>
+                <td className="w-full">{post.ip}</td>
+              </tr>
+              <tr>
+                <th>投稿日時</th>
+                <td className="w-full">{convertUtcToJst(post.created_at)}</td>
+              </tr>
+            </tbody>
+          </table>
           
-          <label>
-            <div className="form-label">{siteIdDisplayName} <span className="form-label-memo">(任意)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{siteIdDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意)</span></div>
             <input type="text" placeholder={siteIdDisplayName} value={siteId} onChange={event => setSiteId(event.target.value)} />
           </label>
           
-          <label>
-            <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
           </label>
           
-          <label>
-            <div className="form-label">{contentDisplayName} <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
-            <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
+          <label className="space-y-1">
+            <div><span className="font-bold">{contentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{contentMaxLength}文字以内)</span></div>
+            <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
           </label>
           
-          <label>
-            <div className="form-label"><input type="checkbox" checked={isAdmin === 1} onChange={event => setIsAdmin(event.target.checked ? 1 : 0)} /> 管理者投稿</div>
+          <label className={`cursor-pointer ${isAdmin === 1 ? 'font-bold' : ''}`}>
+            <input type="checkbox" checked={isAdmin === 1} onChange={() => setIsAdmin(prevIsAdmin => prevIsAdmin === 1 ? 0 : 1)} /> リングマスター投稿
           </label>
           
-          {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+          {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
           
-          <p><button type="submit">編集</button></p>
+          <div><button type="submit">編集</button></div>
           
-          <p className="form-delete text-right"><button type="button" onClick={onDelete}>削除</button></p>
+          <div className="form-danger text-right"><button type="button" onClick={onDelete}>物理削除する</button></div>
         </form>
       )}
+      
+      <div className="text-right"><Link to={{ pathname: '/admin/posts', search: '?page=1' }}>サポート掲示板投稿管理</Link> | <Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

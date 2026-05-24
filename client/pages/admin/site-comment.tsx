@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
-import { AdminNavigation } from './components/admin-navigation';
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
@@ -13,6 +12,7 @@ import { extractApiErrorMessage } from '../../helpers/extract-api-error-message'
 import type { SiteCommentAdmin } from '../../../shared/types/admin/admin-site-comment';
 
 export default function AdminSiteComment(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -33,6 +33,8 @@ export default function AdminSiteComment(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
+    
     if(id == null) {
       setLoadError('コメント ID が指定されていません');
       setIsLoading(false);
@@ -59,7 +61,7 @@ export default function AdminSiteComment(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [id]);
+  }, [location.key, id]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -95,52 +97,58 @@ export default function AdminSiteComment(): ReactElement {
   };
   
   return (
-    <main className="page-container">
-      <AdminNavigation />
+    <main>
+      <title>サイト別コメント編集・削除 - 個人サイトウェブリング</title>
       <h1>サイト別コメント編集・削除</h1>
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <p className="text-error">{loadError}</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
       ) : siteComment == null ? (
-        <p className="text-error">コメントが見つかりませんでした。</p>
+        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">コメントが見つかりませんでした</div>
       ) : (
-        <form onSubmit={onSubmit}>
-          <label>
-            <div className="form-label">ID</div>
-            <div>{siteComment.id}</div>
-          </label>
-          <label>
-            <div className="form-label">サイト ID</div>
-            <div><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></div>
-          </label>
-          <label>
-            <div className="form-label">IP アドレス</div>
-            <div>{siteComment.ip}</div>
-          </label>
-          <label>
-            <div className="form-label">投稿日時</div>
-            <div>{convertUtcToJst(siteComment.created_at)}</div>
-          </label>
+        <form className="mb-8 space-y-4" onSubmit={onSubmit}>
+          <table>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td className="w-full">{siteComment.id}</td>
+              </tr>
+              <tr>
+                <th>サイト ID</th>
+                <td className="w-full"><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></td>
+              </tr>
+              <tr>
+                <th>IP アドレス</th>
+                <td className="w-full">{siteComment.ip}</td>
+              </tr>
+              <tr>
+                <th>投稿日時</th>
+                <td className="w-full">{convertUtcToJst(siteComment.created_at)}</td>
+              </tr>
+            </tbody>
+          </table>
           
-          <label>
-            <div className="form-label">{userNameDisplayName} <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
+          <label className="space-y-1">
+            <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
           </label>
           
-          <label>
-            <div className="form-label">{commentDisplayName} <span className="form-label-memo">(必須・{commentMaxLength}文字以内)</span></div>
-            <textarea placeholder={commentDisplayName} value={content} maxLength={commentMaxLength} onChange={event => setContent(event.target.value)} required rows={6} />
+          <label className="space-y-1">
+            <div><span className="font-bold">{commentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{commentMaxLength}文字以内)</span></div>
+            <textarea placeholder={commentDisplayName} value={content} maxLength={commentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
           </label>
           
-          {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+          {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
           
-          <p><button type="submit">編集</button></p>
+          <div><button type="submit">編集</button></div>
           
-          <p className="form-delete text-right"><button type="button" onClick={onDelete}>削除</button></p>
+          <div className="form-danger text-right"><button type="button" onClick={onDelete}>物理削除する</button></div>
         </form>
       )}
+      
+      <div className="text-right"><Link to={{ pathname: '/admin/site-comments', search: '?page=1' }}>サイト別コメント管理</Link> | <Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }
