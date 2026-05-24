@@ -10,6 +10,7 @@ import { adminUpdateSiteSchema } from '../../../../shared/schemas/admin/admin-si
 import { idParamSchema } from '../../../../shared/schemas/id-param-schema';
 import { hashPassword } from '../../../helpers/hash-password';
 import { AdminSiteCommentsRepository } from '../../../repositories/admin/admin-site-comments-repository';
+import { AdminSiteIpsRepository } from '../../../repositories/admin/admin-site-ips-repository';
 import { AdminSitesRepository } from '../../../repositories/admin/admin-sites-repository';
 import { DenyDomainsRepository } from '../../../repositories/deny-domains-repository';
 import { SiteTagsRepository } from '../../../repositories/site-tags-repository';
@@ -20,7 +21,6 @@ import { SiteTagService } from '../../../services/site-tag-service';
 import { SiteUrlService } from '../../../services/site-url-service';
 
 import type { HonoBindings } from '../../../types/hono-bindings';
-import { AdminSiteIpsRepository } from '../../../repositories/admin/admin-site-ips-repository';
 
 export const adminSites = new Hono<{ Bindings: HonoBindings; }>();
 export const adminSitesPath = '/sites';

@@ -145,7 +145,7 @@ export default function New(): ReactElement {
       <div className="mb-8">個人サイトをウェブリングに登録します。他薦・自薦を選んでフォームに入力してください。</div>
       
       <form className="mb-8 space-y-6" onSubmit={onSubmit}>
-        <fieldset>
+        <fieldset className="bg-white">
           <legend>登録種別</legend>
           
           <div className="space-x-4">
@@ -158,7 +158,7 @@ export default function New(): ReactElement {
           </div>
         </fieldset>
         
-        <fieldset className="space-y-4">
+        <fieldset className="space-y-4 bg-white">
           <legend className="mb-0">サイト情報</legend>
           
           <label className="space-y-1">
@@ -243,11 +243,11 @@ export default function New(): ReactElement {
             </div>
           </div>
           
-          {/* TODO : Blur 時に、`https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+          {/* TODO : Blur 時に `https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
         </fieldset>
         
         {isSelf === 0 && (
-          <fieldset className="space-y-4">
+          <fieldset className="space-y-4 bg-white">
             <legend className="mb-0">{recommenderCommentDisplayName}</legend>
             
             <label className="space-y-1">
@@ -263,7 +263,7 @@ export default function New(): ReactElement {
         )}
         
         {isSelf === 1 && (
-          <fieldset className="space-y-4">
+          <fieldset className="space-y-4 bg-white">
             <legend className="mb-0">{passwordDisplayName}</legend>
             
             <label className="space-y-1">

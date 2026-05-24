@@ -134,7 +134,7 @@ export default function Site(): ReactElement {
         <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
       ) : (
         <>
-          <section className="mb-6 border border-slate-500 p-3 pb-1">
+          <section className="mb-6 border border-slate-500 p-3 pb-1 bg-white">
             <h2 className="mb-4 font-bold text-lg"><a href={site.url} target="_blank">{site.site_name}</a></h2>
             
             {!isEmpty(site.banner_url) && (
@@ -146,9 +146,12 @@ export default function Site(): ReactElement {
             <div className="mb-4 text-sm whitespace-pre-wrap">{site.description || '説明はありません'}</div>
             
             <ul className="mb-4 text-slate-500 text-xs">
+              <li>
+                ID : [{site.id}]
+                {site.is_self === 1 ? (<span className="ml-2 p-1 font-bold text-emerald-600 bg-emerald-50">自薦</span>) : (<span className="ml-2 p-1 font-bold text-indigo-600 bg-indigo-50">他薦</span>)}
+              </li>
               <li>管理人 : {site.owner_name || '-'}</li>
               <li>更新日 : {convertUtcToJst(site.updated_at, true)}</li>
-              <li className="mt-1">{site.is_self === 1 ? (<span className="p-1 font-bold text-emerald-600 bg-emerald-50">自薦</span>) : (<span className="p-1 font-bold text-indigo-600 bg-indigo-50">他薦</span>)}</li>
             </ul>
             
             <div>
@@ -190,7 +193,7 @@ export default function Site(): ReactElement {
           </section>
           
           <form className="mb-10" onSubmit={onSubmit}>
-            <fieldset className="space-y-4">
+            <fieldset className="space-y-4 bg-white">
               <legend className="mb-0">コメントを投稿する</legend>
               
               <label className="space-y-1">
@@ -211,11 +214,11 @@ export default function Site(): ReactElement {
               <div><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></div>
             </fieldset>
           </form>
-          
         </>
       )}
       
-      <div className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧へ戻る</Link></div>
+      <div className="mb-2 text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧へ戻る</Link></div>
+      <div className="text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

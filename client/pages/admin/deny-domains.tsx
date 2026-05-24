@@ -1,13 +1,14 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { Link } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
-import { domainDisplayName, domainMaxLength } from '../../../shared/schemas/admin/admin-deny-domain-schema';
+import { mergeIssues } from '../../../shared/helpers/merge-issues';
+import { adminNewDenyDomainSchema, domainDisplayName, domainMaxLength } from '../../../shared/schemas/admin/admin-deny-domain-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { DenyDomainAdmin } from '../../../shared/types/admin/admin-deny-domain';
-import { Link } from 'react-router';
 
 export default function AdminDenyDomains(): ReactElement {
   // 入力フォーム
@@ -44,8 +45,14 @@ export default function AdminDenyDomains(): ReactElement {
     event.preventDefault();
     setError('');
     
+    const payload = {
+      domain: domain
+    };
+    const parsed = adminNewDenyDomainSchema.safeParse(payload);
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
+    
     try {
-      await adminApi.post('/api/admin/deny-domains', { json: { domain } }).json();
+      await adminApi.post('/api/admin/deny-domains', { json: parsed.data }).json();
       setDomain('');
       await fetchDenyDomains();
     }

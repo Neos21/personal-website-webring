@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { mergeIssues } from '../../../shared/helpers/merge-issues';
+import { adminNewOrUpdateTagSchema } from '../../../shared/schemas/admin/admin-tag-schema';
 import { tagDisplayName, tagMaxLength } from '../../../shared/schemas/site-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
@@ -34,7 +36,11 @@ export default function AdminTags(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
+    setIsLoading(true);
     setError('');
+    setNewTagName('');
+    setEditingTagId(null);
+    setEditingTagName('');
     
     // URL に `page=1` がなければ再読込する
     const currentPageNumber = Number(pageParam);
@@ -63,10 +69,14 @@ export default function AdminTags(): ReactElement {
     event.preventDefault();
     setError('');
     
-    if(isEmpty(newTagName)) return;
+    const payload = {
+      name: newTagName
+    };
+    const parsed = adminNewOrUpdateTagSchema.safeParse(payload);
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {
-      await adminApi.post('/api/admin/tags', { json: { name: newTagName } }).json();
+      await adminApi.post('/api/admin/tags', { json: parsed.data }).json();
       navigate('/admin/tags?page=1');
     }
     catch(error) {
@@ -89,10 +99,14 @@ export default function AdminTags(): ReactElement {
   const onEdit = async (id: number): Promise<void> => {
     setError('');
     
-    if(isEmpty(editingTagName)) return;
+    const payload = {
+      name: editingTagName
+    };
+    const parsed = adminNewOrUpdateTagSchema.safeParse(payload);
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
     
     try {
-      await adminApi.put(`/api/admin/tags/${id}`, { json: { name: editingTagName } });
+      await adminApi.put(`/api/admin/tags/${id}`, { json: parsed.data });
       onCancelEdit();
       navigate(`/admin/tags?page=${page}`);
     }
@@ -115,69 +129,79 @@ export default function AdminTags(): ReactElement {
   
   return (
     <main>
+      <title>タグ管理 - 個人サイトウェブリング</title>
+      <h1>タグ管理</h1>
       
-      <h1>タグ</h1>
-      
-      <form onSubmit={onSubmit}>
-        <label>
-          <div className="form-label">{tagDisplayName}</div>
-          <input type="text" placeholder={tagDisplayName} value={newTagName} maxLength={tagMaxLength} onChange={event => setNewTagName(event.target.value)} required />
-        </label>
-        <p><button type="submit">追加</button></p>
+      <form className="mb-8 flex gap-x-3" onSubmit={onSubmit}>
+        <input className="flex-1" type="text" placeholder={tagDisplayName} value={newTagName} maxLength={tagMaxLength} onChange={event => setNewTagName(event.target.value)} required />
+        <button className="flex-none" type="submit">追加</button>
       </form>
       
-      {!isEmpty(error) && (<p className="text-error">{error}</p>)}
+      {!isEmpty(error) && (<div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
       
       {isLoading ? (
-        <p className="loading">読み込み中…</p>
+        <div className="loading mb-8">読み込み中…</div>
       ) : tags.length === 0 ? (
-        <p>タグはありません。</p>
+        <>
+          <div className="mb-8 text-slate-500 text-sm">タグはありません。</div>
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>タグ名</th>
-              <th>編集・削除</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tags.map(tag => (
-              <tr key={tag.id}>
-                <td className="nowrap">{tag.id}</td>
-                <td>
-                  {editingTagId === tag.id ? (
-                    <input type="text" placeholder={tagDisplayName} value={editingTagName} onChange={event => setEditingTagName(event.target.value)} required />
-                  ) : (
-                    tag.name
-                  )}
-                </td>
-                <td>
-                  {editingTagId === tag.id ? (
-                    <>
-                      <button type="button" onClick={() => onEdit(tag.id)}>保存</button>
-                      <button type="button" onClick={onCancelEdit}>取消</button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" onClick={() => onStartEdit(tag)}>編集</button>
-                      <span className="form-delete"><button type="button" onClick={() => onDelete(tag.id)}>削除</button></span>
-                    </>
-                  )}
-                </td>
+        <>
+          <table className="mb-8">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>タグ名</th>
+                <th>編集・削除</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tags.map(tag => (
+                <tr key={tag.id}>
+                  <td className="text-right whitespace-nowrap">{tag.id}</td>
+                  <td className="w-full">
+                    {editingTagId === tag.id ? (
+                      <input type="text" placeholder={tagDisplayName} value={editingTagName} onChange={event => setEditingTagName(event.target.value)} required />
+                    ) : (
+                      tag.name
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap">
+                    {editingTagId === tag.id ? (
+                      <>
+                        <button type="button" onClick={() => onEdit(tag.id)}>保存</button>
+                        <button className="ml-2" type="button" onClick={onCancelEdit}>取消</button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => onStartEdit(tag)}>編集</button>
+                        <span className="form-danger ml-2"><button type="button" onClick={() => onDelete(tag.id)}>削除</button></span>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {(page > 1 || hasNext) && (
+            <div className="mb-8 space-x-2 text-sm text-center">
+              {page > 1            && (<Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
+              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {hasNext             && (<Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
+            </div>
+          )}
+        </>
       )}
       
-      {(page > 1 || hasNext) && (
-        <p className="text-center">
-          {page > 1            && (<Link to={{ pathname: '/admin/tags', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-          {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
-          {hasNext             && (<Link to={{ pathname: '/admin/tags', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
-        </p>
-      )}
+      <div className="text-right"><Link to="/admin/dashboard">ダッシュボード</Link> | <Link to="/">トップ</Link></div>
     </main>
   );
 }

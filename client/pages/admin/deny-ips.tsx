@@ -1,13 +1,14 @@
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { Link } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
-import { ipDisplayName } from '../../../shared/schemas/admin/admin-deny-ip-schema';
+import { mergeIssues } from '../../../shared/helpers/merge-issues';
+import { adminNewDenyIpSchema, ipDisplayName } from '../../../shared/schemas/admin/admin-deny-ip-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { DenyIpAdmin } from '../../../shared/types/admin/admin-deny-ip';
-import { Link } from 'react-router';
 
 export default function AdminDenyIps(): ReactElement {
   // 入力フォーム
@@ -44,8 +45,14 @@ export default function AdminDenyIps(): ReactElement {
     event.preventDefault();
     setError('');
     
+    const payload = {
+      ip: ip
+    };
+    const parsed = adminNewDenyIpSchema.safeParse(payload);
+    if(!parsed.success) return setError(mergeIssues(parsed.error));
+    
     try {
-      await adminApi.post('/api/admin/deny-ips', { json: { ip } }).json();
+      await adminApi.post('/api/admin/deny-ips', { json: parsed.data }).json();
       setIp('');
       await fetchDenyIps();
     }

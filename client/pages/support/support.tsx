@@ -176,11 +176,11 @@ export default function Support(): ReactElement {
               <div className="mb-8"><Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板の全体の投稿を見る場合はコチラ</Link></div>
             </>
           ) : (
-            <div className="mb-8">当サイトに関するご意見・お問い合わせなどがありましたらコチラにドウゾ。</div>
+            <div className="mb-8">本ウェブリングに関するご意見・お問い合わせ・バグ報告などありましたらコチラにドウゾ。</div>
           )}
           
           <form className="mb-10" onSubmit={onSubmit}>
-            <fieldset className="space-y-4">
+            <fieldset className="space-y-4 bg-white">
               <legend className="mb-0">投稿する</legend>
               
               <label className="space-y-1">
@@ -189,7 +189,7 @@ export default function Support(): ReactElement {
               </label>
               
               {lookupSite != null && (
-                <div className="p-4 text-emerald-600 bg-emerald-50">
+                <div className="p-4 text-emerald-600 text-sm bg-emerald-50">
                   <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}&page=1` }}>{lookupSite.site_name}</Link>
                 </div>
               )}
@@ -234,11 +234,11 @@ export default function Support(): ReactElement {
                     <span>{convertUtcToJst(post.created_at)}</span>
                     {post.is_admin ? (
                       <>
-                        <span className="ml-3">{post.user_name || '名無し'}</span>
+                        <span className="ml-3 font-bold">{post.user_name || '名無し'}</span>
                         <span className="ml-3 p-1 font-bold text-emerald-600 text-xs bg-emerald-50">リングマスター</span>
                       </>
                     ) : (
-                      <span className="ml-3">{post.user_name || '名無し'} さん</span>
+                      <span className="ml-3 font-bold">{post.user_name || '名無し'} さん</span>
                     )}
                     {post.site_id != null && (
                       <Link className="ml-3" to={{ pathname: '/site', search: `?id=${post.site_id}&page=1` }}>サイト ID [{post.site_id}]</Link>

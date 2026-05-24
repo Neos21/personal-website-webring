@@ -81,11 +81,12 @@ export default function Edit(): ReactElement {
           
           {site.is_self === 1 && (<DeleteSiteForm site={site} />)}
           
-          <div className="text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト詳細へ戻る</Link></div>
+          <div className="mb-2 text-right"><Link to={{ pathname: '/site', search: `?id=${siteId}&page=1` }}>サイト詳細へ戻る</Link></div>
         </>
       )}
       
-      <div className="text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧へ戻る</Link></div>
+      <div className="mb-2 text-right"><Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧へ戻る</Link></div>
+      <div className="text-right"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

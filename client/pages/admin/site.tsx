@@ -1,3 +1,4 @@
+import ky from 'ky';
 import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
@@ -11,7 +12,6 @@ import { convertBannerSizeToDimensions, type BannerSize } from '../../helpers/co
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
 
 import type { SiteAdminWithTags } from '../../../shared/types/admin/admin-site';
-import ky from 'ky';
 import type { SiteNameUrl } from '../../../shared/types/site';
 
 export default function AdminSite(): ReactElement {
@@ -121,7 +121,7 @@ export default function AdminSite(): ReactElement {
     
     // 重複・類似 URL のチェック
     try {
-      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site.id } }).json<{ result: { exact_match: SiteNameUrl | null; near_match: SiteNameUrl | null; }; }>();
+      const response = await ky.get('/api/sites/search-url', { searchParams: { url: inputUrl, id: site!.id } }).json<{ result: { exact_match: SiteNameUrl | null; near_match: SiteNameUrl | null; }; }>();
       setExactMatch(response.result.exact_match);
       setNearMatch(response.result.near_match);
     }
@@ -287,11 +287,11 @@ export default function AdminSite(): ReactElement {
           </label>
           
           {tags.length > 0 && (
-            <p className="space-x-2 space-y-2">
+            <div className="space-x-2 space-y-2">
               {tags.map((tag, index) => (
                 <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prevTags => prevTags.filter((_, i) => i !== index))}>{tag} ×</button>
               ))}
-            </p>
+            </div>
           )}
           
           <label className="space-y-1">
@@ -311,7 +311,7 @@ export default function AdminSite(): ReactElement {
             </div>
           </div>
           
-          {/* TODO : 初期表示時および Blur 時に、`https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+          {/* TODO : 初期表示時および Blur 時に `https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
           
           <label className="space-y-1">
             <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>

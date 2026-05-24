@@ -13,6 +13,7 @@
     "preview-only": "wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "deploy-only": "wrangler deploy",
+    "eslint": "eslint",
     "tsc": "tsc",
     "wrangler": "wrangler"
   },

@@ -3,6 +3,10 @@ import { index, route, type RouteConfig } from '@react-router/dev/routes';
 export default [
   index('./pages/index/index.tsx'),
   
+  route('/prev'  , './pages/prev/prev.tsx'),
+  route('/next'  , './pages/next/next.tsx'),
+  route('/random', './pages/random/random.tsx'),
+  
   route('/new'    , './pages/new/new.tsx'),
   route('/list'   , './pages/list/list.tsx'),
   route('/site'   , './pages/site/site.tsx'),

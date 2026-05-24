@@ -126,10 +126,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
   
   return (
     <form className="mb-8 space-y-6" onSubmit={onSubmit}>
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-4 bg-white">
         <legend className="mb-0">サイト編集</legend>
         
-        <label className="space-y-1">
+        <label className="space-y-1 bg-white">
           <div><span className="font-bold">{siteNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{siteNameMaxLength}文字以内)</span></div>
           <input type="text" placeholder={siteNameDisplayName} value={siteName} maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required />
         </label>
@@ -187,11 +187,11 @@ export function EditSiteForm({ site }: Props): ReactElement {
         </label>
         
         {tags.length > 0 && (
-          <p className="space-x-2 space-y-2">
+          <div className="space-x-2 space-y-2">
             {tags.map((tag, index) => (
               <button type="button" key={`${tag}-${index}`} onClick={() => setTags(prevTags => prevTags.filter((_, i) => i !== index))}>{tag} ×</button>
             ))}
-          </p>
+          </div>
         )}
         
         <label className="space-y-1">
@@ -211,10 +211,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
           </div>
         </div>
         
-        {/* TODO : 初期表示時および Blur 時に、`https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+        {/* TODO : 初期表示時および Blur 時に `https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
       </fieldset>
       
-      <fieldset className="space-y-4">
+      <fieldset className="space-y-4 bg-white">
         <legend className="mb-0">{site.is_self === 1 ? passwordDisplayName : `新しい${passwordDisplayName}`}</legend>
         
         <div className="text-slate-500 text-sm">{site.is_self === 1 ? '更新を適用するために管理パスワードを入力してください。' : '自薦に切り替えるため、新しいパスワードを設定してください。'}</div>

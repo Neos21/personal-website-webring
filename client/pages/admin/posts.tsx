@@ -3,14 +3,14 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { adminNewPostSchema } from '../../../shared/schemas/admin/admin-post-schema';
 import { contentDisplayName, contentMaxLength, siteIdDisplayName, userNameDisplayName, userNameMaxLength } from '../../../shared/schemas/post-schema';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
+import { useAdminStore } from '../../stores/admin-store';
 
 import type { PostAdmin } from '../../../shared/types/admin/admin-post';
-import { mergeIssues } from '../../../shared/helpers/merge-issues';
-import { useAdminStore } from '../../stores/admin-store';
 
 export default function AdminPosts(): ReactElement {
   const location = useLocation();
@@ -151,7 +151,7 @@ export default function AdminPosts(): ReactElement {
               </thead>
               <tbody>
                 {posts.map(post => (
-                  <tr key={post.id} className={post.is_admin === 1 ? 'row-admin' : ''}>
+                  <tr key={post.id} className={post.is_admin === 1 ? '[&>td]:bg-emerald-50' : ''}>  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
                     <td className="font-bold text-right whitespace-nowrap"><Link to={{ pathname: '/admin/post', search: `?id=${post.id}` }}>{post.id}</Link></td>
                     <td className="          text-right whitespace-nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
                     <td className="min-w-25        text-sm">{post.user_name || '-'}</td>

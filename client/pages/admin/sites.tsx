@@ -84,7 +84,7 @@ export default function AdminSites(): ReactElement {
               </thead>
               <tbody>
                 {sites.map(site => (
-                  <tr key={site.id} className={site.is_deleted === 1 ? 'row-deleted' : ''}>
+                  <tr key={site.id} className={site.is_deleted === 1 ? '[&>td]:bg-red-50' : ''}>  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
                     <td className="text-right whitespace-nowrap">{site.id}</td>
                     <td className="w-full"><Link to={{ pathname: '/admin/site', search: `?id=${site.id}` }}>{site.site_name}</Link></td>
                   </tr>

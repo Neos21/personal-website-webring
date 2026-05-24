@@ -13,7 +13,7 @@
     @apply h-full text-gray-800 break-all cursor-default scrollbar-gutter-stable;
     
     text-decoration-skip-ink: none;
-    background: color-mix(in srgb, var(--color-amber-50) 20%, transparent);
+    background: color-mix(in srgb, var(--color-yellow-50) 50%, transparent);
   }
   
   body {
@@ -21,6 +21,8 @@
   }
   
   a {
+    @apply cursor-crosshair;
+    
     color: rgb(var(--colour-link-base));
     
     &:hover {
@@ -86,7 +88,7 @@
   }
   
   main {
-    @apply max-w-4xl mx-auto py-10 px-4;
+    @apply max-w-4xl mx-auto pt-12 px-4 pb-16;
   }
   
   h1 {
@@ -146,8 +148,16 @@
     animation: fade-first-view-animation .2s .5s ease forwards;  /* duration delay の順 */
     opacity: 0;
   }
-    @keyframes fade-first-view-animation {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+  .fade-redirect {
+    animation: fade-first-view-animation .3s 1.5s ease forwards;
+    opacity: 0;
+    
+    & a:hover {
+      text-decoration: underline overline;
     }
+  }
+  @keyframes fade-first-view-animation {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
 }

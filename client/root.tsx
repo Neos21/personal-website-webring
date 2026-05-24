@@ -1,6 +1,7 @@
 import { type ReactElement, type ReactNode } from 'react';
 import { isRouteErrorResponse, Link, Links, Outlet, Scripts, ScrollRestoration } from 'react-router';
 
+import { appConstants } from '../shared/constants/app-constants';
 import { isEmpty } from '../shared/helpers/is-empty';
 
 import type { Route } from './+types/root';
@@ -12,26 +13,26 @@ export function Layout({ children }: { children: ReactNode }): ReactElement {
     <html lang="ja">
       <head>
         <meta charSet="UTF-8" />
-        <title>個人サイトウェブリング</title>
+        <title>{appConstants.siteNameJapanese}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0088ff" />
-        <meta name="description" content="個人サイトウェブリング" />
-        <meta name="keywords" content="Personal WebSite WebRing, 個人サイトウェブリング" />
+        <meta name="description" content={appConstants.siteNameJapanese} />
+        <meta name="keywords" content={`${appConstants.siteNameJapanese}, ${appConstants.siteNameEnglish}`} />
         <meta name="robots" content="index, follow" />
         
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="個人サイトウェブリング" />
-        <meta property="og:title" content="個人サイトウェブリング" />
-        <meta property="og:description" content="個人サイトウェブリング" />
-        <meta property="og:url" content="https://personal-website-webring.neos21.workers.dev" />
-        <meta property="og:image" content="https://personal-website-webring.neos21.workers.dev/icon-512.png" />
+        <meta property="og:site_name" content={appConstants.siteNameJapanese} />
+        <meta property="og:title" content={appConstants.siteNameJapanese} />
+        <meta property="og:description" content={appConstants.siteNameJapanese} />
+        <meta property="og:url" content={appConstants.origin} />
+        <meta property="og:image" content={`${appConstants.origin}/icon-512.png`} />
         <meta property="og:locale" content="ja_JP" />
         
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:title" content="個人サイトウェブリング" />
-        <meta property="twitter:description" content="個人サイトウェブリング" />
-        <meta property="twitter:url" content="https://personal-website-webring.neos21.workers.dev" />
-        <meta property="twitter:image" content="https://personal-website-webring.neos21.workers.dev/icon-512.png" />
+        <meta property="twitter:title" content={appConstants.siteNameJapanese} />
+        <meta property="twitter:description" content={appConstants.siteNameJapanese} />
+        <meta property="twitter:url" content={appConstants.origin} />
+        <meta property="twitter:image" content={`${appConstants.origin}/icon-512.png`} />
         
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -76,10 +77,14 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactElement
   
   return (
     <main>
-      <h1>個人サイトウェブリング</h1>
-      <h2 className="text-error">{title}</h2>
-      <p className="text-error">{text}</p>
-      <p className="text-right"><Link to="/">トップへ戻る</Link></p>
+      <h1>{appConstants.siteNameJapanese}</h1>
+      
+      <div className="mb-8 p-4 font-bold text-red-600 text-center bg-red-50">
+        <div className="mb-4 text-lg">{title}</div>
+        <div>{text}</div>
+      </div>
+      
+      <div className="text-center"><Link to="/">トップへ戻る</Link></div>
     </main>
   );
 }

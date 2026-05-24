@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
-
 import { Link, useNavigate } from 'react-router';
+
 import { useAdminStore } from '../../stores/admin-store';
 
 export default function AdminDashboard(): ReactElement {

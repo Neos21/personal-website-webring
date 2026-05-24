@@ -93,39 +93,46 @@ export class SitesRepository {
     }
   }
   
-  public async findNext(id: number): Promise<SiteUrl | null> {
+  public async findNext(id: number): Promise<SiteNameUrl | null> {
     // 現在の ID より大きい最初のサイトを取得する
     let site = await this.db
-      .prepare('SELECT id, url FROM sites WHERE id >  ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .prepare('SELECT id, site_name, url FROM sites WHERE id >  ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
-      .first<SiteUrl>();
+      .first<SiteNameUrl>();
     // 見つからない場合は先頭へ戻る
     if(site == null) site = await this.db
-      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
-      .first<SiteUrl>();
+      .first<SiteNameUrl>();
     return site;
   }
   
-  public async findPrev(id: number): Promise<SiteUrl | null> {
+  public async findPrev(id: number): Promise<SiteNameUrl | null> {
     // 現在の ID より小さい最後のサイトを取得する
     let site = await this.db
-      .prepare('SELECT id, url FROM sites WHERE id <  ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT id, site_name, url FROM sites WHERE id <  ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
-      .first<SiteUrl>();
+      .first<SiteNameUrl>();
     // 見つからない場合は末尾へ戻る
     if(site == null) site = await this.db
-      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
-      .first<SiteUrl>();
+      .first<SiteNameUrl>();
     return site;
   }
   
-  public async findRandom(id: number): Promise<SiteUrl | null> {
-    return await this.db
-      .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
-      .bind(id)
-      .first<SiteUrl>();
+  public async findRandom(id: number | null): Promise<SiteNameUrl | null> {
+    if(id == null) {
+      return await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE             is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
+        .first<SiteNameUrl>();
+    }
+    else {
+      return await this.db
+        .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
+        .bind(id)
+        .first<SiteNameUrl>();
+    }
   }
   
   public async create(site: NewSite): Promise<number> {
