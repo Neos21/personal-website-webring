@@ -18,7 +18,7 @@ export default function AdminDashboard(): ReactElement {
       
       <ul className="mb-8 pl-6 list-disc">
         <li><Link to={{ pathname: '/admin/sites', search: '?page=1' }}>サイト管理</Link></li>
-        {/* TODO : サイト操作 IP アドレス履歴管理 : 全件表示のみ */}
+        <li><Link to="/admin/site-ips">サイト操作 IP アドレス履歴管理</Link></li>
         <li><Link to={{ pathname: '/admin/site-comments', search: '?page=1' }}>サイト別コメント管理</Link></li>
         <li><Link to={{ pathname: '/admin/posts', search: '?page=1' }}>サポート掲示板投稿管理</Link></li>
         <li><Link to={{ pathname: '/admin/tags', search: '?page=1' }}>タグ管理</Link></li>

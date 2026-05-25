@@ -5,6 +5,7 @@ import { adminDenyIps, adminDenyIpsPath } from './deny-ips';
 import { adminLogin, adminLoginPath } from './login';
 import { adminPosts, adminPostsPath } from './posts';
 import { adminSiteComments, adminSiteCommentsPath } from './site-comments';
+import { adminSiteIps, adminSiteIpsPath } from './site-ips';
 import { adminSites, adminSitesPath } from './sites';
 import { adminTags, adminTagsPath } from './tags';
 
@@ -15,6 +16,7 @@ export const adminPath = '/admin';
 
 admin.route(adminLoginPath       , adminLogin);
 admin.route(adminSitesPath       , adminSites);
+admin.route(adminSiteIpsPath     , adminSiteIps);
 admin.route(adminSiteCommentsPath, adminSiteComments);
 admin.route(adminPostsPath       , adminPosts);
 admin.route(adminTagsPath        , adminTags);

@@ -41,7 +41,7 @@ export default function Index(): ReactElement {
         <p>サイトのどこかにナビゲーションバーを設置していただけると、個人サイトの輪が広がります。(必須ではありません)</p>
         <p><span className="text-red-600">【ID】</span> の部分を、登録した時のあなたの ID に差し替えてください。HTML は自由に改造してもらっても結構です。</p>
         <p><textarea value={exampleNavigationBarHtml} rows={4} readOnly={true} /></p>
-        <table className="w-auto border border-black">
+        <table className="w-auto mx-auto border border-black">
           <tbody>
             <tr>
               <td className="p-0 bg-white">
@@ -64,6 +64,7 @@ export default function Index(): ReactElement {
         <p>本ウェブリングに関するお問い合わせは<Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板</Link>までご連絡ください。</p>
       </div>
       
+      <div className="mb-2"><img className="mx-auto" src="/banner-88x31.png" width="88" height="31" alt={appConstants.siteNameJapanese} /></div>
       <div className="text-slate-500 text-sm text-center">Copyright © 2026 <a className="text-inherit" href="https://github.com/Neos21/personal-website-webring">{appConstants.siteNameJapanese}</a>, All rights reserved.</div>
     </main>
   );

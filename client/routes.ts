@@ -17,6 +17,7 @@ export default [
   route('/admin/dashboard'    , './pages/admin/dashboard.tsx'),
   route('/admin/sites'        , './pages/admin/sites.tsx'),
   route('/admin/site'         , './pages/admin/site.tsx'),
+  route('/admin/site-ips'     , './pages/admin/site-ips.tsx'),
   route('/admin/site-comments', './pages/admin/site-comments.tsx'),
   route('/admin/site-comment' , './pages/admin/site-comment.tsx'),
   route('/admin/posts'        , './pages/admin/posts.tsx'),

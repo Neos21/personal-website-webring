@@ -3,6 +3,7 @@ import z from 'zod';
 import { preprocessBooleanNumber, preprocessMultiLinesString, preprocessOneLineString, preprocessUrl, propertyTurnstileToken } from './schema-utilities';
 import { tagNameSchema } from './tag-schema';
 import { isEmpty } from '../helpers/is-empty';
+import { isImageUrl } from '../helpers/is-image-url';
 
 export const siteNameDisplayName           = 'サイト名'             as const;
 export const siteNameMaxLength             = 100                    as const;
@@ -27,9 +28,7 @@ export const recommenderCommentDisplayName = '推薦コメント'         as con
 export const recommenderCommentMaxLength   = 500                    as const;
 
 export const refineBannerUrl = (data: any, context: any): void => {  // eslint-disable-line @typescript-eslint/no-explicit-any
-  if(isEmpty(data.banner_url)) return;
-  const lowerBannerUrl = data.banner_url.toLowerCase();
-  if(['.jpg', '.jpeg', '.gif', '.png', '.webp'].some(extension => lowerBannerUrl.endsWith(extension))) return;
+  if(isEmpty(data.banner_url) || isImageUrl(data.banner_url)) return;
   context.addIssue({ code: 'custom', message: `${bannerUrlDisplayName} の末尾は .jpg .jpeg .gif .png .webp のみです` });
 };
 

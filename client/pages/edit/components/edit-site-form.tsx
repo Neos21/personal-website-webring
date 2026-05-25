@@ -3,6 +3,7 @@ import { useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { isEmpty } from '../../../../shared/helpers/is-empty';
+import { isImageUrl } from '../../../../shared/helpers/is-image-url';
 import { mergeIssues } from '../../../../shared/helpers/merge-issues';
 import { bannerUrlDisplayName, bannerUrlMaxLength, descriptionDisplayName, descriptionMaxLength, updateSiteSchema, ownerNameDisplayName, ownerNameMaxLength, passwordDisplayName, passwordMaxLength, siteNameDisplayName, siteNameMaxLength, tagDisplayName, tagMaxLength, tagsMax, urlDisplayName, urlMaxLength } from '../../../../shared/schemas/site-schema';
 import { TurnstileField } from '../../../components/turnstile-field';
@@ -31,11 +32,12 @@ export function EditSiteForm({ site }: Props): ReactElement {
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   
   // エラー表示系
-  const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
-  const [exactMatch  , setExactMatch  ] = useState<SiteNameUrl | null>(null);
-  const [nearMatch   , setNearMatch   ] = useState<SiteNameUrl | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error       , setError       ] = useState<string>('');
+  const [isDenyDomain , setIsDenyDomain ] = useState<boolean>(false);
+  const [exactMatch   , setExactMatch   ] = useState<SiteNameUrl | null>(null);
+  const [nearMatch    , setNearMatch    ] = useState<SiteNameUrl | null>(null);
+  const [isShownBanner, setIsShownBanner] = useState<boolean>(!isEmpty(site.banner_url) && isImageUrl(site.banner_url));
+  const [isSubmitting , setIsSubmitting ] = useState<boolean>(false);
+  const [error        , setError        ] = useState<string>('');
   
   const onBlurUrl = async (inputUrl: string): Promise<void> => {
     if(isEmpty(inputUrl)) {
@@ -196,7 +198,10 @@ export function EditSiteForm({ site }: Props): ReactElement {
         
         <label className="space-y-1">
           <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{bannerUrlMaxLength}文字以内)</span></div>
-          <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} />
+          <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength}
+            onChange={event => { setIsShownBanner(false); setBannerUrl(event.target.value); }}
+            onBlur={() => setIsShownBanner(!isEmpty(bannerUrl) && isImageUrl(bannerUrl))}
+          />
         </label>
         
         <div className="space-y-1">
@@ -211,7 +216,13 @@ export function EditSiteForm({ site }: Props): ReactElement {
           </div>
         </div>
         
-        {/* TODO : 初期表示時および Blur 時に `https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+        {isShownBanner && (
+          <img src={bannerUrl}
+            width={bannerSize === '200x40' ? 200 : 88} height={bannerSize === '200x40' ? 40 : 31}
+            style={{ width: bannerSize === '200x40' ? 200 : 88, height: bannerSize === '200x40' ? 40 : 31 }}
+            alt="バナー画像プレビュー" title="バナー画像プレビュー"
+          />
+        )}
       </fieldset>
       
       <fieldset className="space-y-4 bg-white">

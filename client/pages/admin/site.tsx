@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
+import { isImageUrl } from '../../../shared/helpers/is-image-url';
 import { mergeIssues } from '../../../shared/helpers/merge-issues';
 import { adminUpdateSiteSchema } from '../../../shared/schemas/admin/admin-site-schema';
 import { bannerUrlDisplayName, bannerUrlMaxLength, descriptionDisplayName, descriptionMaxLength, ownerNameDisplayName, ownerNameMaxLength, passwordDisplayName, passwordMaxLength, siteNameDisplayName, siteNameMaxLength, tagDisplayName, tagMaxLength, tagsMax, urlDisplayName, urlMaxLength } from '../../../shared/schemas/site-schema';
@@ -40,12 +41,13 @@ export default function AdminSite(): ReactElement {
   const [isDeleted  , setIsDeleted  ] = useState<0 | 1>(0);
   
   // エラー表示系
-  const [isLoading   , setIsLoading   ] = useState<boolean>(true);
-  const [loadError   , setLoadError   ] = useState<string>('');
-  const [isDenyDomain, setIsDenyDomain] = useState<boolean>(false);
-  const [exactMatch  , setExactMatch  ] = useState<SiteNameUrl | null>(null);
-  const [nearMatch   , setNearMatch   ] = useState<SiteNameUrl | null>(null);
-  const [error       , setError       ] = useState<string>('');
+  const [isLoading    , setIsLoading    ] = useState<boolean>(true);
+  const [loadError    , setLoadError    ] = useState<string>('');
+  const [isDenyDomain , setIsDenyDomain ] = useState<boolean>(false);
+  const [exactMatch   , setExactMatch   ] = useState<SiteNameUrl | null>(null);
+  const [nearMatch    , setNearMatch    ] = useState<SiteNameUrl | null>(null);
+  const [isShownBanner, setIsShownBanner] = useState<boolean>(false);
+  const [error        , setError        ] = useState<string>('');
   
   useEffect(() => {
     // 再読込時のための最低限の初期化
@@ -68,15 +70,16 @@ export default function AdminSite(): ReactElement {
         const response = await adminApi.get(`/api/admin/sites/${id}`).json<{ result: SiteAdminWithTags; }>();
         setSite(response.result);
         
-        setIsSelf     (response.result.is_self);
-        setSiteName   (response.result.site_name);
-        setUrl        (response.result.url);
-        setOwnerName  (response.result.owner_name || '');
-        setDescription(response.result.description || '');
-        setTags       (Array.isArray(response.result.tags) && response.result.tags.length > 0 ? response.result.tags.map(tag => tag.name) : []);
-        setBannerUrl  (response.result.banner_url || '');
-        setBannerSize (response.result.banner_width === 88 && response.result.banner_height === 31 ? '88x31' : '200x40');
-        setIsDeleted  (response.result.is_deleted);
+        setIsSelf       (response.result.is_self);
+        setSiteName     (response.result.site_name);
+        setUrl          (response.result.url);
+        setOwnerName    (response.result.owner_name || '');
+        setDescription  (response.result.description || '');
+        setTags         (Array.isArray(response.result.tags) && response.result.tags.length > 0 ? response.result.tags.map(tag => tag.name) : []);
+        setBannerUrl    (response.result.banner_url || '');
+        setBannerSize   (response.result.banner_width === 88 && response.result.banner_height === 31 ? '88x31' : '200x40');
+        setIsDeleted    (response.result.is_deleted);
+        setIsShownBanner(!isEmpty(response.result.banner_url) && isImageUrl(response.result.banner_url));
       }
       catch(error) {
         setError(extractApiErrorMessage(error, 'サイトの取得に失敗しました'));
@@ -296,7 +299,10 @@ export default function AdminSite(): ReactElement {
           
           <label className="space-y-1">
             <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{bannerUrlMaxLength}文字以内)</span></div>
-            <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength} onChange={event => setBannerUrl(event.target.value)} />
+            <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength}
+              onChange={event => { setIsShownBanner(false); setBannerUrl(event.target.value); }}
+              onBlur={() => setIsShownBanner(!isEmpty(bannerUrl) && isImageUrl(bannerUrl))}
+            />
           </label>
           
           <div className="space-y-1">
@@ -311,7 +317,13 @@ export default function AdminSite(): ReactElement {
             </div>
           </div>
           
-          {/* TODO : 初期表示時および Blur 時に `https?://` 始まり・画像拡張子終わりの URL が確認できたらバナー画像プレビューを表示する */}
+          {isShownBanner && (
+            <img src={bannerUrl}
+              width={bannerSize === '200x40' ? 200 : 88} height={bannerSize === '200x40' ? 40 : 31}
+              style={{ width: bannerSize === '200x40' ? 200 : 88, height: bannerSize === '200x40' ? 40 : 31 }}
+              alt="バナー画像プレビュー" title="バナー画像プレビュー"
+            />
+          )}
           
           <label className="space-y-1">
             <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>

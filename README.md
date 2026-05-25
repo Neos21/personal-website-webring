@@ -1,6 +1,6 @@
-# Personal WebSite WebRing
+# 個人サイトウェブリング Personal WebSite WebRing
 
-<https://personal-website-webring.neos21.workers.dev>
+<https://personal-website-webring.neos21.net>
 
 
 ## コンセプト
@@ -183,8 +183,8 @@ $ wrangler d1 execute personal-website-webring --local  --command='SELECT * FROM
 $ wrangler d1 execute personal-website-webring --remote --command='SELECT * FROM 【テーブル名】'
 
 # SQL ファイルを実行する場合
-# $ wrangler d1 execute personal-website-webring --local  --file='./schema.sql'
-# $ wrangler d1 execute personal-website-webring --remote --file='./schema.sql'
+$ wrangler d1 execute personal-website-webring --local  --file='./schema.sql'
+$ wrangler d1 execute personal-website-webring --remote --file='./schema.sql'
 
 # インデックスを確認する
 $ wrangler d1 execute personal-website-webring --local  --command='SELECT * FROM sqlite_master WHERE type = '\''index'\'''
@@ -199,6 +199,10 @@ $ wrangler d1 execute personal-website-webring --remote --command='SELECT * FROM
 
 ```bash
 $ echo 'VALUE' | wrangler secret put 【Secret 名】 --name personal-website-webring
+
+$ echo 'VALUE' | wrangler secret put TURNSTILE_SECRET_KEY --name personal-website-webring
+$ echo 'VALUE' | wrangler secret put ADMIN_PASSWORD       --name personal-website-webring
+$ echo 'VALUE' | wrangler secret put ADMIN_JWT_SECRET     --name personal-website-webring
 ```
 
 
