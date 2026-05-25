@@ -3,6 +3,7 @@ import neosEslintPlugin from '@neos21/neos-eslint-plugin';
 import { defineConfig } from 'eslint/config';
 import importPlugin from 'eslint-plugin-import';
 import pluginReact from 'eslint-plugin-react';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
 import tailwindcss from 'eslint-plugin-tailwindcss';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -59,6 +60,19 @@ export default defineConfig([
       react: {
         version: 'detect'
       }
+    }
+  },
+  
+  {
+    plugins: {
+      'react-hooks': pluginReactHooks as any  // eslint-disable-line @typescript-eslint/no-explicit-any
+    },
+    rules: {
+      ...pluginReactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+      'react-hooks/set-state-in-effect': 'off',  // うるせぇ
+      'react-hooks/immutability': 'off'
     }
   },
   

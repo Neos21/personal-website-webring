@@ -63,7 +63,7 @@ export default function AdminTags(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [location.key, pageParam, page]);
+  }, [location.key, navigate, pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();

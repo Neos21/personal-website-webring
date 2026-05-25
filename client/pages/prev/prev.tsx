@@ -27,7 +27,7 @@ export default function Prev(): ReactElement {
         const id       = idNumber != null && (!Number.isInteger(idNumber) || idNumber <= 0) ? null : idNumber;
         
         const response = await ky.get(`/api/prev${id != null ? '?id=' + id : ''}`).json<{ result: SiteNameUrl; }>();
-        console.log('Prev', site);
+        console.log('Prev', response.result);
         location.href = response.result.url;  // 遷移開始
         setSite(response.result);
       }

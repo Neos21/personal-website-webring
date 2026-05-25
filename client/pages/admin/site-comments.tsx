@@ -51,7 +51,7 @@ export default function AdminSiteComments(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [pageParam, page]);
+  }, [navigate, pageParam, page]);
   
   return (
     <main>

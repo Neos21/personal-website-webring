@@ -22,7 +22,7 @@ export default function Admin(): ReactElement {
   
   useEffect(() => {
     if(!isEmpty(useAdminStore.getState().token)) navigate('/admin/dashboard');
-  }, []);
+  }, [navigate]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();

@@ -27,7 +27,7 @@ export default function Random(): ReactElement {
         const id       = idNumber != null && (!Number.isInteger(idNumber) || idNumber <= 0) ? null : idNumber;
         
         const response = await ky.get(`/api/random${id != null ? '?id=' + id : ''}`).json<{ result: SiteNameUrl; }>();
-        console.log('Random', site);
+        console.log('Random', response.result);
         location.href = response.result.url;  // 遷移開始
         setSite(response.result);
       }

@@ -93,7 +93,8 @@ export default function Support(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [location.key, siteId, pageParam, page]);
+    // `onBlurSiteId` を依存関係に要求されるが、うるせぇ
+  }, [location.key, navigate, siteId, pageParam, page]);  // eslint-disable-line react-hooks/exhaustive-deps
   
   const onBlurSiteId = async (): Promise<void> => {
     if(isEmpty(formSiteId)) {

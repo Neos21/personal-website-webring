@@ -47,17 +47,17 @@ export const newSiteSchemaObject = z.object({
                           preprocessBooleanNumber,
                           z.union([z.literal(0), z.literal(1)])
                         ),
-  site_name           : z.preprocess(
-                          preprocessOneLineString,
-                          z.string({ error: `${siteNameDisplayName}に文字列でないデータが入力されています` })
-                            .min(1, { error: `${siteNameDisplayName}を入力してください` })
-                            .max(siteNameMaxLength, { error: `${siteNameDisplayName}は${siteNameMaxLength}文字以内で入力してください` })
-                        ),
   url                 : z.preprocess(
                           preprocessOneLineString,
                           z.httpUrl({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
                             .min(1, { error: `${urlDisplayName}を入力してください` })
                             .max(urlMaxLength, { error: `${urlDisplayName}は${urlMaxLength}文字以内で入力してください` })
+                        ),
+  site_name           : z.preprocess(
+                          preprocessOneLineString,
+                          z.string({ error: `${siteNameDisplayName}に文字列でないデータが入力されています` })
+                            .min(1, { error: `${siteNameDisplayName}を入力してください` })
+                            .max(siteNameMaxLength, { error: `${siteNameDisplayName}は${siteNameMaxLength}文字以内で入力してください` })
                         ),
   owner_name          : z.preprocess(
                           preprocessOneLineString,

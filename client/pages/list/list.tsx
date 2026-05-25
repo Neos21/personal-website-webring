@@ -52,7 +52,7 @@ export default function List(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [pageParam, page]);
+  }, [navigate, pageParam, page]);
   
   return (
     <main>

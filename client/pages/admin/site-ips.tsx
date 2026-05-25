@@ -51,7 +51,7 @@ export default function AdminSiteIps(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [location.key, pageParam, page]);
+  }, [location.key, navigate, pageParam, page]);
   
   return (
     <main>

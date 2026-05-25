@@ -93,7 +93,7 @@ export default function Site(): ReactElement {
         setIsLoading(false);
       }
     })();
-  }, [location.key, siteId, pageParam, page]);  // `onSubmit` 時の `navigate()` でパラメータが変わらない場合も再読込させるため `location.key` を依存関係に入れる
+  }, [location.key, navigate, siteId, pageParam, page]);  // `onSubmit` 時の `navigate()` でパラメータが変わらない場合も再読込させるため `location.key` を依存関係に入れる
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
