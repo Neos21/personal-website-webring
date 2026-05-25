@@ -15,6 +15,15 @@
       "database_id": "508cba73-65f6-43f5-bb43-b688668ad962"
     }
   ],
+  "routes": [
+    {
+      "pattern": "personal-website-webring.neos21.net",  // 独自ドメインに割り当てる
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": false
+    }
+  ],
+  "workers_dev": false,  // `workers.dev` ドメインを無効にする
   "preview_urls": false,
   "observability": {
     "enabled": true,
