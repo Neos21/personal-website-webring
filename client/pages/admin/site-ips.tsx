@@ -79,9 +79,7 @@ export default function AdminSiteIps(): ReactElement {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>サイト ID</th>
                 <th>操作</th>
-                <th>種別</th>
                 <th>IP アドレス</th>
                 <th>操作日時</th>
               </tr>
@@ -89,12 +87,16 @@ export default function AdminSiteIps(): ReactElement {
             <tbody>
               {siteIps.map(siteIp => (
                 <tr key={siteIp.id}>
-                  <td className="text-right whitespace-nowrap">{siteIp.id}</td>
-                  <td className="text-right whitespace-nowrap"><Link to={{ pathname: '/admin/site', search: `?id=${siteIp.site_id}` }}>{siteIp.site_id}</Link></td>
-                  <td className="whitespace-nowrap">{siteIp.is_created === 1 ? '新規' : '編集'}</td>
-                  <td className="whitespace-nowrap">{siteIp.is_self === 1 ? '自薦' : '他薦'}</td>
-                  <td className="w-full">{siteIp.ip}</td>
-                  <td className="whitespace-nowrap">{convertUtcToJst(siteIp.created_at)}</td>
+                  <td className="text-right whitespace-nowrap">
+                    <div>{siteIp.id}</div>
+                    <div className="font-bold"><Link to={{ pathname: '/admin/site', search: `?id=${siteIp.site_id}` }}>{siteIp.site_id}</Link></div>
+                  </td>
+                  <td className="text-sm whitespace-nowrap">
+                    <div>{siteIp.is_created === 1 ? '新規' : '編集'}</div>
+                    <div>{siteIp.is_self === 1 ? '自薦' : '他薦'}</div>
+                  </td>
+                  <td className="w-full text-sm">{siteIp.ip}</td>
+                  <td className="text-sm whitespace-nowrap">{convertUtcToJst(siteIp.created_at)}</td>
                 </tr>
               ))}
             </tbody>

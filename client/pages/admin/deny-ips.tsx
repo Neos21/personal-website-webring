@@ -104,7 +104,7 @@ export default function AdminDenyIps(): ReactElement {
               <tr key={denyIp.id}>
                 <td className="text-right whitespace-nowrap">{denyIp.id}</td>
                 <td className="w-full">{denyIp.ip}</td>
-                <td className="whitespace-nowrap">{convertUtcToJst(denyIp.created_at)}</td>
+                <td className="text-sm whitespace-nowrap">{convertUtcToJst(denyIp.created_at)}</td>
                 <td className="form-danger whitespace-nowrap"><button type="button" onClick={() => onDelete(denyIp.id)}>削除</button></td>
               </tr>
             ))}

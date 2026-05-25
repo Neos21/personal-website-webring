@@ -104,7 +104,7 @@ export default function AdminDenyDomains(): ReactElement {
               <tr key={domain.id}>
                 <td className="text-right whitespace-nowrap">{domain.id}</td>
                 <td className="w-full">{domain.domain}</td>
-                <td className="whitespace-nowrap">{convertUtcToJst(domain.created_at)}</td>
+                <td className="text-sm whitespace-nowrap">{convertUtcToJst(domain.created_at)}</td>
                 <td className="form-danger whitespace-nowrap"><button type="button" onClick={() => onDelete(domain.id)}>削除</button></td>
               </tr>
             ))}
