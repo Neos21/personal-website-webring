@@ -3,7 +3,10 @@ import { z } from 'zod';
 import { preprocessBooleanNumber, preprocessOneLineString } from '../schema-utilities';
 import { passwordDisplayName, passwordMaxLength, refineBannerUrl, refineBanneSize, updateSiteSchemaObject } from '../site-schema';
 
-export const adminUpdateSiteSchema = updateSiteSchemaObject.omit({ password: true, turnstile_token: true }).extend({
+export const adminUpdateSiteSchema = updateSiteSchemaObject.omit({
+  password       : true,
+  turnstile_token: true
+}).extend({
   is_self   : z.preprocess(
                 preprocessBooleanNumber,
                 z.union([z.literal(0), z.literal(1)])

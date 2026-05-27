@@ -9,9 +9,6 @@ export type SitePublicWithTags = SitePublic & { tags: Array<Tag>; };
 /** 編集・削除時のパスワード認証で使用する */
 export type SiteForAuth = Pick<SiteAdmin, 'id' | 'is_self' | 'password_hash' | 'is_deleted'>;
 
-/** 類似 URL チェック時に使用する */
-export type SiteUrl = Pick<SiteAdmin, 'id' | 'url'>;
-
 /** ウェブリング機能・重複・類似 URL 情報の表示・サポート掲示板のサイト情報表示に使用する */
 export type SiteNameUrl = Pick<SiteAdmin, 'id' | 'site_name' | 'url'>;
 

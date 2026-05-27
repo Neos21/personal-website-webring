@@ -38,6 +38,8 @@ export function Layout({ children }: { children: ReactNode }): ReactElement {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         
+        <link rel="author" href="http://www.hatena.ne.jp/neos21/" />
+        
         <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <link rel="preconnect" href="https://static.cloudflareinsights.com" />
         

@@ -48,7 +48,7 @@ export const newSiteSchemaObject = z.object({
                           z.union([z.literal(0), z.literal(1)])
                         ),
   url                 : z.preprocess(
-                          preprocessOneLineString,
+                          preprocessUrl,
                           z.httpUrl({ error: `${urlDisplayName}に文字列でないデータが入力されています` })
                             .min(1, { error: `${urlDisplayName}を入力してください` })
                             .max(urlMaxLength, { error: `${urlDisplayName}は${urlMaxLength}文字以内で入力してください` })

@@ -1,4 +1,4 @@
-import type { NewSite, SiteForAuth, SiteNameUrl, SitePublic, SiteUrl, UpdateSite } from '../../shared/types/site';
+import type { NewSite, SiteForAuth, SiteNameUrl, SitePublic, UpdateSite } from '../../shared/types/site';
 
 export class SitesRepository {
   constructor(private readonly db: D1Database) { }
@@ -27,52 +27,19 @@ export class SitesRepository {
       .first<SiteForAuth>();
   }
   
-  /** 完全一致 URL の存在チェック用 */
-  public async findActiveUrlByExactUrl(url: string, ignoreId?: number | null): Promise<SiteUrl | null> {
-    if(ignoreId == null) {
-      return await this.db
-        .prepare('SELECT id, url FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
-        .bind(url)
-        .first<SiteUrl>();
-    }
-    else {
-      return await this.db
-        .prepare('SELECT id, url FROM sites WHERE lower(url) = lower(?) AND id != ? AND is_deleted = 0 LIMIT 1')
-        .bind(url, ignoreId)
-        .first<SiteUrl>();
-    }
-  }
-  
   /** 完全一致 URL の検索用・サイト情報を含む */
-  public async findActiveNameUrlByExactUrl(url: string, ignoreId?: number | null): Promise<SiteNameUrl | null> {
+  public async findActiveNameUrlByExactUrl(lowerUrl: string, ignoreId?: number | null): Promise<SiteNameUrl | null> {
     if(ignoreId == null) {
       return await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE lower(url) = lower(?)             AND is_deleted = 0 LIMIT 1')
-        .bind(url)
+        .prepare('SELECT id, url, site_name FROM sites WHERE lower(url) = ?             AND is_deleted = 0 LIMIT 1')
+        .bind(lowerUrl)
         .first<SiteNameUrl>();
     }
     else {
       return await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE lower(url) = lower(?) AND id != ? AND is_deleted = 0 LIMIT 1')
-        .bind(url, ignoreId)
+        .prepare('SELECT id, url, site_name FROM sites WHERE lower(url) = ? AND id != ? AND is_deleted = 0 LIMIT 1')
+        .bind(lowerUrl, ignoreId)
         .first<SiteNameUrl>();
-    }
-  }
-  
-  /** 類似 URL チェック用 */
-  public async findActiveUrls(ignoreId?: number | null): Promise<Array<SiteUrl>> {
-    if(ignoreId == null) {
-      const result = await this.db
-        .prepare('SELECT id, url FROM sites WHERE             is_deleted = 0')
-        .all<SiteUrl>();
-      return result.results ?? [];
-    }
-    else {
-      const result = await this.db
-        .prepare('SELECT id, url FROM sites WHERE id != ? AND is_deleted = 0')
-        .bind(ignoreId)
-        .all<SiteUrl>();
-      return result.results ?? [];
     }
   }
   
@@ -80,13 +47,13 @@ export class SitesRepository {
   public async findActiveNameUrls(ignoreId?: number | null): Promise<Array<SiteNameUrl>> {
     if(ignoreId == null) {
       const result = await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE             is_deleted = 0')
+        .prepare('SELECT id, url, site_name FROM sites WHERE             is_deleted = 0')
         .all<SiteNameUrl>();
       return result.results ?? [];
     }
     else {
       const result = await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0')
+        .prepare('SELECT id, url, site_name FROM sites WHERE id != ? AND is_deleted = 0')
         .bind(ignoreId)
         .all<SiteNameUrl>();
       return result.results ?? [];
@@ -96,12 +63,12 @@ export class SitesRepository {
   public async findNext(id: number): Promise<SiteNameUrl | null> {
     // 現在の ID より大きい最初のサイトを取得する
     let site = await this.db
-      .prepare('SELECT id, site_name, url FROM sites WHERE id >  ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .prepare('SELECT id, url, site_name FROM sites WHERE id >  ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
       .first<SiteNameUrl>();
     // 見つからない場合は先頭へ戻る
     if(site == null) site = await this.db
-      .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
+      .prepare('SELECT id, url, site_name FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id ASC LIMIT 1')
       .bind(id)
       .first<SiteNameUrl>();
     return site;
@@ -110,12 +77,12 @@ export class SitesRepository {
   public async findPrev(id: number): Promise<SiteNameUrl | null> {
     // 現在の ID より小さい最後のサイトを取得する
     let site = await this.db
-      .prepare('SELECT id, site_name, url FROM sites WHERE id <  ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT id, url, site_name FROM sites WHERE id <  ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
       .first<SiteNameUrl>();
     // 見つからない場合は末尾へ戻る
     if(site == null) site = await this.db
-      .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
+      .prepare('SELECT id, url, site_name FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1')
       .bind(id)
       .first<SiteNameUrl>();
     return site;
@@ -124,12 +91,12 @@ export class SitesRepository {
   public async findRandom(id: number | null): Promise<SiteNameUrl | null> {
     if(id == null) {
       return await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE             is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
+        .prepare('SELECT id, url, site_name FROM sites WHERE             is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
         .first<SiteNameUrl>();
     }
     else {
       return await this.db
-        .prepare('SELECT id, site_name, url FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
+        .prepare('SELECT id, url, site_name FROM sites WHERE id != ? AND is_deleted = 0 ORDER BY RANDOM() LIMIT 1')
         .bind(id)
         .first<SiteNameUrl>();
     }

@@ -4,7 +4,8 @@ import type { SitesRepository } from '../repositories/sites-repository';
 export class SiteUrlService {
   /** 大文字小文字を区別せず完全一致する URL を探す */
   public async findExactMatch(sitesRepository: SitesRepository, url: string, ignoreSiteId?: number | null): Promise<SiteNameUrl | null> {
-    return await sitesRepository.findActiveNameUrlByExactUrl(url, ignoreSiteId);
+    const lowerUrl = url.toLowerCase();
+    return await sitesRepository.findActiveNameUrlByExactUrl(lowerUrl, ignoreSiteId);
   }
   
   /** URL を正規化して類似 URL を探す */

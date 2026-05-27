@@ -40,14 +40,14 @@ comments.post('/', async context => {
   const siteIdParsed = idParamSchema.safeParse(context.req.param('id'));
   if(!siteIdParsed.success) return context.json({ error: 'ID パラメータが不正です' }, httpStatusCode.badRequest);
   
-  const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
-  if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
-  
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
   const parsed = newSiteCommentSchema.safeParse(body);
   if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
+  
+  const site = await new SitesRepository(context.env.DB).findActiveById(siteIdParsed.data);
+  if(site == null) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   
   const isValidTurnstile = await validateTurnstile(context.env.TURNSTILE_SECRET_KEY, parsed.data.turnstile_token, ip);
   if(!isValidTurnstile) return context.json({ error: 'Turnstile 認証に失敗しました' }, httpStatusCode.badRequest);

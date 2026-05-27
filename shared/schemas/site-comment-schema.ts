@@ -1,6 +1,6 @@
 import z from 'zod';
 
-import { preprocessMultiLinesString, preprocessUrl, propertyTurnstileToken } from './schema-utilities';
+import { preprocessMultiLinesString, preprocessOneLineString, propertyTurnstileToken } from './schema-utilities';
 
 export const userNameDisplayName = 'ハンドルネーム' as const;
 export const userNameMaxLength   = 50               as const;
@@ -9,7 +9,7 @@ export const commentMaxLength    = 500              as const;
 
 export const newSiteCommentSchema = z.object({
   user_name       : z.preprocess(
-                      preprocessUrl,
+                      preprocessOneLineString,
                       z.string({ error: `${userNameDisplayName}に文字列でないデータが入力されています` })
                         .max(userNameMaxLength, { error: `${userNameDisplayName}は${userNameMaxLength}文字以内で入力してください` })
                         .nullish()  // null・undefined

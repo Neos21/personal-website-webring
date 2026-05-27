@@ -139,13 +139,13 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
+  const parsed = updateSiteSchema.safeParse(body);
+  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
+  
   const sitesRepository = new SitesRepository(context.env.DB);
   
   const beforeSite = await sitesRepository.findAuthById(idParsed.data);
   if(beforeSite == null || beforeSite.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
-  
-  const parsed = updateSiteSchema.safeParse(body);
-  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const denyDomain = await new DenyDomainService().findMatchedDomain(new DenyDomainsRepository(context.env.DB), parsed.data.url);
   if(denyDomain != null) return context.json({ error: 'このドメインは登録できません' }, httpStatusCode.badRequest);
@@ -154,6 +154,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
   if(exactMach != null) return context.json({ error: `この URL は既に登録されています : ID [${exactMach.id}]` }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
+  
   // 自薦状態での編集時はパスワードチェックを行う (他薦から自薦に切り替える最初はパスワードチェックをしない)
   if(beforeSite.is_self === 1 && passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);
   
@@ -167,7 +168,7 @@ sites.put('/:id', async context => {  // eslint-disable-line neos-eslint-plugin/
     owner_name    : parsed.data.owner_name,
     description   : parsed.data.description,
     banner_url    : parsed.data.banner_url,
-    banner_width  : parsed.data.banner_width ?? null,
+    banner_width  : parsed.data.banner_width  ?? null,
     banner_height : parsed.data.banner_height ?? null,
     password_hash : passwordHash
   });
@@ -191,14 +192,14 @@ sites.delete('/:id', async context => {  // eslint-disable-line neos-eslint-plug
   const body = await context.req.json().catch(() => null);
   if(body == null) return context.json({ error: 'リクエストボディが不正です' }, httpStatusCode.badRequest);
   
+  const parsed = deleteSiteSchema.safeParse(body);
+  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
+  
   const sitesRepository = new SitesRepository(context.env.DB);
   
   const beforeSite = await sitesRepository.findAuthById(idParsed.data);
   if(beforeSite == null || beforeSite.is_deleted === 1) return context.json({ error: '対象のサイトが見つかりませんでした' }, httpStatusCode.notFound);
   if(isEmpty(beforeSite.password_hash)) return context.json({ error: `${passwordDisplayName}が登録されていません` }, httpStatusCode.forbidden);
-  
-  const parsed = deleteSiteSchema.safeParse(body);
-  if(!parsed.success) return context.json({ error: mergeIssues(parsed.error) }, httpStatusCode.badRequest);
   
   const passwordHash = await hashPassword(parsed.data.password);
   if(passwordHash !== beforeSite.password_hash) return context.json({ error: `${passwordDisplayName}が一致しません` }, httpStatusCode.unauthorized);

@@ -71,7 +71,6 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
   
   // 入力値があればパスワードを変更する
   const passwordHash = !isEmpty(parsed.data.password) ? await hashPassword(parsed.data.password!) : existing.password_hash;
-  
   await adminSitesRepository.update({
     id            : idParsed.data,
     is_self       : parsed.data.is_self,
@@ -80,7 +79,7 @@ adminSites.put('/:id', async context => {  // eslint-disable-line neos-eslint-pl
     owner_name    : parsed.data.owner_name,
     description   : parsed.data.description,
     banner_url    : parsed.data.banner_url,
-    banner_width  : parsed.data.banner_width ?? null,
+    banner_width  : parsed.data.banner_width  ?? null,
     banner_height : parsed.data.banner_height ?? null,
     password_hash : passwordHash,
     is_deleted    : parsed.data.is_deleted

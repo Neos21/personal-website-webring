@@ -18,7 +18,7 @@ export class AdminDenyDomainsRepository {
       .first<DenyDomainAdmin>();
   }
   
-  /** 登録時の重複チェック用 */
+  /** 登録時の重複チェック用・`DenyDomainsRepository#findByHostname()` と比べて完全一致にしてある */
   public async findByDomain(domain: string): Promise<DenyDomainAdmin | null> {
     return await this.db
       .prepare('SELECT id, domain, created_at FROM deny_domains WHERE domain = ? LIMIT 1')
@@ -28,7 +28,7 @@ export class AdminDenyDomainsRepository {
   
   public async create(domain: string): Promise<number> {
     const result = await this.db
-      .prepare('INSERT INTO deny_domains (domain) VALUES (?)')
+      .prepare('INSERT INTO deny_domains (domain, created_at) VALUES (?, CURRENT_TIMESTAMP)')
       .bind(domain)
       .run();
     return result.meta.last_row_id;

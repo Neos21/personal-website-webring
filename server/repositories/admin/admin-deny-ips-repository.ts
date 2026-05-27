@@ -26,7 +26,7 @@ export class AdminDenyIpsRepository {
   
   public async create(ip: string): Promise<number> {
     const result = await this.db
-      .prepare('INSERT INTO deny_ips (ip) VALUES (?)')
+      .prepare('INSERT INTO deny_ips (ip, created_at) VALUES (?, CURRENT_TIMESTAMP)')
       .bind(ip)
       .run();
     return result.meta.last_row_id;

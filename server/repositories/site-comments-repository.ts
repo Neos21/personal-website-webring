@@ -6,7 +6,7 @@ export class SiteCommentsRepository {
   /** ページング処理付き一覧 */
   public async findPage(siteId: number, pageSize: number, offset: number): Promise<Array<SiteCommentPublic>> {
     const result = await this.db
-      .prepare('SELECT id, user_name, content, created_at FROM site_comments WHERE site_id = ? ORDER BY id DESC LIMIT ? OFFSET ?')
+      .prepare('SELECT id, site_id, user_name, content, created_at FROM site_comments WHERE site_id = ? ORDER BY id DESC LIMIT ? OFFSET ?')
       .bind(siteId, pageSize, offset)
       .all<SiteCommentPublic>();
     return result.results ?? [];
