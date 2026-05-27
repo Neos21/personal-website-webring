@@ -37,22 +37,22 @@ export default function AdminPosts(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   useEffect(() => {
-    setIsLoading(true);
-    setError('');
-    setPosts([]);
-    setSiteId('');
-    setContent('');
-    setIsSubmitting(false);
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/admin/posts?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      setError('');
+      setPosts([]);
+      setSiteId('');
+      setContent('');
+      setIsSubmitting(false);
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/admin/posts?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/posts?page=${page}`).json<{ result: { page: number; posts: Array<PostAdmin>; has_next: boolean; }; }>();
         setPosts(response.result.posts);
@@ -156,7 +156,7 @@ export default function AdminPosts(): ReactElement {
                     <td className="          text-right whitespace-nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
                     <td className="min-w-25        text-sm">{post.user_name || '-'}</td>
                     <td className="min-w-40 w-full text-sm whitespace-pre-wrap">{post.content}</td>
-                    <td className="                text-sm whitespace-nowrap">{convertUtcToJst(post.created_at)}</td>
+                    <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(post.created_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                   </tr>
                 ))}
               </tbody>

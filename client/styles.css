@@ -143,7 +143,7 @@
   }
   
   .loading {
-    @apply font-bold text-amber-600;
+    @apply font-bold text-amber-600 text-sm;
     
     animation: fade-first-view-animation .2s .75s ease forwards;  /* duration delay の順 */
     opacity: 0;

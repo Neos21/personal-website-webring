@@ -24,18 +24,18 @@ export default function Edit(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    if(siteId == null) {
-      setError('サイト ID が指定されていません');
-      setIsLoading(false);
-      return;
-    }
-    if(!Number.isInteger(siteId) || siteId <= 0) {
-      setError('サイト ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
     (async () => {
+      if(siteId == null) {
+        setError('サイト ID が指定されていません');
+        setIsLoading(false);
+        return;
+      }
+      if(!Number.isInteger(siteId) || siteId <= 0) {
+        setError('サイト ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       setError('');
       

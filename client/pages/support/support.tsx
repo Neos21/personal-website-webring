@@ -1,5 +1,5 @@
 import ky from 'ky';
-import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link, useSearchParams, useNavigate, useLocation } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
@@ -45,58 +45,7 @@ export default function Support(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error       , setError       ] = useState<string>('');
   
-  useEffect(() => {
-    // 投稿後の再読込のためココで初期化する
-    setIsLoading(true);
-    setLoadError('');
-    setPosts([]);
-    setFormSiteId(siteId != null ? String(siteId) : '');
-    setContent('');
-    setTurnstileToken('');
-    setLookupSite(null);
-    setLookupError('');
-    setIsSubmitting(false);
-    setError('');
-    
-    if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
-      setLoadError('サイト ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      const query = new URLSearchParams();
-      if(siteId != null) query.set('id', String(siteId));
-      query.set('page', '1');
-      navigate(`/support?${query.toString()}`, { replace: true });
-      return;
-    }
-    
-    (async () => {
-      if(siteId != null) onBlurSiteId();  // サイト ID に基づく情報表示・裏で非同期実行する
-      
-      try {
-        const query = new URLSearchParams();
-        if(siteId != null) query.set('id', String(siteId));
-        query.set('page', String(page));
-        const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
-        setPosts(response.result.posts);
-        setHasNext(response.result.has_next);
-      }
-      catch(error) {
-        setLoadError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
-      }
-      finally {
-        setIsLoading(false);
-      }
-    })();
-    // `onBlurSiteId` を依存関係に要求されるが、うるせぇ
-  }, [location.key, navigate, siteId, pageParam, page]);  // eslint-disable-line react-hooks/exhaustive-deps
-  
-  const onBlurSiteId = async (): Promise<void> => {
+  const onBlurSiteId = useCallback(async (): Promise<void> => {
     if(isEmpty(formSiteId)) {
       setLookupError('');
       setLookupSite(null);
@@ -118,7 +67,63 @@ export default function Support(): ReactElement {
       setLookupError(extractApiErrorMessage(error, 'サイト情報の取得に失敗しました'));
       setLookupSite(null);
     }
-  };
+  }, [formSiteId]);
+  
+  // 初期表示時に実行しようとするとおかしくなるのでその回避用
+  const onBlurSiteIdRef = useRef(onBlurSiteId);
+  useEffect(() => {
+    onBlurSiteIdRef.current = onBlurSiteId;
+  }, [onBlurSiteId]);
+  
+  useEffect(() => {
+    (async () => {
+      // 投稿後の再読込のためココで初期化する
+      setIsLoading(true);
+      setLoadError('');
+      setPosts([]);
+      setFormSiteId(siteId != null ? String(siteId) : '');
+      setContent('');
+      setTurnstileToken('');
+      setLookupSite(null);
+      setLookupError('');
+      setIsSubmitting(false);
+      setError('');
+      
+      if(siteId != null && (!Number.isInteger(siteId) || siteId <= 0)) {
+        setLoadError('サイト ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        const query = new URLSearchParams();
+        if(siteId != null) query.set('id', String(siteId));
+        query.set('page', '1');
+        navigate(`/support?${query.toString()}`, { replace: true });
+        return;
+      }
+      
+      if(siteId != null) onBlurSiteIdRef.current();  // サイト ID に基づく情報表示・裏で非同期実行する
+      
+      try {
+        const query = new URLSearchParams();
+        if(siteId != null) query.set('id', String(siteId));
+        query.set('page', String(page));
+        const response = await ky.get(`/api/posts?${query.toString()}`).json<{ result: { page: number; posts: Array<PostPublic>; has_next: boolean; }; }>();
+        setPosts(response.result.posts);
+        setHasNext(response.result.has_next);
+      }
+      catch(error) {
+        setLoadError(extractApiErrorMessage(error, '投稿一覧の取得に失敗しました'));
+      }
+      finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [location.key, navigate, siteId, pageParam, page]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();

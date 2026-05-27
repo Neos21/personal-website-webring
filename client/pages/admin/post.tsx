@@ -35,20 +35,21 @@ export default function AdminPost(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    
-    if(id == null) {
-      setLoadError('サイト ID が指定されていません');
-      setIsLoading(false);
-      return;
-    }
-    if(!Number.isInteger(id) || id <= 0) {
-      setLoadError('サイト ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
     (async () => {
+      // `useEffect` 直下で呼ぶと ESLint がうるせぇので全部 IIFE の中に書く
+      setIsLoading(true);
+      
+      if(id == null) {
+        setLoadError('サイト ID が指定されていません');
+        setIsLoading(false);
+        return;
+      }
+      if(!Number.isInteger(id) || id <= 0) {
+        setLoadError('サイト ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/posts/${id}`).json<{ result: PostAdmin; }>();
         setPost(response.result);

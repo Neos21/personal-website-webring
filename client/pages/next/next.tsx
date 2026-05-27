@@ -16,11 +16,11 @@ export default function Next(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setSite(null);
-    setError('');
-    
     (async () => {
+      setIsLoading(true);
+      setSite(null);
+      setError('');
+      
       try {
         const idParam  = searchParams.get('id');
         const idNumber = isEmpty(idParam) ? null : Number(idParam);

@@ -27,18 +27,18 @@ export default function AdminSiteIps(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setError('');
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/admin/site-ips?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      setError('');
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/admin/site-ips?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/site-ips?page=${page}`).json<{ result: { page: number; site_ips: Array<SiteIpAdmin>; has_next: boolean; }; }>();
         setSiteIps(response.result.site_ips);
@@ -96,7 +96,7 @@ export default function AdminSiteIps(): ReactElement {
                     <div>{siteIp.is_self === 1 ? '自薦' : '他薦'}</div>
                   </td>
                   <td className="w-full text-sm">{siteIp.ip}</td>
-                  <td className="text-sm whitespace-nowrap">{convertUtcToJst(siteIp.created_at)}</td>
+                  <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(siteIp.created_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                 </tr>
               ))}
             </tbody>

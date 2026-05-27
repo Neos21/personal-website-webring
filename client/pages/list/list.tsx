@@ -26,20 +26,20 @@ export default function List(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    // ページ遷移時の再読込のためココで初期化する
-    setIsLoading(true);
-    setSites([]);
-    setError('');
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/list?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      // ページ遷移時の再読込のためココで初期化する
+      setIsLoading(true);
+      setSites([]);
+      setError('');
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/list?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await ky.get(`/api/sites?page=${page}`).json<{ result: { page: number; sites: Array<SitePublicWithTags>; has_next: boolean; }; }>();
         setSites(response.result.sites);

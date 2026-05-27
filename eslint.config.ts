@@ -24,6 +24,8 @@ export default defineConfig([
       }
     },
     rules: {
+      'eqeqeq': ['error', 'always', { null: 'ignore' }],
+      
       'import/order': [
         'error',
         {
@@ -65,14 +67,14 @@ export default defineConfig([
   
   {
     plugins: {
-      'react-hooks': pluginReactHooks as any  // eslint-disable-line @typescript-eslint/no-explicit-any
+      'react-hooks': pluginReactHooks as unknown as Plugin,
     },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
-      'react-hooks/set-state-in-effect': 'off',  // うるせぇ
-      'react-hooks/immutability': 'off'
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/immutability': 'error'
     }
   },
   

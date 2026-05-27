@@ -48,35 +48,35 @@ export default function Site(): ReactElement {
   const [error       , setError       ] = useState<string>('');
   
   useEffect(() => {
-    // 投稿後の再読込のためココで初期化する
-    setIsLoading(true);
-    setLoadError('');
-    setSiteComments([]);
-    setContent('');
-    setTurnstileToken('');
-    setIsSubmitting(false);
-    setError('');
-    
-    if(siteId == null) {
-      setLoadError('サイト ID が指定されていません');
-      setIsLoading(false);
-      return;
-    }
-    if(!Number.isInteger(siteId) || siteId <= 0) {
-      setLoadError('サイト ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate(`/site?id=${siteId}&page=1`, { replace: true });
-      return;
-    }
-    
     (async () => {
+      // 投稿後の再読込のためココで初期化する
+      setIsLoading(true);
+      setLoadError('');
+      setSiteComments([]);
+      setContent('');
+      setTurnstileToken('');
+      setIsSubmitting(false);
+      setError('');
+      
+      if(siteId == null) {
+        setLoadError('サイト ID が指定されていません');
+        setIsLoading(false);
+        return;
+      }
+      if(!Number.isInteger(siteId) || siteId <= 0) {
+        setLoadError('サイト ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate(`/site?id=${siteId}&page=1`, { replace: true });
+        return;
+      }
+      
       try {
         const [siteResponse, siteCommentsResponse] = await Promise.all([
           ky.get(`/api/sites/${siteId}`).json<{ result: SitePublicWithTags; }>(),

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
+import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
 import { isEmpty } from '../../../shared/helpers/is-empty';
 import { adminApi } from '../../helpers/admin-api';
 import { extractApiErrorMessage } from '../../helpers/extract-api-error-message';
@@ -25,19 +26,19 @@ export default function AdminSites(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setSites([]);
-    setError('');
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/admin/sites?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      setSites([]);
+      setError('');
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/admin/sites?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/sites?page=${page}`).json<{ result: { page: number; sites: Array<SiteAdmin>; has_next: boolean; }; }>();
         setSites(response.result.sites);
@@ -80,6 +81,7 @@ export default function AdminSites(): ReactElement {
                 <tr>
                   <th>ID</th>
                   <th>サイト名</th>
+                  <th>更新日時</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +89,7 @@ export default function AdminSites(): ReactElement {
                   <tr key={site.id} className={site.is_deleted === 1 ? '[&>td]:bg-red-50' : ''}>  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
                     <td className="text-right whitespace-nowrap">{site.id}</td>
                     <td className="w-full"><Link to={{ pathname: '/admin/site', search: `?id=${site.id}` }}>{site.site_name}</Link></td>
+                    <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(site.updated_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                   </tr>
                 ))}
               </tbody>

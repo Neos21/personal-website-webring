@@ -26,19 +26,19 @@ export default function AdminSiteComments(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setSiteComments([]);
-    setError('');
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/admin/site-comments?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      setSiteComments([]);
+      setError('');
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/admin/site-comments?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/site-comments?page=${page}`).json<{ result: { page: number; site_comments: Array<SiteCommentAdmin>; has_next: boolean; }; }>();
         setSiteComments(response.result.site_comments);
@@ -80,7 +80,6 @@ export default function AdminSiteComments(): ReactElement {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th className="text-sm">サイト ID</th>
                   <th>HN</th>
                   <th>本文</th>
                   <th>投稿日時</th>
@@ -89,11 +88,13 @@ export default function AdminSiteComments(): ReactElement {
               <tbody>
                 {siteComments.map(siteComment => (
                   <tr key={siteComment.id}>
-                    <td className="font-bold text-right whitespace-nowrap"><Link to={{ pathname: '/admin/site-comment', search: `?id=${siteComment.id}` }}>{siteComment.id}</Link></td>
-                    <td className="          text-right whitespace-nowrap"><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></td>
+                    <td className="text-right whitespace-nowrap">
+                      <div className="font-bold"><Link to={{ pathname: '/admin/site-comment', search: `?id=${siteComment.id}` }}>{siteComment.id}</Link></div>
+                      <div><Link to={{ pathname: '/admin/site', search: `?id=${siteComment.site_id}` }}>{siteComment.site_id}</Link></div>
+                    </td>
                     <td className="min-w-25        text-sm">{siteComment.user_name || '-'}</td>
                     <td className="min-w-40 w-full text-sm whitespace-pre-wrap">{siteComment.content}</td>
-                    <td className="                text-sm whitespace-nowrap">{convertUtcToJst(siteComment.created_at)}</td>
+                    <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(siteComment.created_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                   </tr>
                 ))}
               </tbody>

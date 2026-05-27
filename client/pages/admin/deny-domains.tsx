@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
+import { useCallback, useEffect, useState, type ReactElement, type SubmitEvent } from 'react';
 import { Link } from 'react-router';
 
 import { convertUtcToJst } from '../../../shared/helpers/convert-utc-to-jst';
@@ -21,11 +21,7 @@ export default function AdminDenyDomains(): ReactElement {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [domains  , setDomains  ] = useState<Array<DenyDomainAdmin>>([]);
   
-  useEffect(() => {
-    fetchDenyDomains();
-  }, []);
-  
-  const fetchDenyDomains = async (): Promise<void> => {
+  const fetchDenyDomains = useCallback(async (): Promise<void> => {
     setError('');
     setIsLoading(true);
     
@@ -39,7 +35,14 @@ export default function AdminDenyDomains(): ReactElement {
     finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+  
+  // ESLint エラー回避のためこのような呼び出し方をする
+  useEffect(() => {
+    (async () => {
+      await fetchDenyDomains();
+    })();
+  }, [fetchDenyDomains]);
   
   const onSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -104,7 +107,7 @@ export default function AdminDenyDomains(): ReactElement {
               <tr key={domain.id}>
                 <td className="text-right whitespace-nowrap">{domain.id}</td>
                 <td className="w-full">{domain.domain}</td>
-                <td className="text-sm whitespace-nowrap">{convertUtcToJst(domain.created_at)}</td>
+                <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(domain.created_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                 <td className="form-danger whitespace-nowrap"><button type="button" onClick={() => onDelete(domain.id)}>削除</button></td>
               </tr>
             ))}

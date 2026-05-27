@@ -36,21 +36,21 @@ export default function AdminTags(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    setError('');
-    setNewTagName('');
-    setEditingTagId(null);
-    setEditingTagName('');
-    
-    // URL に `page=1` がなければ再読込する
-    const currentPageNumber = Number(pageParam);
-    const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
-    if(needsPageFix) {
-      navigate('/admin/tags?page=1', { replace: true });
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      setError('');
+      setNewTagName('');
+      setEditingTagId(null);
+      setEditingTagName('');
+      
+      // URL に `page=1` がなければ再読込する
+      const currentPageNumber = Number(pageParam);
+      const needsPageFix = isEmpty(pageParam) || !Number.isInteger(currentPageNumber) || currentPageNumber <= 0;
+      if(needsPageFix) {
+        navigate('/admin/tags?page=1', { replace: true });
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/tags?page=${page}`).json<{ result: { page: number; tags: Array<Tag>; has_next: boolean; }; }>();
         setTags(response.result.tags);

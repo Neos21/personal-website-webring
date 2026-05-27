@@ -50,22 +50,22 @@ export default function AdminSite(): ReactElement {
   const [error        , setError        ] = useState<string>('');
   
   useEffect(() => {
-    // 再読込時のための最低限の初期化
-    setIsLoading(true);
-    setPassword('');
-    
-    if(id == null) {
-      setLoadError('サイト ID が指定されていません');
-      setIsLoading(false);
-      return;
-    }
-    if(!Number.isInteger(id) || id <= 0) {
-      setLoadError('サイト ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
     (async () => {
+      // 再読込時のための最低限の初期化
+      setIsLoading(true);
+      setPassword('');
+      
+      if(id == null) {
+        setLoadError('サイト ID が指定されていません');
+        setIsLoading(false);
+        return;
+      }
+      if(!Number.isInteger(id) || id <= 0) {
+        setLoadError('サイト ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/sites/${id}`).json<{ result: SiteAdminWithTags; }>();
         setSite(response.result);

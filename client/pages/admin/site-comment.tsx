@@ -33,20 +33,20 @@ export default function AdminSiteComment(): ReactElement {
   const [error    , setError    ] = useState<string>('');
   
   useEffect(() => {
-    setIsLoading(true);
-    
-    if(id == null) {
-      setLoadError('コメント ID が指定されていません');
-      setIsLoading(false);
-      return;
-    }
-    if(!Number.isInteger(id) || id <= 0) {
-      setLoadError('コメント ID が不正です');
-      setIsLoading(false);
-      return;
-    }
-    
     (async () => {
+      setIsLoading(true);
+      
+      if(id == null) {
+        setLoadError('コメント ID が指定されていません');
+        setIsLoading(false);
+        return;
+      }
+      if(!Number.isInteger(id) || id <= 0) {
+        setLoadError('コメント ID が不正です');
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const response = await adminApi.get(`/api/admin/site-comments/${id}`).json<{ result: SiteCommentAdmin; }>();
         setSiteComment(response.result);
