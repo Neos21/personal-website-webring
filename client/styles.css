@@ -76,15 +76,19 @@
   }
   
   fieldset {
-    @apply border border-slate-500 pt-2 px-4 pb-4;
+    @apply border border-slate-500 pt-2 px-4 pb-4 space-y-4 bg-white;
     
     & > legend {
-      @apply pl-1 pr-2 font-bold;
+      @apply mb-0 pl-1 pr-2 font-bold;
     }
   }
   
   label {
     @apply block;
+  }
+  
+  :is(form, fieldset) > label {
+    @apply space-y-1;
   }
   
   main {
@@ -121,6 +125,25 @@
 }
 
 @layer components {
+  .loading {
+    @apply font-bold text-amber-600 text-sm;
+    
+    animation: fade-first-view-animation .2s .75s ease forwards;  /* duration delay の順 */
+    opacity: 0;
+  }
+  .fade-redirect {
+    animation: fade-first-view-animation .3s 1.5s ease forwards;
+    opacity: 0;
+    
+    & a:hover {
+      text-decoration: underline overline;
+    }
+  }
+  @keyframes fade-first-view-animation {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  
   .form-danger {
     & :is(input[type="text"], input[type="url"], input[type="password"], textarea, button) {
       @apply border-rose-500 text-rose-600;
@@ -142,22 +165,32 @@
     }
   }
   
-  .loading {
-    @apply font-bold text-amber-600 text-sm;
+  .form-label-memo { @apply ml-2 text-slate-500 text-sm; }
+  
+  .form-radio-buttons {
+    @apply space-x-4;
     
-    animation: fade-first-view-animation .2s .75s ease forwards;  /* duration delay の順 */
-    opacity: 0;
-  }
-  .fade-redirect {
-    animation: fade-first-view-animation .3s 1.5s ease forwards;
-    opacity: 0;
-    
-    & a:hover {
-      text-decoration: underline overline;
+    & > label {
+      @apply inline cursor-pointer;
     }
   }
-  @keyframes fade-first-view-animation {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
+  
+  .pager-links { @apply space-x-2 text-sm text-center; }
+  
+  .site-card { @apply border border-slate-500 p-3 bg-white; }
+  
+  :is(.site-comment-card, .post-card) { @apply mb-4 border-b border-slate-300 pb-4; }
+  
+  .tag { @apply inline-block mr-2 mb-2 p-1 text-sky-600 text-sm bg-sky-50; }
+  
+  .text-muted { @apply text-slate-500; }
+  
+  :is(.alert-danger, .alert-warning, .alert-success) { @apply p-4; }
+  .alert-danger  { @apply text-red-600     bg-red-50    ; }
+  .alert-warning { @apply text-amber-600   bg-amber-50  ; }
+  .alert-success { @apply text-emerald-600 bg-emerald-50; }
+  
+  :is(.label-success, .label-info) { @apply p-1 font-bold; }
+  .label-success { @apply text-emerald-600 bg-emerald-50; }
+  .label-info    { @apply text-indigo-600  bg-indigo-50 ; }
 }

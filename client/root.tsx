@@ -81,7 +81,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactElement
     <main>
       <h1>{appConstants.siteNameJapanese}</h1>
       
-      <div className="mb-8 p-4 font-bold text-red-600 text-center bg-red-50">
+      <div className="alert-danger mb-8 font-bold text-center">
         <div className="mb-4 text-lg">{title}</div>
         <div>{text}</div>
       </div>

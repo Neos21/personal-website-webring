@@ -171,7 +171,7 @@ export default function Support(): ReactElement {
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
         <>
-          <div className="mb-4 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
+          <div className="alert-danger mb-4 font-bold">{loadError}</div>
           <div className="mb-8"><Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板の全体の投稿を見る場合はコチラ</Link></div>
         </>
       ) : (
@@ -186,36 +186,36 @@ export default function Support(): ReactElement {
           )}
           
           <form className="mb-10" onSubmit={onSubmit}>
-            <fieldset className="space-y-4 bg-white">
-              <legend className="mb-0">投稿する</legend>
+            <fieldset>
+              <legend>投稿する</legend>
               
-              <label className="space-y-1">
-                <div><span className="font-bold">{siteIdDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(特定サイトに関するお問合せの場合は入力してください)</span></div>
+              <label>
+                <div><span className="font-bold">{siteIdDisplayName}</span> <span className="form-label-memo">(特定サイトに関するお問合せの場合は入力してください)</span></div>
                 <input type="text" placeholder={siteIdDisplayName} value={formSiteId} onChange={event => setFormSiteId(event.target.value)} onBlur={onBlurSiteId} />
               </label>
               
               {lookupSite != null && (
-                <div className="p-4 text-emerald-600 text-sm bg-emerald-50">
+                <div className="alert-success">
                   <Link to={{ pathname: '/site', search: `?id=${lookupSite.id}&page=1` }}>{lookupSite.site_name}</Link>
                 </div>
               )}
               {!isEmpty(lookupError) && (
-                <div className="p-4 font-bold text-red-600 bg-red-50">{lookupError}</div>
+                <div className="alert-danger font-bold">{lookupError}</div>
               )}
               
-              <label className="space-y-1">
-                <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
+              <label>
+                <div><span className="font-bold">{userNameDisplayName}</span> <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
                 <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
               </label>
               
-              <label className="space-y-1">
-                <div><span className="font-bold">{contentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{contentMaxLength}文字以内)</span></div>
+              <label>
+                <div><span className="font-bold">{contentDisplayName}</span> <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
                 <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
               </label>
               
               <TurnstileField key={location.key} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+              {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
               
               <div><button type="submit" disabled={isSubmitting || !isEmpty(lookupError)}>{isSubmitting ? '送信中…' : '投稿する'}</button></div>
             </fieldset>
@@ -223,11 +223,11 @@ export default function Support(): ReactElement {
           
           {posts.length === 0 ? (
             <>
-              <div className="mb-8 text-slate-500 text-sm">まだ投稿はありません。</div>
+              <div className="text-muted mb-8 text-sm">まだ投稿はありません。</div>
               {(page > 1 || hasNext) && (
-                <div className="mb-8 space-x-2 text-sm text-center">
+                <div className="pager-links mb-8">
                   {page > 1            && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>)}
-                  {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+                  {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
                   {hasNext             && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>)}
                 </div>
               )}
@@ -235,13 +235,13 @@ export default function Support(): ReactElement {
           ) : (
             <>
               {posts.map(post => (
-                <section className="mb-4 border-b border-slate-300 pb-4" key={post.id}>
-                  <div className="mb-1 text-slate-500 text-sm">
+                <section className="post-card" key={post.id}>
+                  <div className="text-muted mb-1 text-sm">
                     <span>{convertUtcToJst(post.created_at)}</span>
                     {post.is_admin ? (
                       <>
                         <span className="ml-3 font-bold">{post.user_name || '名無し'}</span>
-                        <span className="ml-3 p-1 font-bold text-emerald-600 text-xs bg-emerald-50">リングマスター</span>
+                        <span className="label-success ml-3 text-xs">リングマスター</span>
                       </>
                     ) : (
                       <span className="ml-3 font-bold">{post.user_name || '名無し'} さん</span>
@@ -255,9 +255,9 @@ export default function Support(): ReactElement {
               ))}
               
               {(page > 1 || hasNext) && (
-                <div className="mt-6 mb-8 space-x-2 text-sm text-center">
+                <div className="pager-links mt-6 mb-8">
                   {page > 1            && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page - 1) }).toString() }}>&laquo; 前のページ</Link>)}
-                  {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+                  {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
                   {hasNext             && (<Link to={{ pathname: '/support', search: new URLSearchParams({ ...(siteId != null ? { id: String(siteId) } : {}), page: String(page + 1) }).toString() }}>次のページ &raquo;</Link>)}
                 </div>
               )}

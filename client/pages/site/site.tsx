@@ -129,12 +129,12 @@ export default function Site(): ReactElement {
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
+        <div className="alert-danger mb-8 font-bold">{loadError}</div>
       ) : site == null ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
+        <div className="alert-danger mb-8 font-bold">対象のサイトが見つかりませんでした</div>
       ) : (
         <>
-          <section className="mb-6 border border-slate-500 p-3 pb-1 bg-white">
+          <section className="site-card mb-8 pb-1">
             <h2 className="mb-4 font-bold text-lg"><a href={site.url} target="_blank">{site.site_name}</a></h2>
             
             {!isEmpty(site.banner_url) && (
@@ -145,10 +145,10 @@ export default function Site(): ReactElement {
             
             <div className="mb-4 text-sm whitespace-pre-wrap">{site.description || '説明はありません'}</div>
             
-            <ul className="mb-4 text-slate-500 text-xs">
+            <ul className="text-muted mb-4 text-xs">
               <li>
                 ID : [{site.id}]
-                {site.is_self === 1 ? (<span className="ml-2 p-1 font-bold text-emerald-600 bg-emerald-50">自薦</span>) : (<span className="ml-2 p-1 font-bold text-indigo-600 bg-indigo-50">他薦</span>)}
+                {site.is_self === 1 ? (<span className="label-success ml-2">自薦</span>) : (<span className="label-info ml-2">他薦</span>)}
               </li>
               <li>管理人 : {site.owner_name || '-'}</li>
               <li>更新日 : {convertUtcToJst(site.updated_at, true)}</li>
@@ -156,7 +156,7 @@ export default function Site(): ReactElement {
             
             <div>
               {site.tags.map(tag => (
-                <span className="inline-block mr-2 mb-2 p-1 text-sky-600 text-sm bg-sky-50" key={tag.id}>{tag.name}</span>
+                <span className="tag" key={tag.id}>{tag.name}</span>
               ))}
             </div>
           </section>
@@ -168,12 +168,12 @@ export default function Site(): ReactElement {
             <h2 className="mb-5 font-bold text-lg">サイトへのコメント</h2>
             
             {siteComments.length === 0 ? (
-              <div className="text-slate-500 text-sm">まだコメントはありません。</div>
+              <div className="text-muted mb-4 text-sm">まだコメントはありません。</div>
             ) : (
               <>
                 {siteComments.map(siteComment => (
-                  <section className="mb-4 border-b border-slate-300 pb-4" key={siteComment.id}>
-                    <div className="mb-1 text-slate-500 text-sm">
+                  <section className="site-comment-card" key={siteComment.id}>
+                    <div className="text-muted mb-1 text-sm">
                       <span>{convertUtcToJst(siteComment.created_at)}</span>
                       <span className="ml-3">{siteComment.user_name || '名無し'} さん</span>
                     </div>
@@ -184,32 +184,32 @@ export default function Site(): ReactElement {
             )}
             
             {(page > 1 || hasNext) && (
-              <div className="mt-5 space-x-2 text-sm text-center">
+              <div className="pager-links mt-5">
                 {page > 1            && (<Link to={{ pathname: '/site', search: `?id=${siteId}&page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-                {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+                {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
                 {hasNext             && (<Link to={{ pathname: '/site', search: `?id=${siteId}&page=${page + 1}` }}>次のページ &raquo;</Link>)}
               </div>
             )}
           </section>
           
           <form className="mb-10" onSubmit={onSubmit}>
-            <fieldset className="space-y-4 bg-white">
-              <legend className="mb-0">コメントを投稿する</legend>
+            <fieldset>
+              <legend>コメントを投稿する</legend>
               
-              <label className="space-y-1">
-                <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
+              <label>
+                <div><span className="font-bold">{userNameDisplayName}</span> <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
                 <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
               </label>
               
-              <label className="space-y-1">
-                <div><span className="font-bold">{commentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{commentMaxLength}文字以内)</span></div>
+              <label>
+                <div><span className="font-bold">{commentDisplayName}</span> <span className="form-label-memo">(必須・{commentMaxLength}文字以内)</span></div>
                 <textarea placeholder={commentDisplayName} value={content} maxLength={commentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
               </label>
               
               {/* 投稿後の再読込でリセットするため `key` に `location.key` を指定する */}
               <TurnstileField key={location.key} onTokenChange={setTurnstileToken} />
               
-              {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+              {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
               
               <div><button type="submit" disabled={isSubmitting}>{isSubmitting ? '送信中…' : '投稿する'}</button></div>
             </fieldset>

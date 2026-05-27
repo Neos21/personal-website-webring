@@ -85,12 +85,12 @@ export default function AdminDenyIps(): ReactElement {
         <button className="flex-none" type="submit">追加</button>
       </form>
       
-      {!isEmpty(error) && (<div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+      {!isEmpty(error) && (<div className="alert-danger mb-8 font-bold">{error}</div>)}
       
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : denyIps.length === 0 ? (
-        <div className="mb-8 text-slate-500 text-sm">禁止 IP アドレスは登録されていません。</div>
+        <div className="text-muted mb-8 text-sm">禁止 IP アドレスは登録されていません。</div>
       ) : (
         <table className="mb-8">
           <thead>

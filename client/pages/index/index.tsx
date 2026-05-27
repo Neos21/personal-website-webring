@@ -7,7 +7,7 @@ export default function Index(): ReactElement {
   /* eslint-disable neos-eslint-plugin/comment-colon-spacing */
   const exampleNavigationBarHtml = `<table style="border: 1px solid #000; border-collapse: collapse;"><tbody>
   <tr>
-    <td style="width: 200px; height: 40px; padding: 0; background: #fff;">
+    <td style="padding: 0; background: #fff;">
       <a href="${appConstants.origin}" target="_blank"><img src="${appConstants.origin}/banner-200x40.png" width="200" height="40" alt="${appConstants.siteNameJapanese}"></a>
     </td>
   </tr>
@@ -29,7 +29,7 @@ export default function Index(): ReactElement {
       
       <div className="my-16 text-center"><Link to="/new">新規登録</Link> | <Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧</Link> | <Link to="/random">ランダムジャンプ</Link> | <Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板</Link></div>
       
-      <div className="mb-16 [&>h2]:mt-8 [&>*]:mb-2 [&>h2]:font-bold">  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
+      <div className="mb-16 [&>*]:mb-2 [&>h2]:mt-8 [&>h2]:font-bold">  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
         <p>「{appConstants.siteNameJapanese}」は、個人サイト同士を繋ぐウェブリングです。</p>
         <p>サイトのジャンルやコンテンツの質・量は関係ありません。個人ウェブサイトであればどんなサイトでも参加できます♪</p>
         
@@ -65,7 +65,7 @@ export default function Index(): ReactElement {
       </div>
       
       <div className="mb-2"><img className="mx-auto" src="/banner-88x31.png" width="88" height="31" alt={appConstants.siteNameJapanese} /></div>
-      <div className="text-slate-500 text-sm text-center">Copyright © 2026 <a className="text-inherit" href="https://github.com/Neos21/personal-website-webring">{appConstants.siteNameJapanese}</a>, All rights reserved.</div>
+      <div className="text-muted text-sm text-center">Copyright © 2026 <a className="text-inherit" href="https://github.com/Neos21/personal-website-webring">{appConstants.siteNameJapanese}</a>, All rights reserved.</div>
     </main>
   );
 }

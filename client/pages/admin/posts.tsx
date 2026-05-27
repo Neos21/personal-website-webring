@@ -103,35 +103,35 @@ export default function AdminPosts(): ReactElement {
       <h1>サポート掲示板投稿管理</h1>
       
       <form className="mb-8 space-y-4" onSubmit={onSubmit}>
-        <label className="space-y-1">
-          <div><span className="font-bold">{siteIdDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意)</span></div>
+        <label>
+          <div><span className="font-bold">{siteIdDisplayName}</span> <span className="form-label-memo">(任意)</span></div>
           <input type="text" placeholder={siteIdDisplayName} value={siteId} onChange={event => setSiteId(event.target.value)} />
         </label>
         
-        <label className="space-y-1">
-          <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{userNameMaxLength}文字以内)</span></div>
+        <label>
+          <div><span className="font-bold">{userNameDisplayName}</span> <span className="form-label-memo">(必須・{userNameMaxLength}文字以内)</span></div>
           <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} required />
         </label>
         
-        <label className="space-y-1">
-          <div><span className="font-bold">{contentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{contentMaxLength}文字以内)</span></div>
+        <label>
+          <div><span className="font-bold">{contentDisplayName}</span> <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
           <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
         </label>
         
         <div><button type="submit" disabled={isSubmitting}>リングマスター投稿</button></div>
       </form>
       
-      {!isEmpty(error) && (<div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+      {!isEmpty(error) && (<div className="alert-danger mb-8 font-bold">{error}</div>)}
       
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : posts.length === 0 ? (
         <>
-          <div className="mb-8 text-slate-500 text-sm">まだ投稿はありません。</div>
+          <div className="text-muted mb-8 text-sm">まだ投稿はありません。</div>
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/admin/posts', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/admin/posts', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}
@@ -153,8 +153,8 @@ export default function AdminPosts(): ReactElement {
                 {posts.map(post => (
                   <tr key={post.id} className={post.is_admin === 1 ? '[&>td]:bg-emerald-50' : ''}>  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
                     <td className="font-bold text-right whitespace-nowrap"><Link to={{ pathname: '/admin/post', search: `?id=${post.id}` }}>{post.id}</Link></td>
-                    <td className="          text-right whitespace-nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
-                    <td className="min-w-25        text-sm">{post.user_name || '-'}</td>
+                    <td className="text-right whitespace-nowrap">{isEmpty(post.site_id) ? '-' : (<Link to={{ pathname: '/admin/site', search: `?id=${post.site_id}` }}>{post.site_id}</Link>)}</td>
+                    <td className="min-w-25 text-sm">{post.user_name || '-'}</td>
                     <td className="min-w-40 w-full text-sm whitespace-pre-wrap">{post.content}</td>
                     <td className="text-sm text-right whitespace-nowrap">{convertUtcToJst(post.created_at).split(' ').map((part, index) => (<span key={index}>{part}{index === 0 && (<br />)}</span>))}</td>
                   </tr>
@@ -164,9 +164,9 @@ export default function AdminPosts(): ReactElement {
           </div>
           
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/admin/posts', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/admin/posts', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}

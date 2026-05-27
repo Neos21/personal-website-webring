@@ -58,17 +58,17 @@ export default function AdminSiteIps(): ReactElement {
       <title>サイト操作 IP アドレス履歴管理 - 個人サイトウェブリング</title>
       <h1>サイト操作 IP アドレス履歴管理</h1>
       
-      {!isEmpty(error) && (<div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+      {!isEmpty(error) && (<div className="alert-danger mb-8 font-bold">{error}</div>)}
       
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : siteIps.length === 0 ? (
         <>
-          <div className="mb-8 text-slate-500 text-sm">サイト操作 IP アドレス履歴は登録されていません。</div>
+          <div className="text-muted mb-8 text-sm">サイト操作 IP アドレス履歴は登録されていません。</div>
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/admin/site-ips', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/admin/site-ips', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}
@@ -103,9 +103,9 @@ export default function AdminSiteIps(): ReactElement {
           </table>
           
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/admin/site-ips', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/admin/site-ips', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}

@@ -62,14 +62,14 @@ export default function List(): ReactElement {
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
+        <div className="alert-danger mb-8 font-bold">{error}</div>
       ) : sites.length === 0 ? (
         <>
-          <div className="mb-8 text-slate-500 text-sm">まだ登録されているサイトはありません。</div>
+          <div className="text-muted mb-8 text-sm">まだ登録されているサイトはありません。</div>
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}
@@ -77,7 +77,7 @@ export default function List(): ReactElement {
       ) : (
         <>
           {sites.map(site => (
-            <section key={site.id} className="mb-8 border border-slate-500 p-3 pb-2 bg-white">
+            <section key={site.id} className="site-card mb-8 pb-2">
               <h2 className="mb-4 font-bold text-lg"><a href={site.url} target="_blank">{site.site_name}</a></h2>
               
               {!isEmpty(site.banner_url) && (
@@ -88,10 +88,10 @@ export default function List(): ReactElement {
               
               <div className="mb-4 text-sm whitespace-pre-wrap">{site.description || '説明はありません'}</div>
               
-              <ul className="mb-4 text-slate-500 text-xs">
+              <ul className="text-muted mb-4 text-xs">
                 <li>
                   ID : [{site.id}]
-                  {site.is_self === 1 ? (<span className="ml-2 p-1 font-bold text-emerald-600 bg-emerald-50">自薦</span>) : (<span className="ml-2 p-1 font-bold text-indigo-600 bg-indigo-50">他薦</span>)}
+                  {site.is_self === 1 ? (<span className="label-success ml-2">自薦</span>) : (<span className="label-info ml-2">他薦</span>)}
                 </li>
                 <li>管理人 : {site.owner_name || '-'}</li>
                 <li>更新日 : {convertUtcToJst(site.updated_at, true)}</li>
@@ -99,7 +99,7 @@ export default function List(): ReactElement {
               
               <div>
                 {site.tags.map(tag => (
-                  <span className="inline-block mr-2 mb-2 p-1 text-sky-600 text-sm bg-sky-50" key={tag.id}>{tag.name}</span>
+                  <span className="tag" key={tag.id}>{tag.name}</span>
                 ))}
               </div>
               
@@ -108,9 +108,9 @@ export default function List(): ReactElement {
           ))}
           
           {(page > 1 || hasNext) && (
-            <div className="mb-8 space-x-2 text-sm text-center">
+            <div className="pager-links mb-8">
               {page > 1            && (<Link to={{ pathname: '/list', search: `?page=${page - 1}` }}>&laquo; 前のページ</Link>)}
-              {page > 1 && hasNext && (<span className="text-slate-500"> | </span>)}
+              {page > 1 && hasNext && (<span className="text-muted"> | </span>)}
               {hasNext             && (<Link to={{ pathname: '/list', search: `?page=${page + 1}` }}>次のページ &raquo;</Link>)}
             </div>
           )}

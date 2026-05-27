@@ -198,9 +198,9 @@ export default function AdminSite(): ReactElement {
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
+        <div className="alert-danger mb-8 font-bold">{loadError}</div>
       ) : site == null ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
+        <div className="alert-danger mb-8 font-bold">対象のサイトが見つかりませんでした</div>
       ) : (
         <form className="mb-8 space-y-4" onSubmit={onSubmit}>
           <table>
@@ -222,23 +222,23 @@ export default function AdminSite(): ReactElement {
           
           <div className="space-y-1">
             <div className="font-bold">登録種別</div>
-            <div className="space-x-4">
-              <label className="inline cursor-pointer">
+            <div className="form-radio-buttons">
+              <label>
                 <input type="radio" name="is_self" value="0" checked={isSelf === 0} onChange={() => setIsSelf(0)} /> 他薦
               </label>
-              <label className="inline cursor-pointer">
+              <label>
                 <input type="radio" name="is_self" value="1" checked={isSelf === 1} onChange={() => setIsSelf(1)} /> 自薦
               </label>
             </div>
           </div>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{siteNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{siteNameMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{siteNameDisplayName}</span> <span className="form-label-memo">(必須・{siteNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={siteNameDisplayName} value={siteName} maxLength={siteNameMaxLength} onChange={event => setSiteName(event.target.value)} required />
           </label>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{urlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{urlMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{urlDisplayName}</span> <span className="form-label-memo">(必須・{urlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={urlDisplayName} value={url} maxLength={urlMaxLength}
               onChange={event => { setUrl(event.target.value); setIsDenyDomain(false); setExactMatch(null); setNearMatch(null); }}
               onBlur={() => onBlurUrl(url)}
@@ -247,35 +247,35 @@ export default function AdminSite(): ReactElement {
           </label>
           
           {isDenyDomain && (
-            <div className="p-4 font-bold text-red-600 bg-red-50">このドメインは登録できません</div>
+            <div className="alert-danger font-bold">このドメインは登録できません</div>
           )}
           {exactMatch != null && (
-            <div className="p-4 bg-red-50">
-              <div className="font-bold text-red-600">この URL は登録済みです</div>
+            <div className="alert-danger">
+              <div className="font-bold">この URL は登録済みです</div>
               <div>ID <Link to={{ pathname: '/site', search: `?id=${exactMatch.id}&page=1` }}>[{exactMatch.id}]</Link> {exactMatch.site_name}</div>
               <div><a href={exactMatch.url} target="_blank">{exactMatch.url}</a></div>
             </div>
           )}
           {nearMatch != null && (
-            <div className="p-4 bg-amber-50">
-              <div className="font-bold text-amber-600">類似する URL が登録されています</div>
+            <div className="alert-warning">
+              <div className="font-bold">類似する URL が登録されています</div>
               <div>ID <Link to={{ pathname: '/site', search: `?id=${nearMatch.id}&page=1` }}>[{nearMatch.id}]</Link> {nearMatch.site_name}</div>
               <div><a href={nearMatch.url} target="_blank">{nearMatch.url}</a></div>
             </div>
           )}
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{ownerNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{ownerNameMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{ownerNameDisplayName}</span> <span className="form-label-memo">(任意・{ownerNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={ownerNameDisplayName} value={ownerName} maxLength={ownerNameMaxLength} onChange={event => setOwnerName(event.target.value)} />
           </label>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{descriptionDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{descriptionMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{descriptionDisplayName}</span> <span className="form-label-memo">(任意・{descriptionMaxLength}文字以内)</span></div>
             <textarea placeholder={descriptionDisplayName} value={description} maxLength={descriptionMaxLength} onChange={event => setDescription(event.target.value)} rows={4} />
           </label>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{tagDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{tagDisplayName}</span> <span className="form-label-memo">(必須・1〜{tagsMax}個・1つ{tagMaxLength}文字以内)</span></div>
             <div className="flex gap-x-3">
               <input className="flex-1" type="text" placeholder={tagDisplayName} value={tagInput} maxLength={tagMaxLength} onChange={event => setTagInput(event.target.value)}
                 onKeyDown={event => {
@@ -297,8 +297,8 @@ export default function AdminSite(): ReactElement {
             </div>
           )}
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{bannerUrlMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{bannerUrlDisplayName}</span> <span className="form-label-memo">(任意・{bannerUrlMaxLength}文字以内)</span></div>
             <input type="url" placeholder={bannerUrlDisplayName} value={bannerUrl} maxLength={bannerUrlMaxLength}
               onChange={event => { setIsShownBanner(false); setBannerUrl(event.target.value); }}
               onBlur={() => setIsShownBanner(!isEmpty(bannerUrl) && isImageUrl(bannerUrl))}
@@ -306,12 +306,12 @@ export default function AdminSite(): ReactElement {
           </label>
           
           <div className="space-y-1">
-            <div><span className="font-bold">バナーサイズ</span> <span className="ml-2 text-slate-500 text-sm">{isEmpty(bannerUrl) ? '(バナー URL 指定時に必須)' : '(必須)'}</span></div>
-            <div className="space-x-4">
-              <label className="inline cursor-pointer">
+            <div><span className="font-bold">バナーサイズ</span> <span className="form-label-memo">({isEmpty(bannerUrl) ? 'バナー URL 指定時に必須' : '必須'})</span></div>
+            <div className="form-radio-buttons">
+              <label>
                 <input type="radio" name="banner_size" value="200x40" checked={bannerSize === '200x40'} onChange={() => setBannerSize('200x40')} /> 200x40
               </label>
-              <label className="inline cursor-pointer">
+              <label>
                 <input type="radio" name="banner_size" value="88x31"  checked={bannerSize === '88x31' } onChange={() => setBannerSize('88x31' )} /> 88x31
               </label>
             </div>
@@ -325,8 +325,8 @@ export default function AdminSite(): ReactElement {
             />
           )}
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>
+          <label>
+            <div><span className="font-bold">{passwordDisplayName}</span> <span className="form-label-memo">({passwordMaxLength}文字以内・変更したい場合のみ入力する)</span></div>
             <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} />
           </label>
           
@@ -336,7 +336,7 @@ export default function AdminSite(): ReactElement {
             <input type="checkbox" checked={isDeleted === 1} onChange={() => setIsDeleted(prevIsDeleted => prevIsDeleted === 1 ? 0 : 1)} /> 論理削除
           </label>
           
-          {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+          {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
           
           <div><button type="submit">編集</button></div>
           

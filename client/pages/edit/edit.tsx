@@ -60,9 +60,9 @@ export default function Edit(): ReactElement {
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(error) ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{error}</div>
+        <div className="alert-danger mb-8 font-bold">{error}</div>
       ) : site == null ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">対象のサイトが見つかりませんでした</div>
+        <div className="alert-danger mb-8 font-bold">対象のサイトが見つかりませんでした</div>
       ) : (
         <>
           {site.is_self === 0 ? (

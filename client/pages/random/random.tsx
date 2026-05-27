@@ -48,7 +48,7 @@ export default function Random(): ReactElement {
       {!isLoading && !isEmpty(error) && (
         <>
           <h1 title="ランダムジャンプ">{appConstants.siteNameJapanese}</h1>
-          <div className="mb-8 p-4 text-red-600 text-center bg-red-50">{error}</div>
+          <div className="alert-danger mb-8 text-center">{error}</div>
           <div className="text-center"><Link to="/">トップへ戻る</Link></div>
         </>
       )}
@@ -56,8 +56,8 @@ export default function Random(): ReactElement {
       {!isLoading && site != null && (
         <div className="fade-redirect">
           <h1 title="ランダムジャンプ">{appConstants.siteNameJapanese}</h1>
-          <div className="mb-8 p-4 text-center bg-emerald-50">
-            <a className="inline-flex flex-col gap-y-2 text-emerald-600 hover:text-sky-600" href={site.url}>
+          <div className="alert-success mb-8 text-center">
+            <a className="inline-flex flex-col gap-y-2 text-inherit hover:text-sky-600" href={site.url}>
               <span className="font-bold">{site.site_name}</span>
               <span>へ Go!</span>
             </a>

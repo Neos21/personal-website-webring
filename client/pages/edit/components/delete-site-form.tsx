@@ -51,19 +51,19 @@ export function DeleteSiteForm({ site }: Props): ReactElement {
   
   return (
     <form className="form-danger mb-8" onSubmit={onSubmit}>
-      <fieldset className="space-y-4 border-rose-500 bg-rose-50">
-        <legend className="mb-0 text-rose-600">サイトの削除</legend>
+      <fieldset className="border-red-500 bg-red-50">
+        <legend className="text-red-600">サイトの削除</legend>
         
         <div className="text-sm">サイトを削除するには管理パスワードを入力してください。</div>
         
-        <label className="space-y-1">
-          <div><span className="font-bold">{passwordDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{passwordMaxLength}文字以内)</span></div>
+        <label>
+          <div><span className="font-bold">{passwordDisplayName}</span> <span className="form-label-memo">(必須・{passwordMaxLength}文字以内)</span></div>
           <input type="password" placeholder={passwordDisplayName} value={password} maxLength={passwordMaxLength} onChange={event => setPassword(event.target.value)} required />
         </label>
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+        {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
         
         <div className="text-right"><button type="submit" disabled={isSubmitting}>{isSubmitting ? '処理中…' : '削除する'}</button></div>
       </fieldset>

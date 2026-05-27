@@ -114,9 +114,9 @@ export default function AdminPost(): ReactElement {
       {isLoading ? (
         <div className="loading mb-8">読み込み中…</div>
       ) : !isEmpty(loadError) ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">{loadError}</div>
+        <div className="alert-danger mb-8 font-bold">{loadError}</div>
       ) : post == null ? (
-        <div className="mb-8 p-4 font-bold text-red-600 bg-red-50">投稿が見つかりませんでした</div>
+        <div className="alert-danger mb-8 font-bold">投稿が見つかりませんでした</div>
       ) : (
         <form className="mb-8 space-y-4" onSubmit={onSubmit}>
           <table>
@@ -136,18 +136,18 @@ export default function AdminPost(): ReactElement {
             </tbody>
           </table>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{siteIdDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意)</span></div>
+          <label>
+            <div><span className="font-bold">{siteIdDisplayName}</span> <span className="form-label-memo">(任意)</span></div>
             <input type="text" placeholder={siteIdDisplayName} value={siteId} onChange={event => setSiteId(event.target.value)} />
           </label>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{userNameDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(任意・{userNameMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{userNameDisplayName}</span> <span className="form-label-memo">(任意・{userNameMaxLength}文字以内)</span></div>
             <input type="text" placeholder={userNameDisplayName} value={userName} maxLength={userNameMaxLength} onChange={event => setUserName(event.target.value)} />
           </label>
           
-          <label className="space-y-1">
-            <div><span className="font-bold">{contentDisplayName}</span> <span className="ml-2 text-slate-500 text-sm">(必須・{contentMaxLength}文字以内)</span></div>
+          <label>
+            <div><span className="font-bold">{contentDisplayName}</span> <span className="form-label-memo">(必須・{contentMaxLength}文字以内)</span></div>
             <textarea placeholder={contentDisplayName} value={content} maxLength={contentMaxLength} onChange={event => setContent(event.target.value)} required rows={4} />
           </label>
           
@@ -155,7 +155,7 @@ export default function AdminPost(): ReactElement {
             <input type="checkbox" checked={isAdmin === 1} onChange={() => setIsAdmin(prevIsAdmin => prevIsAdmin === 1 ? 0 : 1)} /> リングマスター投稿
           </label>
           
-          {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+          {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
           
           <div><button type="submit">編集</button></div>
           

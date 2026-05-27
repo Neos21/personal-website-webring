@@ -55,11 +55,11 @@ export default function Admin(): ReactElement {
       <h1>リングマスター管理ログイン</h1>
       
       <form className="mb-8 space-y-4" onSubmit={onSubmit}>
-        <input type="password" placeholder={adminPasswordDisplayName} value={password} onChange={event => setPassword(event.target.value)} required />
+        <div><input type="password" placeholder={adminPasswordDisplayName} value={password} onChange={event => setPassword(event.target.value)} required /></div>
         
         <TurnstileField onTokenChange={setTurnstileToken} />
         
-        {!isEmpty(error) && (<div className="p-4 font-bold text-red-600 bg-red-50">{error}</div>)}
+        {!isEmpty(error) && (<div className="alert-danger font-bold">{error}</div>)}
         
         <div><button type="submit" disabled={isSubmitting}>ログイン</button></div>
       </form>
