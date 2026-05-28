@@ -32,6 +32,7 @@ export default function Index(): ReactElement {
       <div className="mb-16 [&>*]:mb-2 [&>h2]:mt-8 [&>h2]:font-bold">  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
         <p>「{appConstants.siteNameJapanese}」は、個人サイト同士を繋ぐウェブリングです。</p>
         <p>サイトのジャンルやコンテンツの質・量は関係ありません。個人ウェブサイトであればどんなサイトでも参加できます♪</p>
+        <p className="text-muted">レンタルブログのようなテンプレート選択型のサイトや、他者との交流を主目的とした汎用 SNS プラットフォームは登録対象外です。サイトデザインや構造に、管理人自身の表現・工夫が見られるサイトを歓迎しています。</p>
         
         <h2>参加の手順</h2>
         <p><Link to="/new">新規登録フォーム</Link>よりサイトを登録してください☆</p>

@@ -29,7 +29,7 @@
     - Cloudflare D1 Database : SQLite データベース
     - Cloudflare Turnstile : Bot 対策
     - Hono : サーバサイド
-    - React Router v7 : クライアントサイド
+    - React Router : クライアントサイド
 - サイトを他薦登録した場合、他薦ユーザによる編集・削除は不可とする
     - 自薦で新規登録した場合や、後から管理人が登場して自薦扱いに切り替えた場合は、管理人のみ編集・削除可能とする
 - タグ管理方針
