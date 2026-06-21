@@ -1,4 +1,5 @@
-import { type ReactElement } from 'react';
+import ky from 'ky';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Link } from 'react-router';
 
 import { appConstants } from '../../../shared/constants/app-constants';
@@ -22,12 +23,37 @@ export default function Index(): ReactElement {
 </tbody></table>`;
   /* eslint-enable */
   
+  const [counter, setCounter] = useState<number | null>(null);
+  
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await ky.get('/api/counters').json<{ result: number; }>();
+        setCounter(response.result);
+      }
+      catch(error) {
+        console.error('Get Counters Error', error);
+        setCounter(0);
+      }
+    })();
+  }, []);
+  
   return (
     <main>
       <title>個人サイトウェブリング</title>
       <h1>{appConstants.siteNameJapanese}</h1>
       
-      <div className="my-16 text-center"><Link to="/new">新規登録</Link> | <Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧</Link> | <Link to="/random">ランダムジャンプ</Link> | <Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板</Link></div>
+      <div className="mt-16 mb-12 text-center"><Link to="/new">新規登録</Link> | <Link to={{ pathname: '/list', search: '?page=1' }}>登録サイト一覧</Link> | <Link to="/random">ランダムジャンプ</Link> | <Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板</Link></div>
+      
+      {counter != null && (
+        <div className="mb-12 text-center [&>img]:inline">  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
+          <span className="mr-2">あなたは</span>
+          {String(counter).split('').map(number => (
+            <img src={`/${number}.png`} width={22} height={32} alt="" />
+          ))}
+          <span className="ml-2">番目のお客さまです♪</span>
+        </div>
+      )}
       
       <div className="mb-16 [&>*]:mb-2 [&>h2]:mt-8 [&>h2]:font-bold">  {/* eslint-disable-line neos-eslint-plugin/comment-colon-spacing */}
         <p>「{appConstants.siteNameJapanese}」は、個人サイト同士を繋ぐウェブリングです。</p>
@@ -72,6 +98,7 @@ export default function Index(): ReactElement {
           <li><a href="https://kobliy.vercel.app/" target="_blank">こぶりー</a></li>
           <li><a href="https://s.10prs.com/" target="_blank">ハコサチ</a></li>
           <li><a href="https://compslink.jp/" target="_blank">コンパスリンク</a></li>
+          <li><a href="https://gebecy.github.io/web10unite/" target="_blank">Web1.0 同盟</a></li>
         </ul>
       </div>
       

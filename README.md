@@ -119,6 +119,11 @@ CREATE TABLE deny_domains (  -- 禁止ドメイン
   domain      TEXT     NOT NULL     UNIQUE,                    -- ドメイン
   created_at  TEXT     NOT NULL     DEFAULT CURRENT_TIMESTAMP  -- 登録日時
 );
+
+CREATE TABLE counters (  -- カウンタ
+  counter  INTEGER  PRIMARY KEY
+);
+INSERT INTO counters (counter) VALUES (0);
 ```
 
 

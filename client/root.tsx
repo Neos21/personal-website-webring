@@ -1,4 +1,5 @@
-import { type ReactElement, type ReactNode } from 'react';
+import ky from 'ky';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import { isRouteErrorResponse, Link, Links, Outlet, Scripts, ScrollRestoration } from 'react-router';
 
 import { appConstants } from '../shared/constants/app-constants';
@@ -9,6 +10,22 @@ import type { Route } from './+types/root';
 import './styles.css';
 
 export function Layout({ children }: { children: ReactNode }): ReactElement {
+  const [isCalled, setIsCalled] = useState<boolean>(false);
+  
+  useEffect(() => {
+    (async () => {
+      if(isCalled) return;
+      setIsCalled(true);
+      
+      try {
+        await ky.post('/api/counters').text();
+      }
+      catch(error) {
+        console.error('Post Counters Error', error);
+      }
+    })();
+  }, [isCalled]);
+  
   return (
     <html lang="ja">
       <head>

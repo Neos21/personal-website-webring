@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 
 import { admin, adminPath } from './admin/admin';
+import { counters, countersPath } from './counters/counters';
 import { denyDomains, denyDomainsPath } from './deny-domains/deny-domains';
 import { next, nextPath } from './next/next';
 import { posts, postsPath } from './posts/posts';
@@ -19,4 +20,5 @@ api.route(randomPath     , random);
 api.route(sitesPath      , sites);
 api.route(postsPath      , posts);
 api.route(denyDomainsPath, denyDomains);
+api.route(countersPath   , counters);
 api.route(adminPath      , admin);
