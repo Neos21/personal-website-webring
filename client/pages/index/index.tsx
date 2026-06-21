@@ -63,6 +63,16 @@ export default function Index(): ReactElement {
         <h2>おことわり</h2>
         <p>不正な URL や閉鎖されたサイトは、発見次第削除させていただきます。</p>
         <p>本ウェブリングに関するお問い合わせは<Link to={{ pathname: '/support', search: '?page=1' }}>サポート掲示板</Link>までご連絡ください。</p>
+        
+        <h2>個人サイトを探す</h2>
+        <p>本ウェブリング以外に個人サイトを収集しているサイトを紹介します。</p>
+        <ul className="pl-6 list-disc">
+          <li><a href="https://mingeiinter.net/" target="_blank">ミンゲイインターネット</a></li>
+          <li><a href="https://mingeiinter.net/motto/" target="_blank">ミンゲイインターネット - モット</a></li>
+          <li><a href="https://kobliy.vercel.app/" target="_blank">こぶりー</a></li>
+          <li><a href="https://s.10prs.com/" target="_blank">ハコサチ</a></li>
+          <li><a href="https://compslink.jp/" target="_blank">コンパスリンク</a></li>
+        </ul>
       </div>
       
       <div className="mb-2"><img className="mx-auto" src="/banner-88x31.png" width="88" height="31" alt={appConstants.siteNameJapanese} /></div>
