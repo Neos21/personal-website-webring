@@ -99,6 +99,8 @@ export default function Index(): ReactElement {
           <li><a href="https://s.10prs.com/" target="_blank">ハコサチ</a></li>
           <li><a href="https://compslink.jp/" target="_blank">コンパスリンク</a></li>
           <li><a href="https://gebecy.github.io/web10unite/" target="_blank">Web1.0 同盟</a></li>
+          <li><a href="https://ietsuku.i-ra.site/" target="_blank">いえつく</a></li>
+          <li><a href="http://kn1.x0.to/" target="_blank">よろずりんく</a></li>
         </ul>
       </div>
       
